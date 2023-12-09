@@ -1,0 +1,23 @@
+name: Clojure CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install server-side dependencies
+      run: lein deps
+    - name: Run server-side tests
+      run: lein test
+    - name: Install client-side dependencies
+      run: npm install
+    - name: Run client-side tests
+      run: lein fig:test
