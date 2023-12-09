@@ -10,6 +10,9 @@
                  [org.clojure/clojurescript "1.11.4"]
                  [cljsjs/react "17.0.2-0"]
                  [cljsjs/react-dom "17.0.2-0"]
+                 [clojure.java-time "1.4.2"]
+                 [com.andrewmcveigh/cljs-time "0.5.2"]
+                 [com.github.dgknght/app-lib "0.3.6" :exclusions [org.clojure/clojure]]
                  [reagent "1.1.1" ]]
 
   :source-paths ["src"]
@@ -18,7 +21,7 @@
             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
             "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]}
 
-  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17"]
+  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17" :exclusions [ring/ring-devel ring/ring-core ring/ring-codec org.eclipse.jetty/jetty-server ring ring/ring-servlet ring/ring-jetty-adapter]]
                                   [org.slf4j/slf4j-nop "1.7.30"]
                                   [com.bhauman/rebel-readline-cljs "0.1.4"]]
                    
