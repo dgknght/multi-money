@@ -5,8 +5,7 @@
             [dgknght.app-lib.core :refer [update-in-if]]
             #?(:clj [clojure.pprint :refer [pprint]]
                :cljs [cljs.pprint :refer [pprint]])
-            #?(:clj [java-time.api :as t]
-               :cljs [cljs-time.core :as t])
+            #?(:cljs [cljs-time.core :as t])
             #?(:cljs [cljs-time.coerce :as tc]))
   #?(:clj (:import java.time.LocalDate)
      :cljs (:import goog.date.Date)))
