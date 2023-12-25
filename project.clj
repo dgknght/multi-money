@@ -12,7 +12,9 @@
                  [cljsjs/react-dom "17.0.2-0"]
                  [clojure.java-time "1.4.2"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
-                 [com.github.dgknght/app-lib "0.3.6" :exclusions [org.clojure/clojure]]
+                 [ring/ring-core "1.8.2"]
+                 [ring/ring-jetty-adapter "1.8.2"]
+                 [com.github.dgknght/app-lib "0.3.6" :exclusions [ring/ring-core org.clojure/clojure commons-io commons-codec ring/ring-servlet ring/ring-jetty-adapter]]
                  [reagent "1.1.1" ]]
 
   :source-paths ["src"]
@@ -25,11 +27,10 @@
   :cloverage {:fail-threshold 90
               :low-watermark 90
               :high-watermark 95}
-  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17" :exclusions [ring/ring-devel ring/ring-core ring/ring-codec org.eclipse.jetty/jetty-server ring ring/ring-servlet ring/ring-jetty-adapter]]
+  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17" :exclusions [ring/ring-devel ring/ring-core org.eclipse.jetty/jetty-http ring/ring-codec org.eclipse.jetty/jetty-io org.eclipse.jetty/jetty-server org.eclipse.jetty/jetty-util ring ring/ring-servlet ring/ring-jetty-adapter]]
                                   [org.slf4j/slf4j-nop "1.7.30"]
                                   [com.bhauman/rebel-readline-cljs "0.1.4"]]
                    
                    :resource-paths ["target"]
                    ;; need to add the compiled assets to the :clean-targets
                    :clean-targets ^{:protect false} ["target"]}})
-
