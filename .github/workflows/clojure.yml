@@ -16,7 +16,7 @@ jobs:
     - name: Install server-side dependencies
       run: lein deps
     - name: Run server-side tests
-      run: lein test
+      run: lein cloverage
     - name: Install client-side dependencies
       run: npm install
     - name: Run client-side tests

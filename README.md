@@ -1,10 +1,15 @@
 # multi-money
 
-FIXME: Write a one-line description of your library/project.
+[![Clojure CI](https://github.com/dgknght/multi-money/actions/workflows/clojure.yml/badge.svg)](https://github.com/dgknght/multi-money/actions/workflows/clojure.yml)
+
+Double-entry accounting system written in Clojure and designed to
+use multiple back-end storage strategies.
 
 ## Overview
 
-FIXME: Write a paragraph about the library/project and highlight its goals.
+This project is a combination of my desire to have a cloud-based,
+easy-to-use accounting tool, and a vehicle with which I test programming
+tools and strategies.
 
 ## Development
 
