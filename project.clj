@@ -21,6 +21,10 @@
             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
             "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]}
 
+  :plugins [[lein-cloverage "1.2.2"]]
+  :cloverage {:fail-threshold 90
+              :low-watermark 90
+              :high-watermark 95}
   :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17" :exclusions [ring/ring-devel ring/ring-core ring/ring-codec org.eclipse.jetty/jetty-server ring ring/ring-servlet ring/ring-jetty-adapter]]
                                   [org.slf4j/slf4j-nop "1.7.30"]
                                   [com.bhauman/rebel-readline-cljs "0.1.4"]]
