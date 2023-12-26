@@ -14,8 +14,8 @@
                  [metosin/reitit-ring "0.7.0-alpha7" :exclusions [ring/ring-core ring/ring-codec commons-fileupload crypto-equality commons-io crypto-random commons-codec]]
                  [hiccup "2.0.0-RC2"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
-                 [ring/ring-core "1.8.2"]
-                 [ring/ring-jetty-adapter "1.8.2"]
+                 [ring/ring-core "1.9.0"]
+                 [ring/ring-jetty-adapter "1.9.0"]
                  [com.github.dgknght/app-lib "0.3.6" :exclusions [ring/ring-core org.clojure/clojure commons-io commons-codec ring/ring-servlet ring/ring-jetty-adapter]]
                  [reagent "1.1.1" ]]
 
