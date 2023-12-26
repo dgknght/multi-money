@@ -11,6 +11,8 @@
                  [cljsjs/react "17.0.2-0"]
                  [cljsjs/react-dom "17.0.2-0"]
                  [clojure.java-time "1.4.2"]
+                 [metosin/reitit-ring "0.7.0-alpha7" :exclusions [ring/ring-core ring/ring-codec commons-fileupload crypto-equality commons-io crypto-random commons-codec]]
+                 [hiccup "2.0.0-RC2"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [ring/ring-core "1.8.2"]
                  [ring/ring-jetty-adapter "1.8.2"]
@@ -21,7 +23,8 @@
 
   :aliases {"fig:build" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
-            "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]}
+            "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
+            "routes"    ["run" "-m" "multi-money.handler/print-routes"]}
 
   :plugins [[lein-cloverage "1.2.2"]]
   :cloverage {:fail-threshold 90
