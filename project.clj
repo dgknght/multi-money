@@ -14,9 +14,17 @@
                  [metosin/reitit-ring "0.7.0-alpha7" :exclusions [ring/ring-core ring/ring-codec commons-fileupload crypto-equality commons-io crypto-random commons-codec]]
                  [hiccup "2.0.0-RC2"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
-                 [ring/ring-core "1.9.0"]
-                 [ring/ring-jetty-adapter "1.9.0"]
-                 [com.github.dgknght/app-lib "0.3.6" :exclusions [ring/ring-core org.clojure/clojure commons-io commons-codec ring/ring-servlet ring/ring-jetty-adapter]]
+                 [ring/ring-core "1.9.6"]
+                 [ring/ring-jetty-adapter "1.9.6"]
+                 [com.github.dgknght/app-lib "0.3.6"
+                  :exclusions [ring/ring-core
+                               org.clojure/clojure
+                               commons-io
+                               commons-codec
+                               ring
+                               ring/ring-devel
+                               ring/ring-servlet
+                               ring/ring-jetty-adapter]]
                  [reagent "1.1.1" ]]
 
   :source-paths ["src"]
@@ -32,7 +40,7 @@
               :high-watermark 95}
   :repl-options {:welcome (println "Welcome to accounting with multiple, persistant storage options!")
                  :init-ns multi-money.repl}
-  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17" :exclusions [ring/ring-devel ring/ring-core org.eclipse.jetty/jetty-http ring/ring-codec org.eclipse.jetty/jetty-io org.eclipse.jetty/jetty-server org.eclipse.jetty/jetty-util ring ring/ring-servlet ring/ring-jetty-adapter]]
+  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17"]
                                   [org.slf4j/slf4j-nop "1.7.30"]
                                   [com.bhauman/rebel-readline-cljs "0.1.4"]]
                    
