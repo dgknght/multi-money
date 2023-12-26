@@ -14,6 +14,7 @@ pom.xml
 .cpcache/
 .rebel_readline_history
 figwheel-main.log
+figwheel-main.log.lck
 node_modules/
 resources/public/cljs-out/
 .clj-kondo/.cache
