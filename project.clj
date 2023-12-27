@@ -28,6 +28,7 @@
                  [reagent "1.1.1" ]]
 
   :source-paths ["src"]
+  :uberjar-name "multi-money.jar"
 
   :aliases {"fig:build" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
