@@ -2,7 +2,7 @@
   :css-dirs ["resources/public/css"]
   :auto-testing true
   :open-url false
-  :log-file "figwheel-main.log"
+  :log-file "logs/figwheel-main.log"
   :ring-server-options {:host "lvh.me"
                         :port 3001}}
 {:main multi-money.core}
