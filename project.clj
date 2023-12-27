@@ -47,4 +47,13 @@
                    
                    :resource-paths ["target"]
                    ;; need to add the compiled assets to the :clean-targets
-                   :clean-targets ^{:protect false} ["target"]}})
+                   :clean-targets ^{:protect false} ["target"]}
+             :uberjar {;:source-paths ["env/prod/clj"]
+                       ;:resource-paths ["env/prod/resources"]
+                       :prep-tasks ["compile"
+                                    #_["cljsbuild" "once" "min"]
+                                    #_"sass"]
+                       :env {:production true
+                             :app-title "Multimoney"}
+                       :aot :all
+                       :omit-source true}})
