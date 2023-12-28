@@ -25,7 +25,7 @@ jobs:
         run: clj-kondo --lint src:test --dependencies
 
       - name: Run server-side tests
-        run: lein cloverage
+        run: lein with-profile test cloverage
 
       - name: Install client-side dependencies
         run: npm install
