@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      jar-file: ${{ steps.uberjar.outputs
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -33,15 +35,15 @@ jobs:
       - name: Run client-side tests
         run: lein fig:test
 
-      - name: Create the uberjar
-        run: lein uberjar
-
   publish:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
+
+      - name: Create the uberjar
+        run: lein uberjar
 
       - name: Log into docker hub
         uses: docker/login-action@v3
