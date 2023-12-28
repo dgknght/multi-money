@@ -8,6 +8,7 @@
 
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.11.4"]
+                 [ch.qos.logback/logback-classic "1.2.3"]
                  [cljsjs/react "17.0.2-0"]
                  [cljsjs/react-dom "17.0.2-0"]
                  [clojure.java-time "1.4.2"]
@@ -37,12 +38,12 @@
             "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
             "routes"    ["run" "-m" "multi-money.handler/print-routes"]}
 
-  :repl-options {:welcome (println "Welcome to accounting with multiple, persistant storage options!")
+  :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
                  :init-ns multi-money.repl}
-  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17"]
-                                  [org.slf4j/slf4j-nop "1.7.30"]
+  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17" :exclusions [org.slf4j/slf4j-api]]
                                   [com.bhauman/rebel-readline-cljs "0.1.4"]]
-                   :resource-paths ["target"]
+                   :source-paths ["env/dev"]
+                   :resource-paths ["target" "env/dev/resources"]
                    ;; need to add the compiled assets to the :clean-targets
                    :clean-targets ^{:protect false} ["target"]
                    :env {:development? true}}
@@ -54,13 +55,11 @@
                                 :ns-exclude-regex [#"multi-money.repl"
                                                    #"multi-money.server"
                                                    #"multi-money.handler"]}} ; I'd really like to cover everything except print-routes, but I can't get that working
-             :uberjar {;:source-paths ["env/prod/clj"]
-                       ;:resource-paths ["env/prod/resources"]
+             :uberjar {:source-paths ["env/prod"]
+                       :resource-paths ["env/prod/resources"]
                        :dependencies [[com.bhauman/figwheel-main "0.2.17"]]
                        :prep-tasks ["compile"
                                     "fig:prod"
                                     #_"sass"]
-                       :env {:production? true
-                             :app-title "Multimoney"}
                        :aot :all
                        :omit-source true}})

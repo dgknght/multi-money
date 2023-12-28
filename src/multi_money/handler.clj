@@ -1,10 +1,11 @@
 (ns multi-money.handler
   (:require [clojure.pprint :refer [pprint]]
-            [config.core :refer [env]]
+            [clojure.tools.logging :as log]
             [hiccup.page :refer [html5
                                  include-js]]
             [reitit.core :as r]
-            [reitit.ring :as ring]))
+            [reitit.ring :as ring]
+            [multi-money.mount-point :refer [js-path]]))
 
 (defn- mount-point
   []
@@ -15,11 +16,8 @@
              :content "width=device-width, initial-scale=1"}]]
     [:body
      [:div#app]
-     (let [filename (format "/cljs-out/%s-main.js"
-                            (if (env :production?)
-                              "prod"
-                              "dev"))]
-       (include-js filename))]))
+     (log/debugf "Using javascript resource at %s" js-path)
+     (include-js js-path)]))
 
 (defn- index
   [_req]
