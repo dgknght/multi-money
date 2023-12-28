@@ -1,5 +1,5 @@
 (defproject multi-money "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
+  :description "Single-page web app implementation of a double-entry accounting application"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -13,6 +13,7 @@
                  [clojure.java-time "1.4.2"]
                  [metosin/reitit-ring "0.7.0-alpha7" :exclusions [ring/ring-core ring/ring-codec commons-fileupload crypto-equality commons-io crypto-random commons-codec]]
                  [hiccup "2.0.0-RC2"]
+                 [yogthos/config "1.2.0" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [ring/ring-core "1.9.6"]
                  [ring/ring-jetty-adapter "1.9.6"]
@@ -32,28 +33,34 @@
 
   :aliases {"fig:build" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
+            "fig:prod"  ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
             "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
             "routes"    ["run" "-m" "multi-money.handler/print-routes"]}
 
-  :plugins [[lein-cloverage "1.2.2"]]
-  :cloverage {:fail-threshold 90
-              :low-watermark 90
-              :high-watermark 95}
   :repl-options {:welcome (println "Welcome to accounting with multiple, persistant storage options!")
                  :init-ns multi-money.repl}
-  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17"]
-                                  [org.slf4j/slf4j-nop "1.7.30"]
-                                  [com.bhauman/rebel-readline-cljs "0.1.4"]]
-                   
-                   :resource-paths ["target"]
-                   ;; need to add the compiled assets to the :clean-targets
-                   :clean-targets ^{:protect false} ["target"]}
-             :uberjar {;:source-paths ["env/prod/clj"]
-                       ;:resource-paths ["env/prod/resources"]
-                       :prep-tasks ["compile"
-                                    #_["cljsbuild" "once" "min"]
-                                    #_"sass"]
-                       :env {:production true
-                             :app-title "Multimoney"}
-                       :aot :all
-                       :omit-source true}})
+  :profiles {:dev [:cljs-builds :dev-base]
+             :dev-base {:resource-paths ["target"]
+                        ;; need to add the compiled assets to the :clean-targets
+                        :clean-targets ^{:protect false} ["target"]
+                        :env {:development? true}}
+             :cljs-builds {:dependencies [[com.bhauman/figwheel-main "0.2.17"]
+                                          [org.slf4j/slf4j-nop "1.7.30"]
+                                          [com.bhauman/rebel-readline-cljs "0.1.4"]]}
+             :test {:plugins [[lein-cloverage "1.2.2"]]
+                    :cloverage {:fail-threshold 90
+                                :low-watermark 90
+                                :high-watermark 95
+                                :exclude-call []
+                                :ns-exclude-regex [#"multi-money.repl"
+                                                   #"multi-money.server"]}}
+             :uberjar [:cljs-builds :uberjar-base]
+             :uberjar-base {;:source-paths ["env/prod/clj"]
+                            ;:resource-paths ["env/prod/resources"]
+                            :prep-tasks ["compile"
+                                         "fig:prod"
+                                         #_"sass"]
+                            :env {:production? true
+                                  :app-title "Multimoney"}
+                            :aot :all
+                            :omit-source true}})

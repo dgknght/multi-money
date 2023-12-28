@@ -1,5 +1,6 @@
 (ns multi-money.handler
   (:require [clojure.pprint :refer [pprint]]
+            [config.core :refer [env]]
             [hiccup.page :refer [html5
                                  include-js]]
             [reitit.core :as r]
@@ -14,7 +15,11 @@
              :content "width=device-width, initial-scale=1"}]]
     [:body
      [:div#app]
-     (include-js "/cljs-out/dev-main.js")]))
+     (let [filename (format "/cljs-out/%s-main.js"
+                            (if (env :production?)
+                              "prod"
+                              "dev"))]
+       (include-js filename))]))
 
 (defn- index
   [_req]
@@ -22,17 +27,11 @@
    :header {"Content-Type" "text/html"}
    :body (mount-point)})
 
-(defn- test-page [_]
-  {:status 200
-   :header {"Content-Type" "text/html"}
-   :body (html5 [:body [:h1 "This is a test"]])})
-
 (def app
   (ring/ring-handler
     (ring/router
       ["/"
-       ["" {:get index}]
-       ["test" {:get test-page}]])
+       ["" {:get index}]])
     (ring/routes
       (ring/create-resource-handler {:path "/"})
       (ring/create-default-handler))))
