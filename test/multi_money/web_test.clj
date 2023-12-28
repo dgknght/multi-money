@@ -1,7 +1,7 @@
 (ns multi-money.web-test
   (:require [clojure.test :refer [deftest is]]
             [clojure.zip :refer [xml-zip]]
-            [clojure.data.zip.xml :refer [tag= attr= xml1->]]
+            [clojure.data.zip.xml :refer [attr= xml1->]]
             [clojure.pprint :refer [pprint]]
             [ring.mock.request :as req]
             [dgknght.app-lib.test :refer [parse-html-body]]
