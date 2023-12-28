@@ -39,14 +39,13 @@
 
   :repl-options {:welcome (println "Welcome to accounting with multiple, persistant storage options!")
                  :init-ns multi-money.repl}
-  :profiles {:dev [:cljs-builds :dev-base]
-             :dev-base {:resource-paths ["target"]
-                        ;; need to add the compiled assets to the :clean-targets
-                        :clean-targets ^{:protect false} ["target"]
-                        :env {:development? true}}
-             :cljs-builds {:dependencies [[com.bhauman/figwheel-main "0.2.17"]
-                                          [org.slf4j/slf4j-nop "1.7.30"]
-                                          [com.bhauman/rebel-readline-cljs "0.1.4"]]}
+  :profiles {:dev {:dependencies [[com.bhauman/figwheel-main "0.2.17"]
+                                  [org.slf4j/slf4j-nop "1.7.30"]
+                                  [com.bhauman/rebel-readline-cljs "0.1.4"]]
+                   :resource-paths ["target"]
+                   ;; need to add the compiled assets to the :clean-targets
+                   :clean-targets ^{:protect false} ["target"]
+                   :env {:development? true}}
              :test {:plugins [[lein-cloverage "1.2.2"]]
                     :dependencies [[ring/ring-mock "0.4.0"]]
                     :cloverage {:fail-threshold 90
@@ -55,13 +54,13 @@
                                 :ns-exclude-regex [#"multi-money.repl"
                                                    #"multi-money.server"
                                                    #"multi-money.handler"]}} ; I'd really like to cover everything except print-routes, but I can't get that working
-             :uberjar [:cljs-builds :uberjar-base]
-             :uberjar-base {;:source-paths ["env/prod/clj"]
-                            ;:resource-paths ["env/prod/resources"]
-                            :prep-tasks ["compile"
-                                         "fig:prod"
-                                         #_"sass"]
-                            :env {:production? true
-                                  :app-title "Multimoney"}
-                            :aot :all
-                            :omit-source true}})
+             :uberjar {;:source-paths ["env/prod/clj"]
+                       ;:resource-paths ["env/prod/resources"]
+                       :dependencies [[com.bhauman/figwheel-main "0.2.17"]]
+                       :prep-tasks ["compile"
+                                    "fig:prod"
+                                    #_"sass"]
+                       :env {:production? true
+                             :app-title "Multimoney"}
+                       :aot :all
+                       :omit-source true}})
