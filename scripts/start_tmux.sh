@@ -27,4 +27,11 @@ tmux send-keys 'tail -f logs/development.log | grep -e ERROR -e WARN -e dbk' C-m
 tmux split-window -v
 tmux send-keys 'tail -f logs/development.log' C-m
 
+# Kubernetes
+tmux new-window -t $session:5 -n 'k8s'
+tmux send-keys 'cd ../multi-money-k8s' C-m
+tmux send-keys 'nvim' C-m
+tmux split-window -h
+tmux send-keys 'cd ../multi-money-k8s' C-m
+
 tmux attach -t $session:1
