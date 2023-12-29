@@ -25,10 +25,23 @@
    :header {"Content-Type" "text/html"}
    :body (mount-point)})
 
+(defn- wrap-request-logging
+  [handler]
+  (fn [req]
+    (log/infof "Request received %s \"%s\""
+               (:request-method req)
+               (:uri req))
+    (let [res (handler req)]
+      (log/infof "Responded to %s \"%s\": %s"
+                 (:request-method req)
+                 (:uri req)
+                 (:status res))
+      res)))
+
 (def app
   (ring/ring-handler
     (ring/router
-      ["/"
+      ["/" {:middleware [wrap-request-logging]}
        ["" {:get index}]])
     (ring/routes
       (ring/create-resource-handler {:path "/"})
