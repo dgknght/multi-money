@@ -49,6 +49,7 @@
                    :env {:development? true}}
              :test {:plugins [[lein-cloverage "1.2.2"]]
                     :dependencies [[ring/ring-mock "0.4.0"]]
+                    :resource-paths ^:replace ["target" "env/test/resources"]
                     :cloverage {:fail-threshold 90
                                 :low-watermark 90
                                 :high-watermark 95
