@@ -45,11 +45,12 @@
                    :source-paths ["env/dev"]
                    :resource-paths ["target" "env/dev/resources"]
                    ;; need to add the compiled assets to the :clean-targets
-                   :clean-targets ^{:protect false} ["target"]
-                   :env {:development? true}}
+                   :clean-targets ^{:protect false} ["target"]}
              :test {:plugins [[lein-cloverage "1.2.2"]]
                     :dependencies [[ring/ring-mock "0.4.0"]]
-                    :resource-paths ^:replace ["target" "env/test/resources"]
+                    :source-paths ^:replace ["env/dev" "src"]
+                    :resource-paths ^:replace ["target" "env/test/resources" "resources"]
+                    :env {:development? true}
                     :cloverage {:fail-threshold 90
                                 :low-watermark 90
                                 :high-watermark 95
