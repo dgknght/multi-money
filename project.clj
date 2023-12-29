@@ -1,4 +1,4 @@
-(defproject multi-money "0.1.0-SNAPSHOT"
+(defproject multi-money "0.1.0"
   :description "Single-page web app implementation of a double-entry accounting application"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
