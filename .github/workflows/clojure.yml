@@ -17,9 +17,9 @@ jobs:
         run: lein deps
 
       - name: Install clj-kondo
-        uses: DeLaGuardo/setup-clj-kondo@master
+        uses: dgknght/setup-clj-kondo@master
         with:
-          version: '2020.04.05'
+          version: '2023.12.15'
 
       - name: Run linter
         run: clj-kondo --lint src:test --dependencies
