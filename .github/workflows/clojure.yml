@@ -40,6 +40,12 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      - name: Tag with the version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: [main]
+
       - name: Create the uberjar
         run: lein do clean, uberjar
 
