@@ -35,10 +35,16 @@ jobs:
 
   publish:
     needs: build
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
+
+      - name: Tag with the version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create the uberjar
         run: lein do clean, uberjar
