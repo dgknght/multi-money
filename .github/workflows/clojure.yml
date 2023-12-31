@@ -52,6 +52,9 @@ jobs:
       - name: Install sass compiler
         run: npm install -g sass
 
+      - name: Compile the css
+        run: sass src/scss/site.scss resources/public/css/site.css
+
       - name: Create the uberjar
         run: lein do clean, uberjar
 

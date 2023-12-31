@@ -63,7 +63,6 @@
                        :resource-paths ["env/prod/resources"]
                        :dependencies [[com.bhauman/figwheel-main "0.2.17"]]
                        :prep-tasks ["compile"
-                                    "fig:prod"
-                                    "sass"]
+                                    "fig:prod"]
                        :aot :all
                        :omit-source true}})
