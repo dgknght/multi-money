@@ -49,6 +49,9 @@ jobs:
           DEFAULT_BUMP: patch
           RELEASE_BRANCHES: main
 
+      - name: Install sass compiler
+        run: npm install -g sass
+
       - name: Create the uberjar
         run: lein do clean, uberjar
 
