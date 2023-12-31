@@ -18,6 +18,8 @@
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [ring/ring-core "1.9.6"]
                  [ring/ring-jetty-adapter "1.9.6"]
+                 [venantius/accountant "0.2.5"]
+                 [clj-commons/secretary "1.2.4"]
                  [com.github.dgknght/app-lib "0.3.6"
                   :exclusions [ring/ring-core
                                org.clojure/clojure
@@ -61,7 +63,6 @@
                        :resource-paths ["env/prod/resources"]
                        :dependencies [[com.bhauman/figwheel-main "0.2.17"]]
                        :prep-tasks ["compile"
-                                    "fig:prod"
-                                    #_"sass"]
+                                    "fig:prod"]
                        :aot :all
                        :omit-source true}})
