@@ -67,6 +67,9 @@ jobs:
       - name: Extract tags and labels
         id: meta
         uses: docker/metadata-action@v5.4.0
+        flavor: |
+          latest=auto
+          suffix={{sha}}
         with:
           images: dgknght/multi-money
 
