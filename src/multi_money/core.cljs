@@ -1,34 +1,48 @@
 (ns ^:figwheel-hooks multi-money.core
-  (:require
-   [goog.dom :as gdom]
-   [reagent.core :as reagent :refer [atom]]
-   [reagent.dom :as rdom]))
+  (:require [goog.dom :as gdom]
+            [accountant.core :as act]
+            [secretary.core :as sct]
+            [reagent.core :as r]
+            [reagent.dom :as rdom]
+            [multi-money.views.components :refer [title-bar]]))
 
-(println "This text is printed from src/multi_money/core.cljs. Go ahead and edit it and see reloading in action.")
+; TODO: Move this to state ns
+(defonce app-state (r/atom {}))
+(def current-page (r/cursor app-state [:current-page]))
 
-(defn multiply [a b] (* a b))
+; TODO: Move this to pages ns
+(defn welcome []
+  [:div.container.mt-2
+   [:h1 "Welcome!"]
+   [:p "We're glad you found us."]])
 
-;; define your app data so that it doesn't get over-written on reload
-(defonce app-state (atom {:text "Hello world!"}))
+(sct/defroute welcome-path "/" []
+  (reset! current-page welcome))
 
 (defn get-app-element []
   (gdom/getElement "app"))
 
-(defn hello-world []
-  [:div
-   [:h1 (:text @app-state)]
-   [:h3 "Edit this in src/multi_money/core.cljs and watch it change!"]])
+(defn full-page []
+  (fn []
+    [:div.container
+     [title-bar] 
+     [@current-page]]))
 
 (defn mount [el]
-  (rdom/render [hello-world] el))
+  (rdom/render [full-page] el))
 
 (defn mount-app-element []
   (when-let [el (get-app-element)]
     (mount el)))
 
-;; conditionally start your application based on the presence of an "app" element
-;; this is particularly helpful for testing this ns without launching the app
-(mount-app-element)
+(defn- init! []
+  (act/configure-navigation!
+    {:nav-handler sct/dispatch!
+     :path-exists? sct/locate-route-value})
+  (act/dispatch-current!)
+  (mount-app-element))
+
+(init!)
 
 ;; specify reload hook with ^:after-load metadata
 (defn ^:after-load on-reload []

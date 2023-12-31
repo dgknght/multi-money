@@ -2,6 +2,7 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.tools.logging :as log]
             [hiccup.page :refer [html5
+                                 include-css
                                  include-js]]
             [reitit.core :as r]
             [reitit.ring :as ring]
@@ -9,11 +10,15 @@
 
 (defn- mount-point
   []
-  (html5
+  (html5 {:lang "en"
+          :data-bs-theme :dark}
     [:head
      [:meta {:charset "UTF-8"}]
      [:meta {:name "viewport"
              :content "width=device-width, initial-scale=1"}]]
+    (include-css "css/site.css")
+    (include-js "https://unpkg.com/@popperjs/core@2")
+    (include-js "js/bootstrap.min.js")
     [:body
      [:div#app]
      (log/debugf "Using javascript resource at %s" js-path)
