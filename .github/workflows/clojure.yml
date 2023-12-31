@@ -71,7 +71,7 @@ jobs:
           images: dgknght/multi-money
           flavor: |
             latest=auto
-            suffix={{sha}}
+            suffix=-{{sha}}
 
       - name: Build and push the docker image
         uses: docker/build-push-action@v5.1.0
