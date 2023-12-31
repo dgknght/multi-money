@@ -43,7 +43,7 @@ jobs:
 
       - name: Tag with the version
         uses: anothrNick/github-tag-action@1.64.0
-        with:
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           DEFAULT_BUMP: patch
