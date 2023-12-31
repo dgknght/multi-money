@@ -3,6 +3,7 @@
   (:require
     ;; require all the namespaces that you want to test
     [multi-money.util-test]
+    [multi-money.icons-test]
     [figwheel.main.testing :refer [run-tests-async]]))
 
 (defn -main [& _args]

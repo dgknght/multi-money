@@ -16,5 +16,5 @@ pom.xml
 .rebel_readline_history
 node_modules/
 resources/public/cljs-out/
+resources/public/css
 .clj-kondo/.cache
-
