@@ -24,11 +24,7 @@
   [s]
   #?(:clj (LocalDate/ofEpochDay s)
      :cljs (tc/to-local-date s)))
-
-; (defn ->id
-;   [id-or-model]
-;   (or (:id id-or-model) id-or-model))
-; 
+ 
 ; (def local-date?
 ;   #?(:clj (partial instance? LocalDate)
 ;      :cljs #(throw (js/Error "Not implemented"))))
@@ -142,6 +138,18 @@
 (def valid-id?
   (every-pred non-nil?
               scalar?))
+
+ (defn ->id
+   [id-or-model]
+   {:pre [(or (scalar? id-or-model)
+              (map? id-or-model))]}
+   (if (scalar? id-or-model)
+     id-or-model
+     (or (:id id-or-model)
+         (when-let [k (->> (keys id-or-model)
+                           (filter #(= "id" (name %)))
+                           first)]
+           (id-or-model k)))))
 
 (defn truncate
   ([s] (truncate s {}))

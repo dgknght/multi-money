@@ -148,3 +148,11 @@
           {:memo "this one"}]
          (utl/rename-criteria-keys [:or {:account-id 101} {:memo "this one"}]
                                    {:account-id #{:debit-account-id :credit-account-id}}))))
+
+(deftest extract-a-model-id
+  (is (= 101 (utl/->id 101))
+      "A scalar value is returned")
+  (is (= 101 (utl/->id {:id 101}))
+      "The value at :id is returned from map")
+  (is (= 101 (utl/->id {:user/id 101}))
+      "The value at a namespaced key with name \"id\" is returned"))

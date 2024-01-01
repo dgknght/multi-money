@@ -5,6 +5,7 @@ pom.xml
 /classes/
 /out/
 /target/
+profiles.clj
 .lein-deps-sum
 .lein-failures
 .lein-repl-history
@@ -18,3 +19,4 @@ node_modules/
 resources/public/cljs-out/
 resources/public/css
 .clj-kondo/.cache
+.clj-kondo/hiccup
