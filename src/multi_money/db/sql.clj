@@ -42,10 +42,10 @@
     (get-in result [(keyword (name table) "id")])))
 
 (defmethod update :default
-  [db {:keys [id] :as model}]
+  [db {:user/keys [id] :as model}] ; TODO: Get the right id
   (let [table (infer-table-name model)
         s (for-update table
-                      (dissoc model :id)
+                      (dissoc model :user/id) ; TODO: get the right id key
                       {:id id}
                       jdbc/snake-kebab-opts)
         result (jdbc/execute-one! db s {:return-keys [:id]})]
@@ -94,7 +94,7 @@
 (defn delete-one
   [db m]
   (let [s (for-delete (infer-table-name m)
-                      (select-keys m [:id]) ; TODO: find the id attribute
+                      {:id (:user/id m)} ; TODO: find the id attribute
                       {})]
 
     ; TODO: scrub sensitive data

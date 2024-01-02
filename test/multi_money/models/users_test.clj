@@ -68,10 +68,10 @@
     (let [user (find-user "john@doe.com")
           _ (assert user)
           updated (usrs/put (assoc user :user/given-name "Johnnyboy"))]
-      (is (comparable? {:given-name "Johnnyboy"}
+      (is (comparable? {:user/given-name "Johnnyboy"}
                        updated)
           "The result contains the updated attributes")
-      (is (comparable? {:given-name "Johnnyboy"}
+      (is (comparable? {:user/given-name "Johnnyboy"}
                        (usrs/find updated))
           "A retrieved model has the updated attributes"))))
 
