@@ -1,0 +1,15 @@
+{:development? true
+ :db {:active :sql
+      :strategies {#_"datomic"
+                   #_{:system "money-test"}
+
+                   #_"xtdb"
+                   ;^:replace {:multi-money.db/provider :xtdb}
+
+                   :sql
+                   {:dbname "multi_money_test"}
+
+                   #_"mongodb"
+                   #_{:database "money_test"}}}
+ :google-oauth-client-id "google-client-id"
+ :google-oauth-client-secret "google-client-secret"}
