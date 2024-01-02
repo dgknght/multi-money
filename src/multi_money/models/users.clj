@@ -8,7 +8,7 @@
             [clj-time.coerce :refer [to-long
                                      from-long]]
             [dgknght.app-lib.validation :as v]
-            [multi-money.util :refer [->id valid-id?]]
+            [multi-money.util :as utl :refer [->id valid-id?]]
             [multi-money.db :as db]))
 
 (s/def :user/id valid-id?)
@@ -38,11 +38,13 @@
   [user]
   ; Some of the data storage strategies embed the identities
   ; in the user record
-  (if (:identities user)
+  (if (:user/identities user)
     user
-    (assoc user :identities (->> (select-identities user)
-                                 (map (juxt :provider :provider-id))
-                                 (into {})))))
+    (assoc user
+           :user/identities
+           (->> (select-identities user)
+                (map (juxt :provider :provider-id))
+                (into {})))))
 (defn- after-read
   [user]
   (-> user
@@ -54,7 +56,8 @@
   ([criteria options]
    {:pre [(s/valid? ::criteria criteria)
           (s/valid? ::db/options options)]}
-   (map after-read
+   (map (comp after-read
+              #(utl/qualify-keys % :user))
         (db/select (db/storage)
                     (db/model-type criteria :user)
                     options))))

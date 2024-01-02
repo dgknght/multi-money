@@ -25,8 +25,8 @@
     (is (comparable? attr
                      result)
         "The result contains the correct attributes")
-    (is (:id result)
-        "The result contains an :id value")))
+    (is (:user/id result)
+        "The result contains an id value")))
 
 #_(dbtest username-is-required)
 #_(dbtest username-is-unique)
