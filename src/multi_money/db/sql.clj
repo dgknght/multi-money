@@ -8,6 +8,7 @@
             [next.jdbc.sql.builder :refer [for-insert
                                            for-update
                                            for-delete]]
+            [multi-money.util :as utl]
             [multi-money.db.sql.queries :refer [criteria->query
                                                 infer-table-name]]
             [multi-money.db.sql.types :refer [coerce-id
@@ -39,7 +40,6 @@
 
     ; TODO: scrub for sensitive data
     (log/debugf "database insert %s -> %s" model s)
-
     (get-in result [(keyword (name table) "id")])))
 
 (defmethod update :default
@@ -85,7 +85,7 @@
     (log/debugf "database select %s with options %s -> %s" criteria options query)
 
     (map (comp after-read
-               (db/+model-type criteria))
+               #(utl/qualify-keys % (utl/qualifier criteria)))
          (select! db
                   (attributes (db/model-type criteria))
                   query

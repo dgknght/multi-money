@@ -54,8 +54,10 @@
   "Creates fully-qualified entity attributes by applying
   the :model-type from the meta data to the keys of the map."
   [m ns-key]
-  {:pre [(map? m) (keyword? ns-key)]}
-  (prewalk #(qualify-key % (name ns-key))
+  {:pre [(map? m)]}
+  (prewalk #(qualify-key % (if (keyword? ns-key)
+                             (name ns-key)
+                             ns-key))
            m))
 
 (defn unqualify-keys
@@ -66,6 +68,16 @@
                (update-in x [0] (comp keyword name))
                x))
            m))
+
+(defn qualifier
+  "Give a map, returns the namespace from the keys"
+  [m]
+  {:pre [(map? m)]}
+  (let [n (->> (keys m)
+               (map namespace)
+               (into #{}))]
+    (assert (= 1 (count n)))
+    (first n)))
 
 (defmulti prepend
   (fn [coll _]

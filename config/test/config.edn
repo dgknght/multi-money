@@ -1,4 +1,4 @@
-{:development? true
+{:test? true
  :db {:active :sql
       :strategies {#_"datomic"
                    #_{:system "money-test"}
@@ -7,9 +7,16 @@
                    ;^:replace {:multi-money.db/provider :xtdb}
 
                    :sql
-                   {:dbname "multi_money_test"}
+                   {:multi-money.db/provider :sql
+                    :dbtype "postgresql"
+                    :dbname "multi_money_test"
+                    :host "localhost"
+                    :port 5432
+                    :user "app_user"
+                    :password "please01"}
 
                    #_"mongodb"
                    #_{:database "money_test"}}}
+ :app-secreate "test secret"
  :google-oauth-client-id "google-client-id"
  :google-oauth-client-secret "google-client-secret"}

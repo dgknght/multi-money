@@ -8,19 +8,24 @@
             [clj-time.coerce :refer [to-long
                                      from-long]]
             [dgknght.app-lib.validation :as v]
-            [multi-money.models :as mdls]
-            [multi-money.util :refer [->id]]
+            [multi-money.util :refer [->id valid-id?]]
             [multi-money.db :as db]))
 
-(s/def ::email v/email?)
-(s/def ::given-name string?)
-(s/def ::surname string?)
-(s/def ::identities (s/map-of keyword? string?))
-(s/def ::user (s/keys :req-un [::email ::given-name ::surname]
-                      :opt-un [::identities]))
+(s/def :user/id valid-id?)
+(s/def :user/username string?)
+(s/def :user/email v/email?)
+(s/def :user/given-name string?)
+(s/def :user/surname string?)
+(s/def :user/identities (s/map-of keyword? string?))
+(s/def ::user (s/keys :req [:user/username
+                            :user/email
+                            :user/given-name
+                            :user/surname]
+                      :opt [:user/identities]))
 
-(s/def ::criteria (s/keys :opt-un [::email
-                                   ::mdls/id]))
+(s/def ::criteria (s/keys :opt-un [:user/email
+                                   :user/username
+                                   :user/id]))
 
 (defn- select-identities
   [user]

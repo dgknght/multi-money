@@ -28,6 +28,10 @@
   (is (= {:name "Personal"}
          (utl/unqualify-keys {:entity/name "Personal"}))))
 
+(deftest extract-a-qualifier
+  (is (= "user" (utl/qualifier {:user/name "John"}))
+      "A single qualifier is taken directly"))
+
 (deftest prepend-a-value
   (is (= [:new :a :b]
          (utl/prepend [:a :b] :new))

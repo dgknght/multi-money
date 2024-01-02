@@ -15,26 +15,28 @@
 (use-fixtures :each reset-db)
 
 (def attr
-  #:user{:email "john@doe.com"
+  #:user{:username "jdoe"
+         :email "john@doe.com"
          :given-name "John"
          :surname "Doe"})
 
 (dbtest create-a-user
   (let [result (usrs/put attr)]
-
-    (pprint {::result result})
-
     (is (comparable? attr
                      result)
         "The result contains the correct attributes")
     (is (:id result)
         "The result contains an :id value")))
 
+#_(dbtest username-is-required)
+#_(dbtest username-is-unique)
+
 #_(dbtest email-is-required
   (let [result (usrs/put (dissoc attr :email))]
     (is (invalid? result [:email] "Email is required"))
     (is (not (:id result))
         "The result does not contain an :id value")))
+#_(dbtest email-is-unique)
 
 #_(dbtest given-name-is-required
   (let [result (usrs/put (dissoc attr :given-name))]
@@ -49,9 +51,10 @@
         "The result does not contain an :id value")))
 
 (def ^:private update-context
-  {:users [{:email "john@doe.com"
-            :given-name "John"
-            :surname "Doe"}]})
+  {:users [#:user{:username "jdoe"
+                  :email "john@doe.com"
+                  :given-name "John"
+                  :surname "Doe"}]})
 
 #_(dbtest email-is-unique
   (with-context update-context
@@ -63,7 +66,7 @@
 (dbtest update-a-user
   (with-context update-context
     (let [user (find-user "john@doe.com")
-          updated (usrs/put (assoc user :given-name "Johnnyboy"))]
+          updated (usrs/put (assoc user :user/given-name "Johnnyboy"))]
       (is (comparable? {:given-name "Johnnyboy"}
                        updated)
           "The result contains the updated attributes")

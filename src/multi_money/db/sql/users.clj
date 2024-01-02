@@ -4,7 +4,7 @@
   (:import java.util.UUID))
 
 (defmethod sql/attributes :user [_]
-  [:id :email :given-name :surname])
+  [:id :username :email :given-name :surname])
 
 (defn- inflate-identity
   [user-id [p id]]

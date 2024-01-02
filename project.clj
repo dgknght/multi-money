@@ -23,6 +23,7 @@
                   [clj-commons/secretary "1.2.4"]
                   [com.github.seancorfield/next.jdbc "1.3.909" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
                   [org.postgresql/postgresql "42.6.0"]
+                  [dev.weavejester/ragtime "0.9.3" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha org.clojure/tools.logging]]
                   [com.github.dgknght/app-lib "0.3.6"
                    :exclusions [ring/ring-core
                                 org.clojure/clojure
@@ -41,6 +42,9 @@
              "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
              "fig:prod"  ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
              "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
+             "migrate"   ["run" "-m" "multi-money.db.sql.migrations/migrate"]
+             "rollback"  ["run" "-m" "multi-money.db.sql.migrations/rollback"]
+             "remigrate" ["run" "-m" "multi-money.db.sql.migrations/remigrate"]
              "routes"    ["run" "-m" "multi-money.handler/print-routes"]}
 
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
@@ -54,7 +58,7 @@
                             :clean-targets ^{:protect false} ["target"]}
               :test [:project/test :profiles/test]
               :project/test {:source-paths ^:replace ["env/dev" "src"]
-                             :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/dev" "config/test"]
+                             :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]
                              :cloverage {:fail-threshold 90
                                          :low-watermark 90
                                          :high-watermark 95
