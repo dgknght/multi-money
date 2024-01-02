@@ -31,7 +31,6 @@
 
 (defmethod insert :default
   [db model]
-  {:pre [(db/model-type model)]}
   (let [table (infer-table-name model)
         s (for-insert table
                       model
@@ -84,17 +83,18 @@
     ; TODO: scrub sensitive data
     (log/debugf "database select %s with options %s -> %s" criteria options query)
 
-    (map (comp after-read
-               #(utl/qualify-keys % (utl/qualifier criteria)))
-         (select! db
-                  (attributes (db/model-type criteria))
-                  query
-                  jdbc/snake-kebab-opts))))
+    (let [q (keyword (utl/qualifier criteria))]
+      (map (comp after-read
+                 #(utl/qualify-keys % q))
+           (select! db
+                    (attributes q)
+                    query
+                    jdbc/snake-kebab-opts)))))
 
 (defn delete-one
   [db m]
   (let [s (for-delete (infer-table-name m)
-                      (select-keys m [:id])
+                      (select-keys m [:id]) ; TODO: find the id attribute
                       {})]
 
     ; TODO: scrub sensitive data
@@ -107,8 +107,8 @@
   [m]
   (if (vector? m)
     m
-    [(if (and (:id m)
-              (not (uuid? (:id m))))
+    [(if (and (:user/id m) ; TODO: Change this to find the id attribute
+              (not (uuid? (:user/id m))))
        ::db/update
        ::db/insert)
      m]))

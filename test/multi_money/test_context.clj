@@ -16,9 +16,10 @@
        first))
 
 (defn find-user
-  ([email] (find-user email *context*))
-  ([email {:keys [users]}]
-   (find-model users :email email)))
+  ([identifier] (find-user identifier *context*))
+  ([identifier {:keys [users]}]
+   (or (find-model users :user/username identifier)
+       (find-model users :user/email identifier))))
 
 (defn- put-with
   [m f]

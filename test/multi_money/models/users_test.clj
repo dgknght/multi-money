@@ -66,6 +66,7 @@
 (dbtest update-a-user
   (with-context update-context
     (let [user (find-user "john@doe.com")
+          _ (assert user)
           updated (usrs/put (assoc user :user/given-name "Johnnyboy"))]
       (is (comparable? {:given-name "Johnnyboy"}
                        updated)

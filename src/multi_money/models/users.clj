@@ -23,15 +23,14 @@
                             :user/surname]
                       :opt [:user/identities]))
 
-(s/def ::criteria (s/keys :opt-un [:user/email
-                                   :user/username
-                                   :user/id]))
+(s/def ::criteria (s/keys :opt [:user/email
+                                :user/username
+                                :user/id]))
 
 (defn- select-identities
   [user]
   (db/select (db/storage)
-              (-> {:user-id (:id user)}
-                  (db/model-type :identity))
+              {:identity/user-id (:user/id user)}
               {}))
 
 (defn- assoc-identities
@@ -69,7 +68,7 @@
 
 (defn find
   [id]
-  (find-by {:id (->id id)}))
+  (find-by {:user/id (->id id)}))
 
 (defn- resolve-put-result
   [records]
@@ -79,7 +78,7 @@
   [user]
   {:pre [user (s/valid? ::user user)]}
   (let [records-or-ids (db/put (db/storage)
-                                [(db/model-type user :user)])]
+                               [(dissoc user :user/identities)])]
     (resolve-put-result records-or-ids))) ; TODO: return all of the saved models instead of the first?
 
 (defn delete
@@ -119,8 +118,8 @@
 
 (defn find-by-oauth
   [[provider id-or-profile]]
-  (find-by {:identities [:= [provider (or (:id id-or-profile)
-                                          id-or-profile)]]}))
+  (find-by {:user/identities [:= [provider (or (:id id-or-profile)
+                                               id-or-profile)]]}))
 
 (defmethod create-from-oauth :google
   [[provider profile]]
@@ -128,5 +127,5 @@
       (rename-keys {:given_name :given-name
                     :family_name :surname})
       (select-keys [:email :given-name :surname])
-      (assoc :identities {provider (:id profile)})
+      (assoc :user/identities {provider (:id profile)})
       put))

@@ -6,16 +6,17 @@
                                        from]]
             [stowaway.sql :refer [apply-criteria]]
             [dgknght.app-lib.inflection :refer [plural]]
-            [multi-money.db :as db]
-            [multi-money.util :refer [update-in-criteria]]
+            [multi-money.util :refer [update-in-criteria
+                                      qualifier]]
             [multi-money.db.sql.types :refer [coerce-id]]))
 
 (derive clojure.lang.PersistentArrayMap ::map)
 (derive clojure.lang.PersistentVector ::vector)
 
 (def infer-table-name
-  (comp plural
-        db/model-type))
+  (comp keyword
+        plural
+        qualifier))
 
 (defn- apply-options
   [s {:keys [limit order-by]}]
@@ -30,12 +31,11 @@
 
 (defn criteria->query
   [criteria & [options]]
-  {:pre [(db/model-type criteria)]}
-
-  (-> (select :*)
-      (from (infer-table-name criteria))
-      (apply-criteria (update-in-criteria criteria [:id] coerce-id)
-                      (merge query-options
-                             {:target (db/model-type criteria)}))
-      (apply-options options)
-      format))
+  (let [model-type (qualifier criteria)]
+    (-> (select :*)
+        (from (keyword (plural model-type)))
+        (apply-criteria (update-in-criteria criteria [:id] coerce-id)
+                        (merge query-options
+                               {:target (keyword model-type)}))
+        (apply-options options)
+        format)))
