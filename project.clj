@@ -48,53 +48,12 @@
              :project/dev {:dependencies [[com.bhauman/figwheel-main "0.2.17" :exclusions [org.slf4j/slf4j-api]]
                                           [com.bhauman/rebel-readline-cljs "0.1.4"]]
                            :source-paths ["env/dev"]
-                           :resource-paths ["target" "env/dev/resources"]
+                           :resource-paths ["target" "env/dev/resources" "config/dev"]
                            ;; need to add the compiled assets to the :clean-targets
-                           :clean-targets ^{:protect false} ["target"]
-                           :env {:db {:active :sql
-                                      :strategies {#_"datomic"
-                                                   #_{:multi-money.core/provider :datomic
-                                                      :server-type :dev-local
-                                                      :system "money-dev"
-                                                      :storage-dir "/home/doug/.datomic-storage"}
-
-                                                   #_"xtdb"
-                                                   #_{:multi-money.core/provider :xtdb
-                                                      :xtdb/tx-log         [:kv-store "/tmp/xtdb-storage/multi-money-dev/tx-log"]
-                                                      :xtdb/document-store [:kv-store "/tmp/xtdb-storage/multi-money-dev/doc-store"]
-                                                      :xtdb/index-store    [:kv-store "/tmp/xtdb-storage/multi-money-dev/index-store"]}
-
-                                                   :sql
-                                                   {:multi-money.core/provider :sql
-                                                    :dbtype "postgresql"
-                                                    :dbname "xtdb_money_development"
-                                                    :host "localhost"
-                                                    :port 5432
-                                                    :user "app_user"
-                                                    :password "please01"}
-
-                                                   #_"mongodb"
-                                                   #_{:multi-money.core/provider :mongodb
-                                                      :database "money_development"}}}
-                                 :app-secret "this is a weak secret for testing only"}}
+                           :clean-targets ^{:protect false} ["target"]}
              :test [:project/test :profiles/test]
              :project/test {:source-paths ^:replace ["env/dev" "src"]
-                            :resource-paths ^:replace ["target" "env/test/resources" "resources"]
-                            :env {:development? true
-                                  :db {:active :sql
-                                       :strategies {#_"datomic"
-                                                    #_{:system "money-test"}
-
-                                                    #_"xtdb"
-                                                    ;^:replace {:multi-money.core/provider :xtdb}
-
-                                                    :sql
-                                                    {:dbname "multi_money_test"}
-
-                                                    #_"mongodb"
-                                                    #_{:database "money_test"}}}
-                                  :google-oauth-client-id "google-client-id"
-                                  :google-oauth-client-secret "google-client-secret"}
+                            :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/dev" "config/test"]
                             :cloverage {:fail-threshold 90
                                         :low-watermark 90
                                         :high-watermark 95
@@ -102,7 +61,7 @@
                                                            #"multi-money.server"
                                                            #"multi-money.handler"]}} ; I'd really like to cover everything except print-routes, but I can't get that working
              :uberjar {:source-paths ["env/prod"]
-                       :resource-paths ["env/prod/resources"]
+                       :resource-paths ["env/prod/resources" "config/prod"]
                        :dependencies [[com.bhauman/figwheel-main "0.2.17"]]
                        :prep-tasks ["compile"
                                     "fig:prod"]
