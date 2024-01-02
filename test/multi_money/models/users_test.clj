@@ -66,7 +66,6 @@
 (dbtest update-a-user
   (with-context update-context
     (let [user (find-user "john@doe.com")
-          _ (assert user)
           updated (usrs/put (assoc user :user/given-name "Johnnyboy"))]
       (is (comparable? {:user/given-name "Johnnyboy"}
                        updated)
@@ -79,7 +78,7 @@
   (with-context update-context
     (let [user (find-user "john@doe.com")]
       (usrs/delete user)
-      (is (nil? (usrs/find (:id user)))
+      (is (nil? (usrs/find (:user/id user)))
           "The user cannot be retrieved after delete"))))
 
 #_(def ^:private oauth-context
