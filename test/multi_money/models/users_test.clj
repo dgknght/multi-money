@@ -81,31 +81,35 @@
       (is (nil? (usrs/find (:id user)))
           "The user cannot be retrieved after delete"))))
 
-#_(def ^:private oauth-context
+(def ^:private oauth-context
   (-> update-context
-      (assoc-in [:users 0 :identities] {:google "abc123"
-                                        :github "def456"})
-      (update-in [:users] conj {:email "jane@doe.com"
-                                :given-name "Jane"
-                                :surname "Doe"
-                                :identities {:google "def456"
-                                             :github "abc123"}})))
+      (assoc-in [:users 0 :user/identities]
+                {:google "abc123"
+                 :github "def456"})
+      (update-in [:users]
+                 conj
+                 #:user{:email "jane@doe.com"
+                        :username "janedoe"
+                        :given-name "Jane"
+                        :surname "Doe"
+                        :identities {:google "def456"
+                                     :github "abc123"}})))
 ; NB The above provider/id pairs contain the same provider and id values
 ; but grouped differently
 
-#_(dbtest find-a-user-by-oauth-id
-  (let [expected {:email "john@doe.com"
-                  :given-name "John"
-                  :surname "Doe"
-                  :identities {:google "abc123"
-                               :github "def456"}}]
-    (with-context oauth-context
-      (is (comparable? expected
-                       (usrs/find-by-oauth [:google "abc123"]))
-          "A given ID is used as-is")
-      (is (comparable? expected
-                       (usrs/find-by-oauth [:google {:id "abc123"}]))
-          "An ID is extracted from a given map"))))
+(dbtest find-a-user-by-oauth-id
+        (let [expected #:user{:email "john@doe.com"
+                              :given-name "John"
+                              :surname "Doe"
+                              :identities #:identity{:google "abc123"
+                                                     :github "def456"}}]
+          (with-context oauth-context
+            (is (comparable? expected
+                             (usrs/find-by-oauth [:google "abc123"]))
+                "A given ID is used as-is")
+            (is (comparable? expected
+                             (usrs/find-by-oauth [:google {:id "abc123"}]))
+                "An ID is extracted from a given map"))))
 
 #_(dbtest create-a-user-from-an-oauth-profile
   (let [user (usrs/create-from-oauth [:google

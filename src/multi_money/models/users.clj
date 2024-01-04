@@ -23,10 +23,6 @@
                       :opt-un [::db/id]
                       :opt [:user/identities]))
 
-(s/def ::criteria (s/keys :opt [:user/email
-                                :user/username
-                                :user/id]))
-
 (defn- select-identities
   [user]
   (db/select (db/storage)
@@ -53,8 +49,7 @@
 (defn select
   ([criteria] (select criteria {}))
   ([criteria options]
-   {:pre [(s/valid? ::criteria criteria)
-          (s/valid? ::db/options options)]}
+   {:pre [(s/valid? ::db/options options)]}
    (map after-read
         (db/select (db/storage)
                     (db/model-type criteria :user)

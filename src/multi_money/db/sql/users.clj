@@ -1,5 +1,5 @@
 (ns multi-money.db.sql.users
-  (:require [multi-money.db :as db]
+  (:require [clojure.pprint :refer [pprint]]
             [multi-money.db.sql :as sql])
   (:import java.util.UUID))
 
@@ -8,17 +8,16 @@
 
 (defn- inflate-identity
   [user-id [p id]]
-  (db/model-type {:user-id user-id
-                  :provider p
-                  :provider-id id}
-                 :identity))
+  #:identity{:user-id user-id
+             :provider p
+             :provider-id id})
 
 (defmethod sql/deconstruct :user
-  [{:as user :keys [identities]}]
+  [{:as user :user/keys [identities]}]
   (let [id (or (:id user) (UUID/randomUUID))]
     (-> user
         (assoc :id id)
-        (dissoc :identities)
+        (dissoc :user/identities)
         (cons (map (partial inflate-identity id)
                    identities)))))
 
@@ -29,11 +28,11 @@
   (if (seq identities)
     (let [[_ [oauth-provider oauth-id]] identities]
       (-> criteria
-          (dissoc :identities)
-          (assoc [:identity :provider] oauth-provider
-                 [:identity :provider-id] oauth-id)))
+          (dissoc :user/identities)
+          (assoc [:user/identity :identity/provider] oauth-provider
+                 [:user/identity :identity/provider-id] oauth-id)))
     criteria))
 
 (defmethod sql/resolve-temp-ids :identity
   [ident id-map]
-  (update-in ident [:user-id] id-map))
+  (update-in ident [:identity/user-id] id-map))
