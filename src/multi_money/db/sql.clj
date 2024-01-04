@@ -168,7 +168,7 @@
     (->> models
          (map (comp #(put-one tx %)
                     #(vector ::db/delete %)
-                    #(update-in % [:id] coerce-id)))
+                    #(update-in % [:user/id] coerce-id)))
          (reduce +))))
 
 (defn- reset*
