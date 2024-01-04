@@ -42,10 +42,11 @@
     (get-in result [(keyword (name table) "id")])))
 
 (defmethod update :default
-  [db {:user/keys [id] :as model}] ; TODO: Get the right id
+  [db {:keys [id] :as model}]
+  {:pre [(:id model)]}
   (let [table (infer-table-name model)
         s (for-update table
-                      (dissoc model :user/id) ; TODO: get the right id key
+                      (dissoc model :id)
                       {:id id}
                       jdbc/snake-kebab-opts)
         result (jdbc/execute-one! db s {:return-keys [:id]})]
@@ -83,9 +84,9 @@
     ; TODO: scrub sensitive data
     (log/debugf "database select %s with options %s -> %s" criteria options query)
 
-    (let [q (keyword (utl/qualifier criteria))]
+    (let [q (db/model-type criteria)]
       (map (comp after-read
-                 #(utl/qualify-keys % q))
+                 #(utl/qualify-keys % q :ignore #{:id}))
            (select! db
                     (attributes q)
                     query
@@ -94,7 +95,7 @@
 (defn delete-one
   [db m]
   (let [s (for-delete (infer-table-name m)
-                      {:id (:user/id m)} ; TODO: find the id attribute
+                      {:id (:id m)} ; TODO: find the id attribute
                       {})]
 
     ; TODO: scrub sensitive data
@@ -107,8 +108,8 @@
   [m]
   (if (vector? m)
     m
-    [(if (and (:user/id m) ; TODO: Change this to find the id attribute
-              (not (uuid? (:user/id m))))
+    [(if (and (:id m) ; TODO: Change this to find the id attribute
+              (not (uuid? (:id m))))
        ::db/update
        ::db/insert)
      m]))
@@ -168,7 +169,7 @@
     (->> models
          (map (comp #(put-one tx %)
                     #(vector ::db/delete %)
-                    #(update-in % [:user/id] coerce-id)))
+                    #(update-in % [:id] coerce-id)))
          (reduce +))))
 
 (defn- reset*

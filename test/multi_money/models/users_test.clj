@@ -25,7 +25,7 @@
     (is (comparable? attr
                      result)
         "The result contains the correct attributes")
-    (is (:user/id result)
+    (is (:id result)
         "The result contains an id value")))
 
 #_(dbtest username-is-required)
@@ -78,7 +78,7 @@
   (with-context update-context
     (let [user (find-user "john@doe.com")]
       (usrs/delete user)
-      (is (nil? (usrs/find (:user/id user)))
+      (is (nil? (usrs/find (:id user)))
           "The user cannot be retrieved after delete"))))
 
 #_(def ^:private oauth-context

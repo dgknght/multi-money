@@ -23,7 +23,13 @@
       "Unqualified keys are qualified with the model type")
   (is (= {:db/id "x"}
          (utl/qualify-keys {:db/id "x"} :entity))
-      "Qualified keys are left as-is"))
+      "Qualified keys are left as-is")
+  (is (= {:id 101
+          :user/name "John"}
+         (utl/qualify-keys {:id 101 :name "John"}
+                           :user
+                           :ignore #{:id}))
+      "Keys can be explicitly ignored"))
 
 (deftest unqaulify-map-keys
   (is (= {:name "Personal"}

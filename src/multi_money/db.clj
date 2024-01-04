@@ -1,12 +1,15 @@
 (ns multi-money.db
   (:require [clojure.spec.alpha :as s]
             [clojure.set :refer [union]]
-            [config.core :refer [env]]))
+            [config.core :refer [env]]
+            [multi-money.util :refer [valid-id?]]))
 
 (def comparison-opers #{:< :<= :> :>=})
 (def set-opers #{:and :or})
 (def opers (union comparison-opers set-opers))
 (def oper? (partial contains? opers))
+
+(s/def ::id valid-id?)
 
 (s/def ::offset integer?)
 (s/def ::limit integer?)
@@ -54,7 +57,13 @@
   the type for the given model. The 2nd argument is either a key identyfying
   the model type, or another model from which the type is to be extracted"
   ([m]
-   (-> m meta :model-type))
+   (let [namespaces (->> (keys m)
+                         (map (comp keyword namespace))
+                         (filter identity)
+                         (into #{}))]
+     (if (= 1 (count namespaces))
+       (first namespaces)
+       (-> m meta :model-type))))
   ([m model-or-type]
    (vary-meta m assoc :model-type (extract-model-type model-or-type))))
 

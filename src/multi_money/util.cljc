@@ -36,29 +36,34 @@
        (keyword? (first x))))
 
 (defmulti qualify-key
-  (fn [x _]
+  (fn [x & _]
     (when (key-value-tuple? x)
       :tuple)))
 
 (defmethod qualify-key :default
-  [x _]
+  [x & _]
   x)
 
 (defmethod qualify-key :tuple
-  [[k :as x] nspace]
-  (if (namespace k)
+  [[k :as x] nspace {:keys [ignore?]}]
+  (if (ignore? k)
     x
     (update-in x [0] #(keyword nspace (name %)))))
 
 (defn qualify-keys
   "Creates fully-qualified entity attributes by applying
   the :model-type from the meta data to the keys of the map."
-  [m ns-key]
+  [m ns-key & {:keys [ignore]}]
   {:pre [(map? m)]}
-  (prewalk #(qualify-key % (if (keyword? ns-key)
-                             (name ns-key)
-                             ns-key))
-           m))
+  (let [k (if (keyword? ns-key)
+            (name ns-key)
+            ns-key)
+        ignore? (if ignore
+                  (some-fn ignore namespace)
+                  namespace)]
+    (prewalk (fn [x]
+               (qualify-key x k {:ignore? ignore?}))
+             m)))
 
 (defn unqualify-keys
   "Replaces qualified keys with the simple values"

@@ -8,6 +8,7 @@
             [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :refer [update-in-criteria
                                       qualifier]]
+            [multi-money.db :as db]
             [multi-money.db.sql.types :refer [coerce-id]]))
 
 (derive clojure.lang.PersistentArrayMap ::map)
@@ -31,7 +32,7 @@
 
 (defn criteria->query
   [criteria & [options]]
-  (let [model-type (qualifier criteria)]
+  (let [model-type (db/model-type criteria)]
     (-> (select :*)
         (from (keyword (plural model-type)))
         (apply-criteria (update-in-criteria criteria [:id] coerce-id)

@@ -8,10 +8,9 @@
             [clj-time.coerce :refer [to-long
                                      from-long]]
             [dgknght.app-lib.validation :as v]
-            [multi-money.util :as utl :refer [->id valid-id?]]
+            [multi-money.util :as utl :refer [->id]]
             [multi-money.db :as db]))
 
-(s/def :user/id valid-id?)
 (s/def :user/username string?)
 (s/def :user/email v/email?)
 (s/def :user/given-name string?)
@@ -21,6 +20,7 @@
                             :user/email
                             :user/given-name
                             :user/surname]
+                      :opt-un [::db/id]
                       :opt [:user/identities]))
 
 (s/def ::criteria (s/keys :opt [:user/email
@@ -55,8 +55,7 @@
   ([criteria options]
    {:pre [(s/valid? ::criteria criteria)
           (s/valid? ::db/options options)]}
-   (map (comp after-read
-              #(utl/qualify-keys % :user))
+   (map after-read
         (db/select (db/storage)
                     (db/model-type criteria :user)
                     options))))
@@ -68,7 +67,7 @@
 
 (defn find
   [id]
-  (find-by {:user/id (->id id)}))
+  (find-by {:id (->id id)}))
 
 (defn- resolve-put-result
   [records]
