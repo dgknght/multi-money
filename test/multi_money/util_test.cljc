@@ -3,7 +3,8 @@
             #?(:clj [java-time.api :as t]
                :cljs [cljs-time.core :as t])
             [dgknght.app-lib.test-assertions]
-            [multi-money.util :as utl]))
+            [multi-money.util :as utl])
+  (:import java.lang.AssertionError))
 
 (def stored-date
   #?(:clj 18262
@@ -30,7 +31,15 @@
 
 (deftest extract-a-qualifier
   (is (= "user" (utl/qualifier {:user/name "John"}))
-      "A single qualifier is taken directly"))
+      "A single qualifier is taken directly")
+  (is (= "user" (utl/qualifier {:id 101
+                                :user/name "John"}))
+      "Nil namespaces are ignored")
+  (is (thrown-with-msg?
+        AssertionError
+        #"more than one keyword namespace"
+        (utl/qualifier {:user/name "John"
+                        :address/line-1 "1234 Main St"}))))
 
 (deftest prepend-a-value
   (is (= [:new :a :b]

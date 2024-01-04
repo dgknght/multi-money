@@ -75,8 +75,10 @@
   {:pre [(map? m)]}
   (let [n (->> (keys m)
                (map namespace)
+               (filter identity)
                (into #{}))]
-    (assert (= 1 (count n)))
+    (assert (= 1 (count n))
+            "The map contains more than one keyword namespace, so the qualifier cannot be inferred.")
     (first n)))
 
 (defmulti prepend
