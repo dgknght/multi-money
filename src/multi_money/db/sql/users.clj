@@ -1,5 +1,6 @@
 (ns multi-money.db.sql.users
   (:require [clojure.pprint :refer [pprint]]
+            [multi-money.db :as db]
             [multi-money.db.sql :as sql])
   (:import java.util.UUID))
 
@@ -30,7 +31,8 @@
       (-> criteria
           (dissoc :user/identities)
           (assoc [:identity :identity/provider] oauth-provider
-                 [:identity :identity/provider-id] oauth-id)))
+                 [:identity :identity/provider-id] oauth-id)
+          (db/model-type :user)))
     criteria))
 
 (defmethod sql/resolve-temp-ids :identity
