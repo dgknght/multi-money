@@ -101,8 +101,8 @@
         (let [expected #:user{:email "john@doe.com"
                               :given-name "John"
                               :surname "Doe"
-                              :identities #:identity{:google "abc123"
-                                                     :github "def456"}}]
+                              :identities {:google "abc123"
+                                           :github "def456"}}]
           (with-context oauth-context
             (is (comparable? expected
                              (usrs/find-by-oauth [:google "abc123"]))

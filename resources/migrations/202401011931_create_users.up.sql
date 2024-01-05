@@ -21,3 +21,4 @@ create table identities (
     primary key (id)
 );
 create unique index uk_identities_provider_id on identities(provider_id, provider);
+create index ix_identities_user_id on identities(user_id);

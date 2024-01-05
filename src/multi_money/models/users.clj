@@ -24,10 +24,11 @@
                       :opt [:user/identities]))
 
 (defn- select-identities
-  [user]
+  [{:keys [id] :as user}]
+  {:pre [(:id user)]}
   (db/select (db/storage)
-              {:identity/user-id (:user/id user)}
-              {}))
+             {:identity/user-id id}
+             {}))
 
 (defn- assoc-identities
   [user]
@@ -38,8 +39,9 @@
     (assoc user
            :user/identities
            (->> (select-identities user)
-                (map (juxt :provider :provider-id))
+                (map (juxt :identity/provider :identity/provider-id))
                 (into {})))))
+
 (defn- after-read
   [user]
   (-> user
@@ -72,7 +74,7 @@
   [user]
   {:pre [user (s/valid? ::user user)]}
   (let [records-or-ids (db/put (db/storage)
-                               [(dissoc user :user/identities)])]
+                               [user])]
     (resolve-put-result records-or-ids))) ; TODO: return all of the saved models instead of the first?
 
 (defn delete
