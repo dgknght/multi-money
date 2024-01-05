@@ -4,7 +4,7 @@
                :cljs [cljs-time.core :as t])
             [dgknght.app-lib.test-assertions]
             [multi-money.util :as utl])
-  (:import java.lang.AssertionError))
+  #?(:clj (:import java.lang.AssertionError)))
 
 (def stored-date
   #?(:clj 18262
@@ -42,7 +42,8 @@
                                 :user/name "John"}))
       "Nil namespaces are ignored")
   (is (thrown-with-msg?
-        AssertionError
+        #?(:clj AssertionError
+           :cljs js/Error)
         #"more than one keyword namespace"
         (utl/qualifier {:user/name "John"
                         :address/line-1 "1234 Main St"}))))
