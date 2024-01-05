@@ -22,15 +22,15 @@
                    identities)))))
 
 (defmethod sql/prepare-criteria :user
-  [{:as criteria :keys [identities]}]
+  [{:as criteria :user/keys [identities]}]
   ; Identities should look like this:
   ; [:= [:google "abc123"]]
   (if (seq identities)
     (let [[_ [oauth-provider oauth-id]] identities]
       (-> criteria
           (dissoc :user/identities)
-          (assoc [:user/identity :identity/provider] oauth-provider
-                 [:user/identity :identity/provider-id] oauth-id)))
+          (assoc [:identity :identity/provider] oauth-provider
+                 [:identity :identity/provider-id] oauth-id)))
     criteria))
 
 (defmethod sql/resolve-temp-ids :identity
