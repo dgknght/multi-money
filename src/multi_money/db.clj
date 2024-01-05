@@ -58,8 +58,10 @@
   the model type, or another model from which the type is to be extracted"
   ([m]
    (let [namespaces (->> (keys m)
-                         (map (comp keyword namespace))
+                         (remove vector?)
+                         (map namespace)
                          (filter identity)
+                         (map keyword)
                          (into #{}))]
      (if (= 1 (count namespaces))
        (first namespaces)
