@@ -11,6 +11,21 @@ This project is a combination of my desire to have a cloud-based,
 easy-to-use accounting tool, and a vehicle with which I test programming
 tools and strategies.
 
+### Models
+```mermaid
+erDiagram
+  user ||--|{ identity : "is identified by"
+  user {
+    string username
+    string given-name
+    string surname
+    string email
+  }
+  identity {
+    string oauth-id
+    string oauth-provider
+  }
+```
 ## Development
 
 To get an interactive development environment run:
