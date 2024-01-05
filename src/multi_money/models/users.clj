@@ -52,7 +52,7 @@
    {:pre [(s/valid? ::db/options options)]}
    (map after-read
         (db/select (db/storage)
-                    (db/model-type criteria :user)
+                    criteria
                     options))))
 
 (defn find-by
@@ -62,7 +62,7 @@
 
 (defn find
   [id]
-  (find-by {:id (->id id)}))
+  (find-by ^{:model-type :user} {:id (->id id)}))
 
 (defn- resolve-put-result
   [records]
