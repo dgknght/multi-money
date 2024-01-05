@@ -32,7 +32,10 @@
 
 (defn criteria->query
   [criteria & [options]]
+  {:pre [criteria]}
+
   (let [model-type (db/model-type criteria)]
+    (assert model-type "Must be able to determine the model type")
     (-> (select :*)
         (from (keyword (plural model-type)))
         (apply-criteria (update-in-criteria criteria [:id] coerce-id)
