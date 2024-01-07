@@ -14,6 +14,7 @@
                   [clojure.java-time "1.4.2"]
                   [metosin/reitit-ring "0.7.0-alpha7" :exclusions [ring/ring-core ring/ring-codec commons-fileupload crypto-equality commons-io crypto-random commons-codec]]
                   [hiccup "2.0.0-RC2"]
+                  [ring-oauth2 "0.2.2" :exclusions [ring/ring-core commons-fileupload]]
                   [yogthos/config "1.2.0" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
                   [com.andrewmcveigh/cljs-time "0.5.2"]
                   [ring/ring-core "1.9.6"]
