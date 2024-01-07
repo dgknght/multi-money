@@ -64,6 +64,11 @@
   [id]
   (find-by ^{:model-type :user} {:id (->id id)}))
 
+(defn find-by-oauth
+  [[provider id-or-profile]]
+  (find-by {:user/identities [:= [provider (or (:id id-or-profile)
+                                               id-or-profile)]]}))
+
 (defn- resolve-put-result
   [records]
   (some find records)) ; This is because when adding a user, identities are inserted first, so the primary record isn't the first one returned
@@ -103,23 +108,18 @@
     (when-not (expired? token)
       (find user-id))))
 
-(defmulti create-from-oauth (fn [[provider]] provider))
+(defmulti from-oauth (fn [[provider]] provider))
 
-(defmethod create-from-oauth :default
+(defmethod from-oauth :default
   [[provider]]
   (log/errorf "Unrecognized oauth provider %s" provider)
   nil)
 
-(defn find-by-oauth
-  [[provider id-or-profile]]
-  (find-by {:user/identities [:= [provider (or (:id id-or-profile)
-                                               id-or-profile)]]}))
-
-(defmethod create-from-oauth :google
+(defmethod from-oauth :google
   [[provider profile]]
   (-> profile
-      (rename-keys {:given_name :given-name
-                    :family_name :surname})
-      (select-keys [:email :given-name :surname])
-      (assoc :user/identities {provider (:id profile)})
-      put))
+      (rename-keys {:given_name :user/given-name
+                    :family_name :user/surname
+                    :email :user/email})
+      (select-keys #{:user/email :user/given-name :user/surname})
+      (assoc :user/identities {provider (:id profile)})))
