@@ -35,6 +35,14 @@
                                 ring/ring-jetty-adapter]]
                   [reagent "1.1.1" ]]
    :plugins [[lein-cloverage "1.2.2"]]
+   :cloverage {:fail-threshold 90
+               :low-watermark 90
+               :high-watermark 95
+               :ns-exclude-regex [#"multi-money.db.sql.migrations"
+                                  #"multi-money.repl"
+                                  #"multi-money.server"
+                                  #"multi-money.handler"]} ; I'd really like to cover everything except print-routes, but I can't get that working
+
    :source-paths ["src"]
    :uberjar-name "multi-money.jar"
 
@@ -58,13 +66,7 @@
                             :clean-targets ^{:protect false} ["target"]}
               :test [:project/test :profiles/test]
               :project/test {:source-paths ^:replace ["env/dev" "src"]
-                             :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]
-                             :cloverage {:fail-threshold 90
-                                         :low-watermark 90
-                                         :high-watermark 95
-                                         :ns-exclude-regex [#"multi-money.repl"
-                                                            #"multi-money.server"
-                                                            #"multi-money.handler"]}} ; I'd really like to cover everything except print-routes, but I can't get that working
+                             :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]}
               :uberjar {:source-paths ["env/prod"]
                         :resource-paths ["env/prod/resources" "config/prod"]
                         :dependencies [[com.bhauman/figwheel-main "0.2.17"]]
