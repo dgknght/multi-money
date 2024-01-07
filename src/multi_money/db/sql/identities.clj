@@ -3,12 +3,12 @@
             [multi-money.db.sql :as sql]))
 
 (defmethod sql/attributes :identity [_]
-  [:id :provider :provider-id :user-id])
+  [:id :oauth-provider :oauth-id :user-id])
 
 (defmethod sql/before-save :identity
   [ident]
-  (update-in ident [:identity/provider] name))
+  (update-in ident [:identity/oauth-provider] name))
 
 (defmethod sql/after-read :identity
   [ident]
-  (update-in ident [:identity/provider] keyword))
+  (update-in ident [:identity/oauth-provider] keyword))

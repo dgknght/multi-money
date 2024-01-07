@@ -39,7 +39,7 @@
     (assoc user
            :user/identities
            (->> (select-identities user)
-                (map (juxt :identity/provider :identity/provider-id))
+                (map (juxt :identity/oauth-provider :identity/oauth-id))
                 (into {})))))
 
 (defn- after-read

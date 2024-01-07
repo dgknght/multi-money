@@ -10,8 +10,8 @@
 (defn- inflate-identity
   [user-id [p id]]
   #:identity{:user-id user-id
-             :provider p
-             :provider-id id})
+             :oauth-provider p
+             :oauth-id id})
 
 (defmethod sql/deconstruct :user
   [{:as user :user/keys [identities]}]
@@ -30,8 +30,8 @@
     (let [[_ [oauth-provider oauth-id]] identities]
       (-> criteria
           (dissoc :user/identities)
-          (assoc [:identity :identity/provider] oauth-provider
-                 [:identity :identity/provider-id] oauth-id)
+          (assoc [:identity :identity/oauth-provider] oauth-provider
+                 [:identity :identity/oauth-id] oauth-id)
           (db/model-type :user)))
     criteria))
 
