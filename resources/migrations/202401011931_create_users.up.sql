@@ -1,6 +1,5 @@
 create table users (
   id serial,
-  username varchar(100) not null,
   email varchar(100) NOT NULL,
   given_name varchar(100) NOT NULL,
   surname varchar(100) NOT NULL,
@@ -9,7 +8,6 @@ create table users (
   primary key (id)
 );
 create unique index uk_users_email on users(email);
-create unique index uk_users_username on users(username);
 
 create table identities (
     id serial,

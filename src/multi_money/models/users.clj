@@ -11,13 +11,11 @@
             [multi-money.util :as utl :refer [->id]]
             [multi-money.db :as db]))
 
-(s/def :user/username string?)
 (s/def :user/email v/email?)
 (s/def :user/given-name string?)
 (s/def :user/surname string?)
 (s/def :user/identities (s/map-of keyword? string?))
-(s/def ::user (s/keys :req [:user/username
-                            :user/email
+(s/def ::user (s/keys :req [:user/email
                             :user/given-name
                             :user/surname]
                       :opt-un [::db/id]

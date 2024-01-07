@@ -15,8 +15,7 @@
 (use-fixtures :each reset-db)
 
 (def attr
-  #:user{:username "jdoe"
-         :email "john@doe.com"
+  #:user{:email "john@doe.com"
          :given-name "John"
          :surname "Doe"})
 
@@ -27,9 +26,6 @@
         "The result contains the correct attributes")
     (is (:id result)
         "The result contains an id value")))
-
-#_(dbtest username-is-required)
-#_(dbtest username-is-unique)
 
 #_(dbtest email-is-required
   (let [result (usrs/put (dissoc attr :email))]
@@ -51,8 +47,7 @@
         "The result does not contain an :id value")))
 
 (def ^:private update-context
-  {:users [#:user{:username "jdoe"
-                  :email "john@doe.com"
+  {:users [#:user{:email "john@doe.com"
                   :given-name "John"
                   :surname "Doe"}]})
 
@@ -89,7 +84,6 @@
       (update-in [:users]
                  conj
                  #:user{:email "jane@doe.com"
-                        :username "janedoe"
                         :given-name "Jane"
                         :surname "Doe"
                         :identities {:google "def456"
