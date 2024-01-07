@@ -16,7 +16,6 @@ tools and strategies.
 erDiagram
   user ||--|{ identity : "is identified by"
   user {
-    string username
     string given-name
     string surname
     string email
@@ -26,29 +25,39 @@ erDiagram
     string oauth-provider
   }
 ```
+## Setup
+
+### Create the databases
+
+#### SQL
+```bash
+lein migrate && lein with-profile +test migrate
+```
+
 ## Development
-
 To get an interactive development environment run:
-
-    lein fig:build
+```bash
+lein fig:build
+```
 
 This will auto compile and send all changes to the browser without the
 need to reload. After the compilation process is complete, you will
 get a Browser Connected REPL. An easy way to try it is:
-
-    (js/alert "Am I connected?")
+```bash
+  (js/alert "Am I connected?")
+```
 
 and you should see an alert in the browser window.
 
 To clean all compiled files:
-
-	lein clean
+```bash
+  lein clean
+```
 
 To create a production build run:
-
-	lein clean
-	lein fig:min
-
+```bash
+  lein do clean, fig:min
+```
 
 ## License
 
