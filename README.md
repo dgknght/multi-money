@@ -27,6 +27,13 @@ erDiagram
 ```
 ## Setup
 
+### OAuth
+
+#### Google
+Set the following environment variables
+- GOOGLE_OAUTH_CLIENT_ID
+- GOOGLE_OAUTH_CLIENT_SECRET
+
 ### Create the databases
 
 #### SQL

@@ -4,6 +4,7 @@
             [hiccup.page :refer [html5
                                  include-css
                                  include-js]]
+            [ring.middleware.oauth2 :refer [wrap-oauth2]]
             [reitit.core :as r]
             [reitit.ring :as ring]
             [multi-money.mount-point :refer [js-path]]))
@@ -43,10 +44,23 @@
                  (:status res))
       res)))
 
+(def wrap-oauth
+  [wrap-oauth2
+   {:google
+    {:authorize-uri "https://accounts.google.com/o/oauth2/v2/auth"
+     :access-token-uri "https://www.googleapis.com/oauth2/v4/token"
+     :client-id (env :google-oauth-client-id)
+     :client-secret (env :google-oauth-client-secret)
+     :scopes ["email" "profile"]
+     :launch-uri "/oauth/google"
+     :redirect-uri "/oauth/google/callback"
+     :landing-uri "/"}}])
+
 (def app
   (ring/ring-handler
     (ring/router
-      ["/" {:middleware [wrap-request-logging]}
+      ["/" {:middleware [wrap-request-logging
+                         wrap-oauth]}
        ["" {:get index}]])
     (ring/routes
       (ring/create-resource-handler {:path "/"})
