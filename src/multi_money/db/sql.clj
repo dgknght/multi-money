@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [update])
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
-            [clojure.walk :refer [postwalk]]
             [next.jdbc :as jdbc]
             [next.jdbc.plan :refer [select!]]
             [next.jdbc.sql.builder :refer [for-insert
@@ -11,8 +10,7 @@
             [multi-money.util :as utl]
             [multi-money.db.sql.queries :refer [criteria->query
                                                 infer-table-name]]
-            [multi-money.db.sql.types :refer [coerce-id
-                                              ->storable]]
+            [multi-money.db.sql.types :refer [coerce-id]]
             [multi-money.db :as db]))
 
 (defn- dispatch
@@ -65,19 +63,9 @@
 (defmulti prepare-criteria db/model-type)
 (defmethod prepare-criteria :default [m] m)
 
-(defn- update-criteria-leaves
-  [c f]
-  (postwalk (fn [v]
-              (if (or (map? v)
-                      (vector? v))
-                v
-                (f v)))
-            c))
-
 (defmethod select :default
   [db criteria options]
   (let [query (-> criteria
-                  (update-criteria-leaves ->storable)
                   prepare-criteria
                   (criteria->query options))]
 
