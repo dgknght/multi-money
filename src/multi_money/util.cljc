@@ -24,11 +24,7 @@
   [s]
   #?(:clj (LocalDate/ofEpochDay s)
      :cljs (tc/to-local-date s)))
-
-; (defn ->id
-;   [id-or-model]
-;   (or (:id id-or-model) id-or-model))
-; 
+ 
 ; (def local-date?
 ;   #?(:clj (partial instance? LocalDate)
 ;      :cljs #(throw (js/Error "Not implemented"))))
@@ -40,27 +36,34 @@
        (keyword? (first x))))
 
 (defmulti qualify-key
-  (fn [x _]
+  (fn [x & _]
     (when (key-value-tuple? x)
       :tuple)))
 
 (defmethod qualify-key :default
-  [x _]
+  [x & _]
   x)
 
 (defmethod qualify-key :tuple
-  [[k :as x] nspace]
-  (if (namespace k)
+  [[k :as x] nspace {:keys [ignore?]}]
+  (if (ignore? k)
     x
     (update-in x [0] #(keyword nspace (name %)))))
 
 (defn qualify-keys
   "Creates fully-qualified entity attributes by applying
   the :model-type from the meta data to the keys of the map."
-  [m ns-key]
-  {:pre [(map? m) (keyword? ns-key)]}
-  (prewalk #(qualify-key % (name ns-key))
-           m))
+  [m ns-key & {:keys [ignore]}]
+  {:pre [(map? m)]}
+  (let [k (if (keyword? ns-key)
+            (name ns-key)
+            ns-key)
+        ignore? (if ignore
+                  (some-fn ignore namespace)
+                  namespace)]
+    (prewalk (fn [x]
+               (qualify-key x k {:ignore? ignore?}))
+             m)))
 
 (defn unqualify-keys
   "Replaces qualified keys with the simple values"
@@ -70,6 +73,18 @@
                (update-in x [0] (comp keyword name))
                x))
            m))
+
+(defn qualifier
+  "Give a map, returns the namespace from the keys"
+  [m]
+  {:pre [(map? m)]}
+  (let [n (->> (keys m)
+               (map namespace)
+               (filter identity)
+               (into #{}))]
+    (assert (= 1 (count n))
+            "The map contains more than one keyword namespace, so the qualifier cannot be inferred.")
+    (first n)))
 
 (defmulti prepend
   (fn [coll _]
@@ -142,6 +157,18 @@
 (def valid-id?
   (every-pred non-nil?
               scalar?))
+
+ (defn ->id
+   [id-or-model]
+   {:pre [(or (scalar? id-or-model)
+              (map? id-or-model))]}
+   (if (scalar? id-or-model)
+     id-or-model
+     (or (:id id-or-model)
+         (when-let [k (->> (keys id-or-model)
+                           (filter #(= "id" (name %)))
+                           first)]
+           (id-or-model k)))))
 
 (defn truncate
   ([s] (truncate s {}))
