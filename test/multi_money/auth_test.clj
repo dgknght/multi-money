@@ -77,7 +77,7 @@
                              {:status 404
                               :body {:message "No mock found"}}))]
               (app (req/request :get url)))]
-    (is (http-redirect-to? "/" res)
+    (is (http-redirect-to? "http://lvh.me:3000/" res)
         "The user is redirected to the root")))
 
 (deftest lookup-existing-user-from-oauth-profile

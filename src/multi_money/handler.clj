@@ -11,6 +11,7 @@
             [ring.util.response :as res]
             [reitit.core :as r]
             [reitit.ring :as ring]
+            [lambdaisland.uri :refer [uri]]
             [multi-money.oauth :refer [fetch-profiles]]
             [multi-money.tokens :as tkns]
             [multi-money.db :refer [with-db]]
@@ -53,6 +54,13 @@
                  (:status res))
       res)))
 
+(defn- landing-uri []
+  (-> (uri "/")
+      (assoc :host   (:web-server-host env)
+             :schema (:web-server-schema env)
+             :port   (:web-server-port env))
+      str))
+
 (def ^:private wrap-oauth
   [wrap-oauth2
    {:google
@@ -63,7 +71,7 @@
      :scopes ["email" "profile"]
      :launch-uri "/oauth/google"
      :redirect-uri "/oauth/google/callback"
-     :landing-uri "/"}}])
+     :landing-uri (landing-uri)}}])
 
 (defn- wrap-site []
   (let [c-store (cookie-store)]
