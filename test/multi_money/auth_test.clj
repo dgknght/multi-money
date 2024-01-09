@@ -16,14 +16,14 @@
 (use-fixtures :each reset-db)
 
 (def ^:private no-profile-ctx
-  {:users [{:email "john@doe.com"
-            :given-name "John"
-            :surname "Doe"}]})
+  {:users [#:user{:email "john@doe.com"
+                  :given-name "John"
+                  :surname "Doe"}]})
 
 (def ^:private oauth-id "1001")
 (def ^:private existing-profile-ctx
   (assoc-in no-profile-ctx
-            [:users 0 :identities :google]
+            [:users 0 :user/identities :google]
             oauth-id))
 
 (deftest initiate-google-oauth
