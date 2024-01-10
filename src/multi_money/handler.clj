@@ -38,7 +38,7 @@
 (defn- index
   [_req]
   {:status 200
-   :header {"Content-Type" "text/html"}
+   :headers {"Content-Type" "text/html"}
    :body (mount-point)})
 
 (defn- wrap-request-logging
