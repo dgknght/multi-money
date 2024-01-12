@@ -1,13 +1,15 @@
 (ns ^:figwheel-hooks multi-money.core
-  (:require [goog.dom :as gdom]
+  (:require [clojure.pprint :refer [pprint]]
+            [goog.dom :as gdom]
             [accountant.core :as act]
             [secretary.core :as sct]
             [reagent.dom :as rdom]
             [multi-money.state :as state :refer [current-page
+                                                 current-user
                                                  +busy
                                                  -busy]]
             [multi-money.views.components :refer [title-bar]]
-            [multi-money.view.pages]
+            [multi-money.views.pages]
             [multi-money.api.users :as usrs]))
 
 (defn get-app-element []

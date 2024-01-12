@@ -2,12 +2,12 @@
   (:require [clojure.test :refer [deftest testing]]
             [clojure.pprint :refer [pprint]]
             [config.core :refer [env]]
-            #_[ring.mock.request :as req]
-            #_[dgknght.app-lib.test :refer [parse-json-body]]
+            [ring.mock.request :as req]
+            [dgknght.app-lib.test :refer [parse-json-body]]
             [multi-money.db :as db]
-            #_[multi-money.tokens :as tkns]
-            #_[multi-money.models.users :as usrs]
-            #_[multi-money.handler :refer [app]]))
+            [multi-money.tokens :as tkns]
+            [multi-money.models.users :as usrs]
+            [multi-money.handler :refer [app]]))
 
 (def ^:dynamic *strategy* nil)
 
@@ -63,7 +63,7 @@
              (db/with-db [config#]
                ~@bod)))))))
 
-#_(defn +auth
+(defn +auth
   [rq user & [user-agent]]
   (if user
     (req/header rq
@@ -75,13 +75,13 @@
                                         tkns/encode)))
     rq))
 
-#_(defn- +json-body
+(defn- +json-body
   [req json-body]
   (if json-body
     (req/json-body req json-body)
     req))
 
-#_(defn request
+(defn request
   [method
    path
    & {:keys [header-user-agent

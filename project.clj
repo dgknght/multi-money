@@ -20,6 +20,7 @@
                   [com.andrewmcveigh/cljs-time "0.5.2"]
                   [ring/ring-core "1.9.6"]
                   [ring/ring-jetty-adapter "1.9.6"]
+                  [ring/ring-json "0.5.1"]
                   [ring/ring-mock "0.4.0"]
                   [venantius/accountant "0.2.5"]
                   [clj-commons/secretary "1.2.4"]
@@ -35,7 +36,8 @@
                                 ring/ring-devel
                                 ring/ring-servlet
                                 ring/ring-jetty-adapter]]
-                  [reagent "1.1.1" ]]
+                  [reagent "1.1.1" ]
+                  [reagent-utils "0.3.3"]]
    :plugins [[lein-cloverage "1.2.2"]]
    :cloverage {:fail-threshold 90
                :low-watermark 90

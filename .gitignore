@@ -4,6 +4,7 @@ pom.xml
 /lib/
 /logs/
 /classes/
+/checkouts/
 /out/
 /target/
 profiles.clj

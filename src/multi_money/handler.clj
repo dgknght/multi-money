@@ -5,18 +5,23 @@
             [hiccup.page :refer [html5
                                  include-css
                                  include-js]]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults ]]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults api-defaults]]
             [ring.middleware.oauth2 :refer [wrap-oauth2]]
             [ring.middleware.session.cookie :refer [cookie-store]]
+            [ring.middleware.json :refer [wrap-json-body
+                                          wrap-json-response]]
             [ring.util.response :as res]
             [reitit.core :as r]
             [reitit.ring :as ring]
             [lambdaisland.uri :refer [uri]]
+            [dgknght.app-lib.api :refer [wrap-authentication
+                                         extract-token-bearer]]
             [multi-money.oauth :refer [fetch-profiles]]
             [multi-money.tokens :as tkns]
             [multi-money.db :refer [with-db]]
             [multi-money.mount-point :refer [js-path]]
             [multi-money.models.users :as usrs]
+            [multi-money.api.users :as u]
             [multi-money.db.sql.ref]))
 
 (defn- mount-point
@@ -98,6 +103,7 @@
           m
           ks))
 
+; TODO: move this to a db.web ns
 (defn- wrap-db
   [handler]
   (fn [req]
@@ -119,6 +125,7 @@
          (catch Exception e
            (log/error e "Unable to fetch the user from the oauth profile")))))
 
+; TODO: move this to a users.web ns
 (defn- wrap-user-lookup
   [handler]
   (fn [{:oauth2/keys [profiles] :as req}]
@@ -126,6 +133,7 @@
                (assoc req :authenticated user)
                req))))
 
+; TODO: move this to a users.web ns
 (defn- wrap-issue-auth-token
   [handler]
   (fn [{:keys [authenticated] :as req}]
@@ -143,12 +151,23 @@
                      {:same-site :strict
                       :max-age (* 6 60 60)})))))
 
+; TODO: move this to a users.web ns
 (defn wrap-fetch-oauth-profile
   [handler]
   (fn [{:oauth2/keys [access-tokens] :as req}]
     (handler (if-let [profiles (seq (fetch-profiles access-tokens))]
                (assoc req :oauth2/profiles profiles)
                req))))
+
+; TODO: move this to a users.web ns
+(defn- validate-token-and-lookup-user
+  [req]
+  (let [decoded (-> req
+                    extract-token-bearer
+                    tkns/decode)]
+    (when (= (get-in req [:headers "user-agent"])
+             (:user-agent decoded))
+      (usrs/detokenize decoded))))
 
 (def app
   (ring/ring-handler
@@ -162,7 +181,12 @@
                          wrap-request-logging]}
        ["" {:get index}]
        ["oauth/*" {:get (constantly {:status 404
-                                      :body "not found"})}]])
+                                     :body "not found"})}]
+       ["api" {:middleware [[wrap-defaults api-defaults]
+                            [wrap-json-body {:keywords? true :bigdecimals? true}]
+                            [wrap-json-response]
+                            [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
+        u/routes]])
     (ring/routes
       (ring/create-resource-handler {:path "/"})
       (ring/create-default-handler))))

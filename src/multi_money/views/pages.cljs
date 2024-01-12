@@ -3,8 +3,7 @@
             [dgknght.app-lib.html :as html]
             [goog.string :refer [format]]
             [multi-money.state :refer [current-page
-                                       current-user]]
-            [multi-money.view.pages]))
+                                       current-user]]))
 
 (defn- sign-in-options []
   [:div.list-group {:style {:max-width "264px"}}
@@ -20,10 +19,10 @@
   (fn []
     (if @current-user
       [:div.container
-       [:h1 (format "Welcome %s!" (:given-name @current-user))]
+       [:h1.mt-3 (format "Welcome %s!" (:given-name @current-user))]
        [:p "Soon we'll put a dashboard here that shows highlights of your finances."]]
       [:div.container
-       [:h1 "Welcome!"]
+       [:h1.mt-3 "Welcome!"]
        [:p "There's lots of cool stuff coming soon."]
        (sign-in-options)])))
 
