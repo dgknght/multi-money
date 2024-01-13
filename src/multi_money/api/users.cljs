@@ -5,4 +5,4 @@
 
 (defn me
   [& {:as opts}]
-  (api/get (path :api :me) opts))
+  (api/get (path :me) opts))

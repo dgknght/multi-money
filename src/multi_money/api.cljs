@@ -12,8 +12,8 @@
 
 (defn- on-failure
   [res]
-  (.error js/console "The API was not successful")
-  (.dir res))
+  (.error js/console "The API call was not successful")
+  (.dir js/console res))
 
 (defn- apply-defaults
   [{:as opts

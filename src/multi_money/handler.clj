@@ -92,7 +92,7 @@
 
 (defn- extract-db-strategy
   [req]
-  (or (some #(get-in req %)
+  (or (some (comp keyword #(get-in req %))
             [[:headers "db-strategy"]
              [:cookies "db-strategy" :value]])
       (get-in env [:db :active])))
@@ -187,7 +187,8 @@
                                      :body "not found"})}]
        ["api" {:middleware [[wrap-defaults api-defaults]
                             [wrap-json-body {:keywords? true :bigdecimals? true}]
-                            [wrap-json-response]
+                            wrap-json-response
+                            wrap-db
                             [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
         u/routes]])
     (ring/routes

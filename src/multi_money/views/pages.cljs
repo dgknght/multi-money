@@ -19,7 +19,7 @@
   (fn []
     (if @current-user
       [:div.container
-       [:h1.mt-3 (format "Welcome %s!" (:given-name @current-user))]
+       [:h1.mt-3 (format "Welcome %s!" (:user/given-name @current-user))]
        [:p "Soon we'll put a dashboard here that shows highlights of your finances."]]
       [:div.container
        [:h1.mt-3 "Welcome!"]
