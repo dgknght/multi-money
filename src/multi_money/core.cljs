@@ -32,7 +32,7 @@
   (when @state/auth-token
     (+busy)
     (usrs/me :on-success #(reset! current-user %)
-              :callback -busy)))
+             :callback -busy)))
 
 (defn- init! []
   (act/configure-navigation!
