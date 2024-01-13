@@ -26,15 +26,18 @@
 
 (defn- mount-point
   []
-  (html5 {:lang "en"
-          :data-bs-theme :dark}
+  (html5
+    {:lang "en"
+     :data-bs-theme :dark}
     [:head
      [:meta {:charset "UTF-8"}]
      [:meta {:name "viewport"
-             :content "width=device-width, initial-scale=1"}]]
-    (include-css "css/site.css")
-    (include-js "https://unpkg.com/@popperjs/core@2")
-    (include-js "js/bootstrap.min.js")
+             :content "width=device-width, initial-scale=1"}]
+     [:link {:rel :icon
+             :href "images/cash-coin.png"}]
+     (include-css "css/site.css")
+     (include-js "https://unpkg.com/@popperjs/core@2")
+     (include-js "js/bootstrap.min.js")]
     [:body
      [:div#app]
      (log/debugf "Using javascript resource at %s" js-path)
