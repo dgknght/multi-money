@@ -7,15 +7,22 @@
 
 (defn handle-error
   [error]
-  (.error js/console "Unable to get a list of entities from the server.")
+  (.error js/console "Unexpected error during API call.")
   (.dir js/console error))
+
+(defn- on-failure
+  [res]
+  (.error js/console "The API was not successful")
+  (.dir res))
 
 (defn- apply-defaults
   [{:as opts
     :keys [on-error]
     :or {on-error handle-error}}]
   (let [{:keys [db-strategy auth-token]} @state/app-state]
-    (cond-> (assoc opts :on-error on-error)
+    (cond-> (assoc opts
+                   :on-error on-error
+                   :on-failure on-failure)
       db-strategy (assoc-in [:headers "db-strategy"] (name db-strategy))
       auth-token  (assoc-in [:headers "Authorization"] (format "Bearer %s" auth-token)))))
 
