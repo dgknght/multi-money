@@ -10,17 +10,16 @@
             [ring.middleware.session.cookie :refer [cookie-store]]
             [ring.middleware.json :refer [wrap-json-body
                                           wrap-json-response]]
-            [ring.util.response :as res]
             [reitit.core :as r]
             [reitit.ring :as ring]
             [lambdaisland.uri :refer [uri]]
-            [dgknght.app-lib.api :refer [wrap-authentication
-                                         extract-token-bearer]]
-            [multi-money.oauth :refer [fetch-profiles]]
-            [multi-money.tokens :as tkns]
-            [multi-money.db :refer [with-db]]
+            [dgknght.app-lib.api :refer [wrap-authentication]]
+            [multi-money.db.web :refer [wrap-db]]
+            [multi-money.models.users.web :refer [validate-token-and-lookup-user
+                                                  wrap-fetch-oauth-profile
+                                                  wrap-issue-auth-token
+                                                  wrap-user-lookup]]
             [multi-money.mount-point :refer [js-path]]
-            [multi-money.models.users :as usrs]
             [multi-money.api.users :as u]
             [multi-money.db.sql.ref]))
 
@@ -90,87 +89,7 @@
                                :cookie-attrs {:same-site :lax
                                               :http-only true}})]))
 
-(defn- extract-db-strategy
-  [req]
-  (or (some (comp keyword #(get-in req %))
-            [[:headers "db-strategy"]
-             [:cookies "db-strategy" :value]])
-      (get-in env [:db :active])))
 
-(defn- mask-values
-  [m ks]
-  (reduce (fn [res k]
-            (if (contains? res k)
-              (assoc res k "****************")
-              res))
-          m
-          ks))
-
-; TODO: move this to a db.web ns
-(defn- wrap-db
-  [handler]
-  (fn [req]
-    (let [storage-key (extract-db-strategy req)
-          storage-config (get-in env [:db :strategies storage-key])]
-      (log/debugf "Handling request with db strategy %s -> %s"
-                  storage-key
-                  (mask-values storage-config [:username :user :password]))
-      (with-db [storage-config]
-        (handler (assoc req :db-strategy storage-key))))))
-
-(defn- find-or-create-user
-  [profiles]
-  (when (seq profiles)
-    (try (or (some usrs/find-by-oauth profiles)
-             (some (comp usrs/put
-                         usrs/from-oauth)
-                   profiles))
-         (catch Exception e
-           (log/error e "Unable to fetch the user from the oauth profile")))))
-
-; TODO: move this to a users.web ns
-(defn- wrap-user-lookup
-  [handler]
-  (fn [{:oauth2/keys [profiles] :as req}]
-    (handler (if-let [user (find-or-create-user profiles)]
-               (assoc req :authenticated user)
-               req))))
-
-; TODO: move this to a users.web ns
-(defn- wrap-issue-auth-token
-  [handler]
-  (fn [{:keys [authenticated] :as req}]
-    (let [cookie-val (when authenticated
-                       (-> (usrs/tokenize authenticated)
-                           (assoc :user-agent
-                                  (get-in req
-                                          [:headers "user-agent"]))
-                           tkns/encode))
-          res (handler req)]
-      (cond-> res
-        cookie-val (res/set-cookie
-                     "auth-token"
-                     cookie-val
-                     {:same-site :strict
-                      :max-age (* 6 60 60)})))))
-
-; TODO: move this to a users.web ns
-(defn wrap-fetch-oauth-profile
-  [handler]
-  (fn [{:oauth2/keys [access-tokens] :as req}]
-    (handler (if-let [profiles (seq (fetch-profiles access-tokens))]
-               (assoc req :oauth2/profiles profiles)
-               req))))
-
-; TODO: move this to a users.web ns
-(defn- validate-token-and-lookup-user
-  [req]
-  (let [decoded (-> req
-                    extract-token-bearer
-                    tkns/decode)]
-    (when (= (get-in req [:headers "user-agent"])
-             (:user-agent decoded))
-      (usrs/detokenize decoded))))
 
 (def app
   (ring/ring-handler
