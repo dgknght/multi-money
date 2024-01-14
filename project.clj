@@ -27,7 +27,7 @@
                   [com.github.seancorfield/next.jdbc "1.3.909" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
                   [org.postgresql/postgresql "42.6.0"]
                   [dev.weavejester/ragtime "0.9.3" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha org.clojure/tools.logging]]
-                  [com.github.dgknght/app-lib "0.3.6"
+                  [com.github.dgknght/app-lib "0.3.10"
                    :exclusions [ring/ring-core
                                 org.clojure/clojure
                                 commons-io
