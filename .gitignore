@@ -6,6 +6,7 @@ pom.xml
 /classes/
 /checkouts/
 /out/
+/secrets/
 /target/
 profiles.clj
 .lein-deps-sum

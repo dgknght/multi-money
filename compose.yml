@@ -1,0 +1,28 @@
+---
+version: "3.8"
+services:
+  web:
+    image: dgknght/multi-money-web
+    links:
+      - sql
+    ports:
+      - "3030:3000"
+    secrets:
+      - google_oauth_client_id
+      - google_oauth_client_secret
+    environment:
+      - GOOGLE_OAUTH_CLIENT_ID=/run/secrets/google_oauth_client_id
+      - GOOGLE_OAUTH_CLIENT_SECRET=/run/secrets/google_oauth_client_secret
+      - DB={:active :sql :strategies {:sql {:multi-money.db/provider :sql :dbtype "postgresql" :dbname "multi_money" :user "app_user" :password "please01"}}}
+  sql:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: please01
+      POSTGRES_USER: app_user
+      POSTGRES_DB: multi_money
+secrets:
+  google_oauth_client_id:
+    file: secrets/google_oauth_client_id.txt
+  google_oauth_client_secret:
+    file: secrets/google_oauth_client_secret.txt
