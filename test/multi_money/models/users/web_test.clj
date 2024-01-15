@@ -53,6 +53,7 @@
                                         :user/given-name "John"}
                         :headers {"user-agent" "test agent"}}))]
     (is (= {:value "abc123"
+            :path "/"
             :same-site :strict
             :max-age 21600} ; six hours
            (get-in res [:cookies "auth-token"]))
