@@ -1,5 +1,6 @@
 (ns multi-money.models.users.web
   (:require [clojure.tools.logging :as log]
+            [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.api :refer [extract-token-bearer]]
             [ring.util.response :as res]
             [multi-money.tokens :as tkns]
@@ -18,9 +19,10 @@
 (defn wrap-fetch-oauth-profile
   [handler]
   (fn [{:oauth2/keys [access-tokens] :as req}]
-    (handler (if-let [profiles (seq (fetch-profiles access-tokens))]
-               (assoc req :oauth2/profiles profiles)
-               req))))
+    (handler (let [profiles (fetch-profiles access-tokens)]
+               (if (empty? profiles)
+                 req
+                 (assoc req :oauth2/profiles profiles))))))
 
 (defn wrap-issue-auth-token
   [handler]

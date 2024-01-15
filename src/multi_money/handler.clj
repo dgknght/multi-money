@@ -66,7 +66,7 @@
 (defn- landing-uri []
   (-> (uri "/")
       (assoc :host   (:web-server-host env)
-             :schema (:web-server-schema env)
+             :scheme (:web-server-scheme env)
              :port   (:web-server-port env))
       str))
 
