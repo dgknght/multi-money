@@ -54,6 +54,14 @@ jobs:
     needs: build
     permissions: write-all
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: web
+            image: dgknght/multi-money-web
+          - target: migrate
+            image: dgknght/multi-money-migrate
     env:
       GOOGLE_OAUTH_CLIENT_ID: build-client-id
       GOOGLE_OAUTH_CLIENT_SECRET: build-client-secret
@@ -71,7 +79,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5.4.0
         with:
-          images: dgknght/multi-money
+          images: ${{ matrix.image }}
           flavor: |
             latest=auto
             suffix=-{{sha}}
@@ -81,6 +89,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          target: ${{ matrix.target }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.output.labels }}
