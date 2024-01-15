@@ -4,9 +4,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.tools.logging :as log]
             [clojure.set :refer [rename-keys]]
-            [clj-time.core :as t]
-            [clj-time.coerce :refer [to-long
-                                     from-long]]
+            [java-time.api :as t]
             [dgknght.app-lib.validation :as v]
             [multi-money.util :as utl :refer [->id]]
             [multi-money.db :as db]))
@@ -87,14 +85,14 @@
 
 (defn- +expiration
   [m]
-  (assoc m :expires-at (to-long
-                         (t/plus (t/now)
+  (assoc m :expires-at (t/to-millis-from-epoch
+                         (t/plus (t/instant)
                                  (t/hours 6)))))
 
 (defn- expired?
   [{:keys [expires-at]}]
-  (t/before? (from-long expires-at)
-             (t/now)))
+  (t/before? (t/instant expires-at)
+             (t/instant)))
 
 (defn tokenize
   [user]

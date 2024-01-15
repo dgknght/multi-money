@@ -1,7 +1,11 @@
 (ns multi-money.models.users-test
-  (:require [clojure.test :refer [is use-fixtures]]
+  (:require [clojure.test :refer [is use-fixtures testing]]
+            [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.test-assertions]
+            [java-time.api :as t]
+            [java-time.mock :refer [mock-clock]]
+            [java-time.clock :refer [with-clock]]
             [multi-money.helpers :refer [reset-db
                                          dbtest]]
             [multi-money.test-context :refer [with-context
@@ -106,17 +110,48 @@
                 "An ID is extracted from a given map"))))
 
 (dbtest create-a-user-from-an-oauth-profile
-  (let [user (usrs/from-oauth [:google
-                               {:id "abc123"
-                                :email "john@doe.com"
-                                :given_name "John"
-                                :family_name "Doe"}])
-        expected #:user{:email "john@doe.com"
-                        :given-name "John"
-                        :surname "Doe"
-                        :identities {:google "abc123"}}]
-    (is (comparable? expected user)
-        "A well-formed user map is returned")))
+  (testing "known provider"
+    (let [user (usrs/from-oauth [:google
+                                 {:id "abc123"
+                                  :email "john@doe.com"
+                                  :given_name "John"
+                                  :family_name "Doe"}])
+          expected #:user{:email "john@doe.com"
+                          :given-name "John"
+                          :surname "Doe"
+                          :identities {:google "abc123"}}]
+      (is (comparable? expected user)
+          "A well-formed user map is returned")))
+  (testing "unknown provider"
+    (let [logs (atom [])
+          result (with-redefs [log/log* (fn [_ & args]
+                                          (swap! logs conj args)
+                                          nil)]
+                   (usrs/from-oauth [:unknown-provider
+                                     {:id "abc123"}]))]
+      (is (nil? result)
+          "Nil is returned")
+      (let [[l :as ls] @logs]
+        (is (= 1 (count ls))
+          "One log entry is written")
+        (is (= [:error nil "Unrecognized oauth provider :unknown-provider"]
+               l)
+            "The error details are logged")))))
+
+(dbtest fetch-a-user-from-an-auth-token
+  (with-context
+    (testing "current token"
+      (let [user (find-user "john@doe.com")
+            token (usrs/tokenize user)]
+        (is (= user (usrs/detokenize token))
+            "The original user record is returned")))
+    (testing "expired token"
+      (let [user (find-user "john@doe.com")
+            token (with-clock (mock-clock (t/minus (t/instant)
+                                                   (t/hours 7)))
+                    (usrs/tokenize user))]
+        (is (nil? (usrs/detokenize token))
+            "Nil is returned")))))
 
 ; TODO: add an identity
 ; TODO: remove an identity

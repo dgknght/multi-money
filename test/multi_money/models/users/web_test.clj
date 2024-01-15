@@ -1,6 +1,7 @@
 (ns multi-money.models.users.web-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [clojure.test :refer [deftest is testing]]
             [clojure.pprint :refer [pprint]]
+            [clojure.tools.logging :as log]
             [multi-money.tokens :as tkns]
             [multi-money.oauth :as oauth]
             [multi-money.models.users :as usrs]
@@ -58,25 +59,49 @@
         "The an auth token cookie is added to the response")))
 
 (deftest lookup-or-create-user-middleware
-  (let [calls (atom [])
-        handler (fn [req]
-                  (swap! calls conj req)
-                  {:body "OK"})
-        wrapped (u/wrap-user-lookup handler)]
-    (with-redefs [usrs/put (fn [u]
-                             (assoc u :id 101))
-                  usrs/find-by-oauth (constantly nil)]
-      (wrapped {:oauth2/profiles {:google {:id "def456"
-                                           :given_name "John"
-                                           :family_name "Doe"
-                                           :email "john@doe.com"}}}))
-    (let [[c :as cs] @calls]
-      (is (= 1 (count cs))
-          "The handler is called once")
-      (is (= {:id 101
-              :user/identities {:google "def456"}
-              :user/given-name "John"
-              :user/surname "Doe"
-              :user/email "john@doe.com"}
-             (:authenticated c))
-          "The user is appended to the request"))))
+  (testing "user creation"
+    (let [calls (atom [])
+          handler (fn [req]
+                    (swap! calls conj req)
+                    {:body "OK"})
+          wrapped (u/wrap-user-lookup handler)]
+      (with-redefs [usrs/put (fn [u]
+                               (assoc u :id 101))
+                    usrs/find-by-oauth (constantly nil)]
+        (wrapped {:oauth2/profiles {:google {:id "def456"
+                                             :given_name "John"
+                                             :family_name "Doe"
+                                             :email "john@doe.com"}}}))
+      (let [[c :as cs] @calls]
+        (is (= 1 (count cs))
+            "The handler is called once")
+        (is (= {:id 101
+                :user/identities {:google "def456"}
+                :user/given-name "John"
+                :user/surname "Doe"
+                :user/email "john@doe.com"}
+               (:authenticated c))
+            "The user is appended to the request"))))
+  (testing "exception"
+    (let [state (atom {:calls []})
+          handler (fn [req]
+                    (swap! state update-in [:calls] conj req)
+                    {:body "OK"})
+          wrapped (u/wrap-user-lookup handler)]
+      (with-redefs [usrs/put (fn [_]
+                               (throw (RuntimeException. "Induced error")))
+                    usrs/find-by-oauth (constantly nil)
+                    log/log* (fn [& args]
+                                (swap! state update-in [:logs] conj args)
+                                nil)]
+        (wrapped {:oauth2/profiles {:google {:id "def456"
+                                             :given_name "John"
+                                             :family_name "Doe"
+                                             :email "john@doe.com"}}}))
+      (let [{[c :as cs] :calls logs :logs} @state]
+        (is (= 1 (count cs))
+            "The handler is called once")
+        (is (nil? (:authenticated c))
+            "The user is appended to the request")
+        (is (= 1 (count logs))
+            "The error is logged")))))

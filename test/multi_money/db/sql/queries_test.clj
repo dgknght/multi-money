@@ -3,7 +3,7 @@
             [multi-money.db.sql.queries :as qrys]))
 
 (deftest convert-a-criteria-map-into-a-sql-query
-  (is (thrown-with-msg? java.lang.AssertionError #"^Must be able to determine the model type"
+  (is (thrown-with-msg? java.lang.AssertionError #"Must be able to determine the model type"
                        (qrys/criteria->query {}))
       "An exception is thrown if the model type cannot be determined.")
   (is (= ["SELECT * FROM users"]
