@@ -38,6 +38,9 @@ jobs:
       - name: Run linter
         run: clj-kondo --lint src:test --dependencies
 
+      - name: Migrate the postgres database
+        run: lein with-profile test migrate
+
       - name: Run server-side tests
         run: lein with-profile test cloverage
 
