@@ -39,6 +39,7 @@
                      "auth-token"
                      cookie-val
                      {:same-site :strict
+                      :path "/"
                       :max-age (* 6 60 60)})))))
 
 (defn- find-or-create-user
