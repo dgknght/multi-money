@@ -1,6 +1,7 @@
 pom.xml
 *jar
 /config/dev
+/config/integration
 /lib/
 /logs/
 /classes/
