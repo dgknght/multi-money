@@ -54,6 +54,9 @@ jobs:
     needs: build
     permissions: write-all
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_OAUTH_CLIENT_ID: build-client-id
+      GOOGLE_OAUTH_CLIENT_SECRET: build-client-secret
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
