@@ -5,7 +5,9 @@
             [hiccup.page :refer [html5
                                  include-css
                                  include-js]]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults api-defaults]]
+            [ring.middleware.defaults :refer [wrap-defaults
+                                              site-defaults
+                                              api-defaults]]
             [ring.middleware.oauth2 :refer [wrap-oauth2]]
             [ring.middleware.session.cookie :refer [cookie-store]]
             [ring.middleware.json :refer [wrap-json-body

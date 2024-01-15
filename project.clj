@@ -22,6 +22,7 @@
                   [ring/ring-jetty-adapter "1.9.6"]
                   [ring/ring-json "0.5.1"]
                   [ring/ring-mock "0.4.0"]
+                  [ring/ring-defaults "0.4.0" :exclusions [ring/ring-core commons-fileupload]]
                   [venantius/accountant "0.2.5"]
                   [clj-commons/secretary "1.2.4"]
                   [com.github.seancorfield/next.jdbc "1.3.909" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
