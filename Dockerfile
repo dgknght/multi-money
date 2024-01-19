@@ -31,6 +31,7 @@ CMD lein migrate
 FROM eclipse-temurin:11-jre-jammy as web
 WORKDIR /usr/local/bin
 COPY --from=build /usr/local/src/target/multi-money.jar .
-CMD ["java", "-cp", "multi-money.jar", "clojure.main", "-m", "multi-money.server", "3000"]
+CMD ["java", "-cp", "multi-money.jar", "clojure.main", "-m", "multi-money.server"]
 
+# Default port for the service
 EXPOSE 3000
