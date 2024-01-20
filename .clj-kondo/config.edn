@@ -13,6 +13,9 @@
                                          (multi-money.core/dbfn)
                                          (multi-money.helpers/dbtest)]}
            :clojure-lsp/unused-public-var {:exclude #{multi-money.repl
+                                                      multi-money.db.sql.migrations/migrate
+                                                      multi-money.db.sql.migrations/rollback
+                                                      multi-money.db.sql.migrations/remigrate
                                                       multi-money.util/local-date?
                                                       multi-money.util/<-storable-date
                                                       multi-money.util/qualify-keys
