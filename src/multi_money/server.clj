@@ -1,6 +1,7 @@
 (ns multi-money.server
   (:require [clojure.tools.logging :as log]
             [clojure.tools.cli :refer [parse-opts]]
+            [config.core :refer [env]]
             [multi-money.handler :refer [app]]
             [ring.adapter.jetty :refer [run-jetty]])
   (:gen-class))
@@ -23,6 +24,10 @@
 (defn- launch-service
   [{:keys [port]}]
   (log/debugf "Starting web service on port %s." port)
+
+  ; TODO: Remove this line!!!
+  (log/tracef "env %s" env)
+
   (run-jetty #'app {:port port :join? false})
   (log/infof "Web service is started on port %s." port))
 
