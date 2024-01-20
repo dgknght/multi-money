@@ -3,7 +3,8 @@
             #?(:clj [java-time.api :as t]
                :cljs [cljs-time.core :as t])
             [dgknght.app-lib.test-assertions]
-            [multi-money.util :as utl]))
+            [multi-money.util :as utl])
+  #?(:clj (:import java.lang.AssertionError)))
 
 (def stored-date
   #?(:clj 18262
@@ -22,11 +23,30 @@
       "Unqualified keys are qualified with the model type")
   (is (= {:db/id "x"}
          (utl/qualify-keys {:db/id "x"} :entity))
-      "Qualified keys are left as-is"))
+      "Qualified keys are left as-is")
+  (is (= {:id 101
+          :user/name "John"}
+         (utl/qualify-keys {:id 101 :name "John"}
+                           :user
+                           :ignore #{:id}))
+      "Keys can be explicitly ignored"))
 
 (deftest unqaulify-map-keys
   (is (= {:name "Personal"}
          (utl/unqualify-keys {:entity/name "Personal"}))))
+
+(deftest extract-a-qualifier
+  (is (= "user" (utl/qualifier {:user/name "John"}))
+      "A single qualifier is taken directly")
+  (is (= "user" (utl/qualifier {:id 101
+                                :user/name "John"}))
+      "Nil namespaces are ignored")
+  (is (thrown-with-msg?
+        #?(:clj AssertionError
+           :cljs js/Error)
+        #"more than one keyword namespace"
+        (utl/qualifier {:user/name "John"
+                        :address/line-1 "1234 Main St"}))))
 
 (deftest prepend-a-value
   (is (= [:new :a :b]
@@ -148,3 +168,11 @@
           {:memo "this one"}]
          (utl/rename-criteria-keys [:or {:account-id 101} {:memo "this one"}]
                                    {:account-id #{:debit-account-id :credit-account-id}}))))
+
+(deftest extract-a-model-id
+  (is (= 101 (utl/->id 101))
+      "A scalar value is returned")
+  (is (= 101 (utl/->id {:id 101}))
+      "The value at :id is returned from map")
+  (is (= 101 (utl/->id {:user/id 101}))
+      "The value at a namespaced key with name \"id\" is returned"))

@@ -1,4 +1,10 @@
-node_modules
-test
-src
-logs
+checkouts/
+.git/
+.github/
+logs/
+node_modules/
+resources/public/cljs-out/
+resources/public/css/
+resources/public/test.html
+scripts/
+target/

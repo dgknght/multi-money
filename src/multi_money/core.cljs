@@ -1,23 +1,16 @@
 (ns ^:figwheel-hooks multi-money.core
-  (:require [goog.dom :as gdom]
+  (:require [clojure.pprint :refer [pprint]]
+            [goog.dom :as gdom]
             [accountant.core :as act]
             [secretary.core :as sct]
-            [reagent.core :as r]
             [reagent.dom :as rdom]
-            [multi-money.views.components :refer [title-bar]]))
-
-; TODO: Move this to state ns
-(defonce app-state (r/atom {}))
-(def current-page (r/cursor app-state [:current-page]))
-
-; TODO: Move this to pages ns
-(defn welcome []
-  [:div.container.mt-2
-   [:h1 "Welcome!"]
-   [:p "We're glad you found us."]])
-
-(sct/defroute welcome-path "/" []
-  (reset! current-page welcome))
+            [multi-money.state :as state :refer [current-page
+                                                 current-user
+                                                 +busy
+                                                 -busy]]
+            [multi-money.views.components :refer [title-bar]]
+            [multi-money.views.pages]
+            [multi-money.api.users :as usrs]))
 
 (defn get-app-element []
   (gdom/getElement "app"))
@@ -35,12 +28,19 @@
   (when-let [el (get-app-element)]
     (mount el)))
 
+(defn- fetch-user []
+  (when @state/auth-token
+    (+busy)
+    (usrs/me :on-success #(reset! current-user %)
+             :callback -busy)))
+
 (defn- init! []
   (act/configure-navigation!
     {:nav-handler sct/dispatch!
      :path-exists? sct/locate-route-value})
   (act/dispatch-current!)
-  (mount-app-element))
+  (mount-app-element)
+  (fetch-user))
 
 (init!)
 
