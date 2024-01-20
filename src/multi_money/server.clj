@@ -22,6 +22,7 @@
 
 (defn- launch-service
   [{:keys [port]}]
+  (log/debugf "Starting web service on port %s." port)
   (run-jetty #'app {:port port :join? false})
   (log/infof "Web service is started on port %s." port))
 
