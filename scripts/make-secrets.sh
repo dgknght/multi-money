@@ -1,3 +1,6 @@
+# When creating the files below, be careful not to allow a new line character to
+# be inserted at the end of the file. E.g., to create APP_SECRET, try
+# echo -n this-is-the-app-secret > config/integration/APP_SECRET
 kubectl create secret generic secret-config -n $1 \
 	--from-file=./config/integration/APP_SECRET \
 	--from-file=./config/integration/DB \
