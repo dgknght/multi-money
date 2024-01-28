@@ -12,11 +12,13 @@
                     :dbname "multi_money_test"
                     :host "localhost"
                     :port 5432
-                    :user "app_user"
-                    :password "please01"}
+                    :user :config/sql-user
+                    :password :config/sql-password}
 
                    #_"mongodb"
                    #_{:database "money_test"}}}
+ :sql-user "app_user"
+ :sql-password "please01"
  :web-server-host "lvh.me"
  :web-server-port "3000"
  :web-server-scheme "http"

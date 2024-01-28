@@ -1,5 +1,7 @@
 (ns multi-money.db
   (:require [clojure.spec.alpha :as s]
+            [clojure.walk :refer [postwalk]]
+            [clojure.pprint :refer [pprint]]
             [clojure.set :refer [union]]
             [config.core :refer [env]]
             [multi-money.util :refer [valid-id?]]))
@@ -39,10 +41,32 @@
 
 (def ^:dynamic *storage* nil)
 
+
+(defn- config-ref?
+  [x]
+  (and (keyword? x)
+       (= "config" (namespace x))))
+
+(defn- config-ref-key
+  [x]
+  (when (config-ref? x)
+    (-> x name keyword)))
+
+(defn resolve-config-refs
+  [config]
+  (postwalk (fn [x]
+              (if-let [k (config-ref-key x)]
+                (env k)
+                x))
+            config))
+
 (defn storage []
   (or *storage*
       (let [active-key (get-in env [:db :active])]
-        (reify-storage (get-in env [:db :strategies active-key])))))
+        (-> env
+            (get-in [:db :strategies active-key])
+            resolve-config-refs
+            reify-storage))))
 
 (declare model-type)
 

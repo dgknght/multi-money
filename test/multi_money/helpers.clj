@@ -39,7 +39,8 @@
   (let [dbs (->> (get-in env [:db :strategies])
                  (remove (comp ignore-strategy first))
                  vals
-                 (mapv db/reify-storage))]
+                 (mapv (comp db/reify-storage
+                             db/resolve-config-refs)))]
     (doseq [db dbs]
       (db/reset db))
     (f)))
