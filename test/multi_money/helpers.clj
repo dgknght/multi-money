@@ -31,16 +31,11 @@
                        (->set (env :ignore-strategy))))
 (def honor-strategy (complement ignore-strategy))
 
-(defn dbs []
-  (assert (seq (:db env)) "At least one db strategy must be configured")
-  (get-in env [:db :strategies]))
-
 (defn reset-db [f]
-  (let [dbs (->> (get-in env [:db :strategies])
+  (let [dbs (->> (db/configs)
                  (remove (comp ignore-strategy first))
                  vals
-                 (mapv (comp db/reify-storage
-                             db/resolve-config-refs)))]
+                 (mapv db/reify-storage))]
     (doseq [db dbs]
       (db/reset db))
     (f)))
@@ -58,7 +53,7 @@
        (doseq [[name# config#] (filter (comp (every-pred ~(include-strategy opts)
                                                          honor-strategy)
                                              first)
-                                       (dbs))]
+                                       (db/configs))]
          (binding [*strategy* (keyword name#)]
            (testing (format "database strategy %s" name#)
              (db/with-db [config#]

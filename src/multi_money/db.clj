@@ -41,7 +41,6 @@
 
 (def ^:dynamic *storage* nil)
 
-
 (defn- config-ref?
   [x]
   (and (keyword? x)
@@ -52,13 +51,21 @@
   (when (config-ref? x)
     (-> x name keyword)))
 
-(defn resolve-config-refs
+(defn- resolve-config-refs
   [config]
   (postwalk (fn [x]
               (if-let [k (config-ref-key x)]
                 (env k)
                 x))
             config))
+
+(defn configs []
+  (assert (seq (:db env)) "At least one db strategy must be configured")
+  (map resolve-config-refs
+       (get-in env [:db :strategies])))
+
+(defn config [k]
+  (resolve-config-refs (get-in env [:db :strategies k])))
 
 (defn storage []
   (or *storage*

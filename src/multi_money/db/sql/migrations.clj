@@ -2,10 +2,10 @@
   (:require [clojure.pprint :refer [pprint]]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as repl]
-            [config.core :refer [env]]))
+            [multi-money.db :as db]))
 
 (defn- config []
-  {:datastore (jdbc/sql-database (get-in env [:db :strategies :sql]))
+  {:datastore (jdbc/sql-database (db/config :sql))
    :migrations (jdbc/load-resources "migrations")})
 
 (defn migrate []

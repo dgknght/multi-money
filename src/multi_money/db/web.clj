@@ -1,8 +1,7 @@
 (ns multi-money.db.web
   (:require [clojure.tools.logging :as log]
             [config.core :refer [env]]
-            [multi-money.db :refer [with-db
-                                    resolve-config-refs]]))
+            [multi-money.db :refer [with-db] :as db]))
 
 (defn- extract-db-strategy
   [req]
@@ -24,9 +23,7 @@
   [handler]
   (fn [req]
     (let [storage-key (extract-db-strategy req)
-          storage-config (-> env
-                             (get-in [:db :strategies storage-key])
-                             resolve-config-refs)]
+          storage-config (db/config storage-key)]
       (log/debugf "Handling request with db strategy %s -> %s"
                   storage-key
                   (mask-values storage-config [:username :user :password]))
