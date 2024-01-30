@@ -34,7 +34,25 @@ Set the following environment variables
 - GOOGLE_OAUTH_CLIENT_ID
 - GOOGLE_OAUTH_CLIENT_SECRET
 
+### Docker
+Start the necessary services with docker compose
+```bash
+docker compose -f dev-compose up -d
+```
+
 ### Create the databases
+Open postgresql cli (_passwords are in the config/<env>/config.edn files_)
+```bash
+psql -h localhost -U app_user -W
+```
+
+In the postgresql cli
+```
+create database multi_money_development;
+create database multi_money_test;
+```
+
+### Migrate the databases
 
 #### SQL
 ```bash
