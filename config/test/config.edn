@@ -1,0 +1,27 @@
+{:test? true
+ :db {:active :sql
+      :strategies {#_"datomic"
+                   #_{:system "money-test"}
+
+                   #_"xtdb"
+                   ;^:replace {:multi-money.db/provider :xtdb}
+
+                   :sql
+                   {:multi-money.db/provider :sql
+                    :dbtype "postgresql"
+                    :dbname "multi_money_test"
+                    :host "localhost"
+                    :port 5432
+                    :user :config/sql-user
+                    :password :config/sql-password}
+
+                   #_"mongodb"
+                   #_{:database "money_test"}}}
+ :sql-user "app_user"
+ :sql-password "please01"
+ :web-server-host "lvh.me"
+ :web-server-port "3000"
+ :web-server-scheme "http"
+ :app-secret "test secret"
+ :google-oauth-client-id "google-client-id"
+ :google-oauth-client-secret "google-client-secret"}

@@ -1,10 +1,15 @@
 pom.xml
 *jar
+/config/dev
+/config/integration
 /lib/
 /logs/
 /classes/
+/checkouts/
 /out/
+/secrets/
 /target/
+profiles.clj
 .lein-deps-sum
 .lein-failures
 .lein-repl-history
@@ -18,3 +23,5 @@ node_modules/
 resources/public/cljs-out/
 resources/public/css
 .clj-kondo/.cache
+.clj-kondo/hiccup
+.clj-kondo/com.github.seancorfield
