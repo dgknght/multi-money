@@ -23,6 +23,11 @@ RUN mkdir resources/public/css \
   && lein do fig:prod, uberjar \
   && pwd && ls
 
+# Create a separate image we can create the database
+# when ArgoCD syncs the k8s files the first time
+FROM with-deps AS create-db
+CMD lein create-db
+
 # Create a separate image we can use to run migrations automatically
 # when ArgoCD syncs the k8s files
 FROM with-deps AS migrate

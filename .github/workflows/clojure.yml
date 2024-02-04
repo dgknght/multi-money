@@ -60,6 +60,8 @@ jobs:
         include:
           - target: web
             image: dgknght/multi-money-web
+          - target: create-db
+            image: dgknght/multi-money-create-db
           - target: migrate
             image: dgknght/multi-money-migrate
     env:
