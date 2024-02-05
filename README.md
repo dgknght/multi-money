@@ -40,23 +40,11 @@ Start the necessary services with docker compose
 docker compose -f dev-compose up -d
 ```
 
-### Create the databases
-Open postgresql cli (_passwords are in the config/<env>/config.edn files_)
-```bash
-psql -h localhost -U app_user -W
-```
-
-In the postgresql cli
-```
-create database multi_money_development;
-create database multi_money_test;
-```
-
-### Migrate the databases
+### Create and Migrate the databases
 
 #### SQL
 ```bash
-lein migrate && lein with-profile +test migrate
+lein do create-db, migrate && lein with-profile +test do create-db, migrate
 ```
 
 ## Development

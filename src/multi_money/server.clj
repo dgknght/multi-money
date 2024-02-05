@@ -1,7 +1,6 @@
 (ns multi-money.server
   (:require [clojure.tools.logging :as log]
             [clojure.tools.cli :refer [parse-opts]]
-            [config.core :refer [env]]
             [multi-money.handler :refer [app]]
             [ring.adapter.jetty :refer [run-jetty]])
   (:gen-class))
