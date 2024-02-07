@@ -12,8 +12,11 @@
                     :dbname "multi_money_test"
                     :host "localhost"
                     :port 5432
-                    :user :config/sql-app-user
-                    :password :config/sql-app-password}
+                    ; Note that we're using ddl-user here to enable truncation
+                    ; for test reset. In the live app, app-user is the correct
+                    ; setting
+                    :user :config/sql-ddl-user
+                    :password :config/sql-ddl-password}
 
                    #_"mongodb"
                    #_{:database "money_test"}}}
