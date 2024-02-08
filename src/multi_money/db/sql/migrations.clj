@@ -58,5 +58,5 @@
       (try
         (j/execute! ds [s])
         (catch PSQLException e
-          (when-not (re-find #"already exists")
+          (when-not (re-find #"already exists" (.getMessage e))
             (throw e)))))))
