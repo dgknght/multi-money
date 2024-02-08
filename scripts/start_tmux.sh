@@ -16,7 +16,7 @@ tmux split-window -h
 tmux send-keys 'git status' C-m
 
 # SQL window
-# tmux new-window -t $session:2 -n 'sql' 'psql -d xtdb_money_development'
+tmux new-window -t $session:2 -n 'sql' 'psql -d multi_money_development'
 
 # MongoDB window
 # tmux new-window -t $session:3 -n 'mongodb' 'mongosh'
