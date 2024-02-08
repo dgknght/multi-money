@@ -9,6 +9,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: please01
+          POSTGRES_USER: adm_user
+          POSTGRES_DB: adm_user
+          SQL_APP_USER: app_user
+          SQL_APP_PASSWORD: please01
+          SQL_DDL_USER: ddl_user
+          SQL_DDL_PASSWORD: please01
+          SQL_ADM_USER: adm_user
+          SQL_ADM_PASSWORD: please01
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -24,6 +44,12 @@ jobs:
       - name: Run linter
         run: clj-kondo --lint src:test --dependencies
 
+      - name: Create the postgres database
+        run: lein with-profile test create-db
+
+      - name: Migrate the postgres database
+        run: lein with-profile test migrate
+
       - name: Run server-side tests
         run: lein with-profile test cloverage
 
@@ -37,6 +63,19 @@ jobs:
     needs: build
     permissions: write-all
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: web
+            image: dgknght/multi-money-web
+          - target: create-db
+            image: dgknght/multi-money-create-db
+          - target: migrate
+            image: dgknght/multi-money-migrate
+    env:
+      GOOGLE_OAUTH_CLIENT_ID: build-client-id
+      GOOGLE_OAUTH_CLIENT_SECRET: build-client-secret
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -45,14 +84,6 @@ jobs:
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install sass compiler
-        run: npm install -g sass
-
-      - name: Compile the css
-        run: sass src/scss/site.scss resources/public/css/site.css
-
-      - name: Create the uberjar
-        run: lein do clean, uberjar
 
       - name: Log into docker hub
         uses: docker/login-action@v3
@@ -64,7 +95,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5.4.0
         with:
-          images: dgknght/multi-money
+          images: ${{ matrix.image }}
           flavor: |
             latest=auto
             suffix=-{{sha}}
@@ -74,6 +105,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          target: ${{ matrix.target }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.output.labels }}
