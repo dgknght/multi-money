@@ -26,7 +26,6 @@
     (repl/rollback cfg)
     (repl/migrate cfg)))
 
-; TODO: Maybe with the test profile app_user should have expanded permissions to allow for  db reset?
 (def ^:private role-cmd
   "create role %s with LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD '%s'")
 
