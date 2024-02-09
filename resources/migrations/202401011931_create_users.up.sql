@@ -9,6 +9,7 @@ create table users (
 );
 create unique index uk_users_email on users(email);
 grant select, insert, update, delete on users to app_user;
+grant select, insert, update, delete on users_id_seq to app_user;
 
 create table identities (
     id serial,
@@ -22,3 +23,4 @@ create table identities (
 create unique index uk_identities_provider_id on identities(oauth_id, oauth_provider);
 create unique index uk_identities_user_id on identities(user_id, oauth_provider);
 grant select, insert, update, delete on identities to app_user;
+grant select, insert, update, delete on identities_id_seq to app_user;
