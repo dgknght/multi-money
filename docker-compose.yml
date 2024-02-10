@@ -1,0 +1,14 @@
+---
+version: "3.9"
+services:
+  sql:
+    image: postgres:16
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ~/.postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: please01
+      POSTGRES_USER: adm_user
+      POSTGRES_DB: adm_user
