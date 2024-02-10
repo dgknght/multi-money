@@ -81,10 +81,8 @@ jobs:
         include:
           - target: web
             image: dgknght/multi-money-web
-          - target: create-db
-            image: dgknght/multi-money-create-db
-          - target: migrate
-            image: dgknght/multi-money-migrate
+          - target: util
+            image: dgknght/multi-money-util
     env:
       GOOGLE_OAUTH_CLIENT_ID: build-client-id
       GOOGLE_OAUTH_CLIENT_SECRET: build-client-secret
