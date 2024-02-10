@@ -1,3 +1,13 @@
+#!/bin/zsh
+
+# Start docker compose if it's not running already
+if docker compose ls | grep multi-money
+then
+	echo "docker compose is already running"
+else
+	docker compose up -d
+fi
+
 session=multi-money
 
 tmux new-session -d -s $session
@@ -16,7 +26,9 @@ tmux split-window -h
 tmux send-keys 'git status' C-m
 
 # SQL window
-# tmux new-window -t $session:2 -n 'sql' 'psql -d xtdb_money_development'
+# Note that you need a file at ~/.pgpass with perms 0600 and content like this following:
+# hostname:port:database:username:password
+tmux new-window -t $session:2 -n 'sql' 'psql --host=localhost --username=adm_user -d adm_user -w'
 
 # MongoDB window
 # tmux new-window -t $session:3 -n 'mongodb' 'mongosh'
