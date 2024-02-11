@@ -27,6 +27,7 @@
                   [clj-commons/secretary "1.2.4"]
                   [com.github.seancorfield/next.jdbc "1.3.909" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
                   [org.postgresql/postgresql "42.6.0"]
+                  [congomongo "2.6.0" :exclusions [org.clojure/data.json]]
                   [dev.weavejester/ragtime "0.9.3" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha org.clojure/tools.logging]]
                   [com.github.dgknght/app-lib "0.3.10"
                    :exclusions [ring/ring-core
@@ -51,15 +52,15 @@
    :source-paths ["src"]
    :uberjar-name "multi-money.jar"
 
-   :aliases {"fig:build" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
-             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
-             "fig:prod"  ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
-             "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
-             "create-db" ["run" "-m" "multi-money.db.sql.migrations/create-db"]
-             "migrate"   ["run" "-m" "multi-money.db.sql.migrations/migrate"]
-             "rollback"  ["run" "-m" "multi-money.db.sql.migrations/rollback"]
-             "remigrate" ["run" "-m" "multi-money.db.sql.migrations/remigrate"]
-             "routes"    ["run" "-m" "multi-money.handler/print-routes"]}
+   :aliases {"fig:build"  ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
+             "fig:min"    ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
+             "fig:prod"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
+             "fig:test"   ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
+             "init-sql"   ["run" "-m" "multi-money.db.sql.migrations/init"]
+             "migrate"    ["run" "-m" "multi-money.db.sql.migrations/migrate"]
+             "rollback"   ["run" "-m" "multi-money.db.sql.migrations/rollback"]
+             "remigrate"  ["run" "-m" "multi-money.db.sql.migrations/remigrate"]
+             "routes"     ["run" "-m" "multi-money.handler/print-routes"]}
 
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
                   :init-ns multi-money.repl}
