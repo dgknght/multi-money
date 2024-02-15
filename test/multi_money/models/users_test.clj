@@ -11,7 +11,7 @@
             [multi-money.test-context :refer [with-context
                                               find-user]]
             [multi-money.models.users :as usrs]
-            #_[multi-money.db.mongodb.ref]
+            [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]
             #_[multi-money.db.xtdb.ref]
             #_[multi-money.db.datomic.ref]))

@@ -56,6 +56,7 @@
              "fig:min"    ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
              "fig:prod"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
              "fig:test"   ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
+             "init-mongo" ["run" "-m" "multi-money.db.mongo/init"]
              "init-sql"   ["run" "-m" "multi-money.db.sql.migrations/init"]
              "migrate"    ["run" "-m" "multi-money.db.sql.migrations/migrate"]
              "rollback"   ["run" "-m" "multi-money.db.sql.migrations/rollback"]
