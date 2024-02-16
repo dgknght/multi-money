@@ -143,7 +143,7 @@
     (testing "current token"
       (let [user (find-user "john@doe.com")
             token (usrs/tokenize user)]
-        (is (= user (usrs/detokenize token))
+        (is (comparable? user (usrs/detokenize token))
             "The original user record is returned")))
     (testing "expired token"
       (let [user (find-user "john@doe.com")

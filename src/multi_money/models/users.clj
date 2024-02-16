@@ -67,9 +67,17 @@
   (find-by {:user/identities [:= [provider (or (:id id-or-profile)
                                                id-or-profile)]]}))
 
+(defn- yield-or-find
+  [m-or-id]
+  ; if we have a map, assume it's a model and return it
+  ; if we don't, assume it's an ID and look it up
+  (if (map? m-or-id)
+    m-or-id
+    (find m-or-id)))
+
 (defn- resolve-put-result
   [records]
-  (some find records)) ; This is because when adding a user, identities are inserted first, so the primary record isn't the first one returned
+  (some yield-or-find records)) ; This is because when adding a user, identities are inserted first, so the primary record isn't the first one returned
 
 (defn put
   [user]

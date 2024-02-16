@@ -20,6 +20,10 @@
            org.bson.types.ObjectId
            com.fasterxml.jackson.core.JsonGenerator))
 
+(derive clojure.lang.PersistentHashMap ::map)
+(derive clojure.lang.PersistentArrayMap ::map)
+(derive com.mongodb.WriteResult ::write-result)
+
 (add-encoder ObjectId
              (fn [^ObjectId id ^JsonGenerator g]
                (.writeString g (str id))))
@@ -51,19 +55,38 @@
 (defmulti after-read db/model-type)
 (defmethod after-read :default [m] m)
 
+(defmulti prepare-criteria db/model-type)
+(defmethod prepare-criteria :default [c] c)
+
 (defn- prepare-for-put
   [m]
   (-> m
-      unqualify-keys
-      before-save))
+      before-save
+      unqualify-keys))
 
-(defn- prepare-for-return
-  [after [op before]]
-  (if (#{::db/insert ::db/update} op)
+(defn- extract-model-type
+  [x]
+  (if (vector? x)
+    (extract-model-type (second x))
+    (db/model-type x)))
+
+(defmulti ^:private prepare-for-return (fn [x _] (type x)))
+(defmethod prepare-for-return :default [x _] x)
+
+; A WriteResult means the operation was an update
+; and the source is the model submitted for update
+(defmethod prepare-for-return ::write-result
+  [_ source]
+  (:id source))
+
+(defmethod prepare-for-return ::map
+  [after source]
+  (if-let [m-type (extract-model-type source)]
     (-> after
         (rename-keys {:_id :id})
-        (qualify-keys (db/model-type before)
-                      :ignore #{:id}))
+        (qualify-keys m-type
+                      :ignore #{:id})
+        after-read)
     after))
 
 (def ^:private infer-collection-name
@@ -100,10 +123,10 @@
 (defn- put*
   [conn models]
   (m/with-mongo conn
-    (mapv #(let [with-oper (wrap-oper %)]
-             (-> with-oper
+    (mapv #(-> %
+               wrap-oper
                put-model
-               (prepare-for-return with-oper)))
+               (prepare-for-return %))
           models)))
 
 (def ^:private oper-map
@@ -156,11 +179,13 @@
   [query criteria]
   (if (seq criteria)
     (assoc query :where (-> criteria
+                            unqualify-keys
                             (update-in-if [:id] coerce-id)
                             (rename-keys {:id :_id})
                             adjust-complex-criteria))
     query))
 
+; TODO: Move this into the mongo.accounts ns
 (defn apply-account-id
   [{:keys [where] :as query} {:keys [account-id]}]
   (if-let [id (safe-coerce-id account-id)]
@@ -195,14 +220,12 @@
   [conn criteria options]
   (m/with-mongo conn
     (let [query (-> {}
-                    (apply-criteria (dissoc criteria :account-id))
-                    (apply-account-id criteria)
+                    (apply-criteria (dissoc (prepare-criteria criteria) :account-id)) ; TODO: remove dissoc once we've moved account-id logic into mongo.accounts ns
+                    (apply-account-id criteria) ; TODO: Remove this once we've move account id logic into mongo.accounts ns
                     (apply-options options))
           f (partial m/fetch (infer-collection-name criteria))]
       (log/debugf "fetch %s with options %s -> %s" criteria options query)
-      (map (comp after-read
-                 #(rename-keys % {:_id :id})
-                 #(db/model-type % criteria))
+      (map #(prepare-for-return % criteria)
            (apply f (mapcat identity query))))))
 
 (defn- delete*
