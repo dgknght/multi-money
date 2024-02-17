@@ -52,16 +52,17 @@
    :source-paths ["src"]
    :uberjar-name "multi-money.jar"
 
-   :aliases {"fig:build"  ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
-             "fig:min"    ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
-             "fig:prod"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
-             "fig:test"   ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
-             "init-mongo" ["run" "-m" "multi-money.db.mongo/init"]
-             "init-sql"   ["run" "-m" "multi-money.db.sql.migrations/init"]
-             "migrate"    ["run" "-m" "multi-money.db.sql.migrations/migrate"]
-             "rollback"   ["run" "-m" "multi-money.db.sql.migrations/rollback"]
-             "remigrate"  ["run" "-m" "multi-money.db.sql.migrations/remigrate"]
-             "routes"     ["run" "-m" "multi-money.handler/print-routes"]}
+   :aliases {"fig:build"   ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
+             "fig:min"     ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
+             "fig:prod"    ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
+             "fig:test"    ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
+             "init-mongo"  ["run" "-m" "multi-money.db.mongo/init"]
+             "index-mongo" ["run" "-m" "multi-money.db.mongo/index"]
+             "init-sql"    ["run" "-m" "multi-money.db.sql.migrations/init"]
+             "migrate"     ["run" "-m" "multi-money.db.sql.migrations/migrate"]
+             "rollback"    ["run" "-m" "multi-money.db.sql.migrations/rollback"]
+             "remigrate"   ["run" "-m" "multi-money.db.sql.migrations/remigrate"]
+             "routes"      ["run" "-m" "multi-money.handler/print-routes"]}
 
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
                   :init-ns multi-money.repl}

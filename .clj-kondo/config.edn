@@ -18,6 +18,7 @@
                                                       multi-money.db.sql.migrations/rollback
                                                       multi-money.db.sql.migrations/remigrate
                                                       multi-money.db.mongo/init
+                                                      multi-money.db.mongo/index
                                                       multi-money.util/local-date?
                                                       multi-money.util/<-storable-date
                                                       multi-money.util/qualify-keys
