@@ -10,6 +10,7 @@
 (def current-page (r/cursor app-state [:current-page]))
 (def current-user (r/cursor app-state [:current-user]))
 (def auth-token (r/cursor app-state [:auth-token]))
+(def nav-items (r/cursor app-state [:nav-items]))
 
 (defn +busy []
   (swap! app-state update-in [:process-count] inc))
