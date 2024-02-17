@@ -20,7 +20,7 @@
   (fn []
     [:<>
      [:div.container
-      [title-bar] 
+      [title-bar]
       [@current-page]]
      [footer]]))
 
