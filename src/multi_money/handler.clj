@@ -23,7 +23,8 @@
                                                   wrap-user-lookup]]
             [multi-money.mount-point :refer [js-path]]
             [multi-money.api.users :as u]
-            [multi-money.db.sql.ref]))
+            [multi-money.db.sql.ref]
+            [multi-money.db.mongo.ref]))
 
 (defn- mount-point
   []
