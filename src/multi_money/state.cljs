@@ -1,5 +1,6 @@
 (ns multi-money.state
-  (:require [reagent.core :as r]
+  (:require [clojure.pprint :refer [pprint]]
+            [reagent.core :as r]
             [reagent.cookies :as cookies]))
 
 (defonce app-state (r/atom {:process-count 0
@@ -18,3 +19,9 @@
 
 (defn -busy []
   (swap! app-state update-in [:process-count] dec))
+
+(add-watch db-strategy
+           ::state
+           (fn [_cursor _id _before strategy]
+             (pprint {::db-strategy-changed strategy})
+             (cookies/set! :db-strategy (name strategy))))
