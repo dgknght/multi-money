@@ -8,7 +8,8 @@
                                                  current-user
                                                  +busy
                                                  -busy]]
-            [multi-money.views.components :refer [title-bar]]
+            [multi-money.views.components :refer [title-bar
+                                                  footer]]
             [multi-money.views.pages]
             [multi-money.api.users :as usrs]))
 
@@ -17,9 +18,11 @@
 
 (defn full-page []
   (fn []
-    [:div.container
-     [title-bar] 
-     [@current-page]]))
+    [:<>
+     [:div.container
+      [title-bar] 
+      [@current-page]]
+     [footer]]))
 
 (defn mount [el]
   (rdom/render [full-page] el))

@@ -115,3 +115,10 @@
        [:span.navbar-toggler-icon]]
       [:div#primary-nav.collapse.navbar-collapse
        [navbar @nav-items]]]]))
+
+(defn footer []
+  (fn []
+    [:footer.w-100
+     {:style {:position :absolute
+              :bottom 0}}
+     [:div.container.border-top.mt-3.py-3 @db-strategy]]))
