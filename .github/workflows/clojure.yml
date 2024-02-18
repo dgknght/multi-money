@@ -45,13 +45,19 @@ jobs:
         run: clj-kondo --lint src:test --dependencies
 
       - name: Create the postgres database
-        run: lein with-profile test create-db
+        run: lein with-profile +test init-sql
 
       - name: Migrate the postgres database
-        run: lein with-profile test migrate
+        run: lein with-profile +test migrate
+
+      - name: Initialize the MongoDB database
+        run: lein with-profile +test init-mongo
+
+      - name: Index the MongoDB database
+        run: lein with-profile +test index-mongo
 
       - name: Run server-side tests
-        run: lein with-profile test cloverage
+        run: lein with-profile +test cloverage
 
       - name: Install client-side dependencies
         run: npm install
