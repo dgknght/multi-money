@@ -10,6 +10,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     services:
+      mongo:
+        image: mongo:7.0
+        env:
+          MONGO_ADM_USER: adm_user
+          MONGO_ADM_PASSWORD: please01
+          MONGO_APP_USER: app_user
+          MONGO_APP_PASSWORD: please02
+          MONGO_INITDB_ROOT_USERNAME: adm_user
+          MONGO_INITDB_ROOT_PASSWORD: please01
+          MONGO_INITDB_DATABASE: admin
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh mongodb://adm_user:please01@localhost/admin --eval 'db.runCommand(""ping"").ok' --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       postgres:
         image: postgres
         env:
@@ -45,13 +62,19 @@ jobs:
         run: clj-kondo --lint src:test --dependencies
 
       - name: Create the postgres database
-        run: lein with-profile test create-db
+        run: lein with-profile +test init-sql
 
       - name: Migrate the postgres database
-        run: lein with-profile test migrate
+        run: lein with-profile +test migrate
+
+      - name: Initialize the MongoDB database
+        run: lein with-profile +test init-mongo
+
+      - name: Index the MongoDB database
+        run: lein with-profile +test index-mongo
 
       - name: Run server-side tests
-        run: lein with-profile test cloverage
+        run: lein with-profile +test cloverage
 
       - name: Install client-side dependencies
         run: npm install
