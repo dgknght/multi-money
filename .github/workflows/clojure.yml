@@ -19,10 +19,11 @@ jobs:
           MONGO_APP_PASSWORD: please02
           MONGO_INITDB_ROOT_USERNAME: adm_user
           MONGO_INITDB_ROOT_PASSWORD: please01
+          MONGO_INITDB_DATABASE: admin
         ports:
           - 27017:27017
         options: >-
-          --health-cmd mongo
+          --health-cmd "mongosh mongodb://adm_user:please01@localhost/admin --eval 'db.runCommand(""ping"").ok' --quiet"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
