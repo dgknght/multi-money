@@ -6,28 +6,28 @@
   (is (= [:ul.navbar-nav.me-auto.mb-2.mb-lg-0
           '([:li.nav-item
              {:class nil}
-             [:a.nav-link
+             [:a.nav-link.d-flex.align-items-center
               {:href "fully-implied"
                :on-click nil}
               "Fully implied"]
              nil]
             [:li.nav-item
              {:class nil}
-             [:a.nav-link
+             [:a.nav-link.d-flex.align-items-center
               {:href "implied-caption"
                :on-click nil}
               "Implied caption"]
              nil]
             [:li.nav-item
              {:class nil}
-             [:a.nav-link
+             [:a.nav-link.d-flex.align-items-center
               {:href "explicit-path"
                :on-click nil}
               "Explicit caption"]
              nil]
             [:li.nav-item
              {:class "dropdown"}
-             [:a.nav-link
+             [:a.nav-link.d-flex.align-items-center
               {:href "#"
                :on-click nil
                :class "dropdown-toggle"
