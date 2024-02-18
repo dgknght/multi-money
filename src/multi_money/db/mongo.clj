@@ -2,12 +2,10 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [rename-keys]]
-            [config.core :refer [env]]
-            #_[java-time.api :as t]
-            #_[cheshire.generate :refer [add-encoder]]
             [somnium.congomongo :as m]
-            [somnium.congomongo.coerce :refer [#_ConvertibleFromMongo
-                                               #_ConvertibleToMongo]]
+            [camel-snake-kebab.extras :refer [transform-keys]]
+            [camel-snake-kebab.core :refer [->snake_case
+                                            ->kebab-case]]
             [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :refer [qualify-keys
                                       unqualify-keys]]
@@ -19,38 +17,27 @@
 (derive clojure.lang.PersistentArrayMap ::map)
 (derive com.mongodb.WriteResult ::write-result)
 
-#_(add-encoder ObjectId
-             (fn [^ObjectId id ^JsonGenerator g]
-               (.writeString g (str id))))
-
-#_(extend-protocol ConvertibleToMongo
-  LocalDate
-  (clojure->mongo [^LocalDate d] (t/java-date d)))
-
-#_(extend-protocol ConvertibleFromMongo
-  Date
-  (mongo->clojure [^Date d _kwd] (t/local-date d))
-
-  Decimal128
-  (mongo->clojure [^Decimal128 d _kwd] (.bigDecimalValue d)))
-
 (defmulti before-save db/model-type)
-(defmethod before-save :default [m] m)
+#_(defmethod before-save :default [m] m)
 
 (defmulti after-read db/model-type)
-(defmethod after-read :default [m] m)
+#_(defmethod after-read :default [m] m)
 
 (defmulti prepare-criteria db/model-type)
-(defmethod prepare-criteria :default [c] c)
+#_(defmethod prepare-criteria :default [c] c)
+
+(def ^:private ->mongo-keys (partial transform-keys ->snake_case))
+(def ^:private ->clj-keys (partial transform-keys ->kebab-case))
 
 (defn- prepare-for-put
   [m]
   (-> m
       before-save
-      unqualify-keys))
+      unqualify-keys
+      ->mongo-keys))
 
 (defmulti ^:private prepare-for-return (fn [x _] (type x)))
-(defmethod prepare-for-return :default [x _] x)
+#_(defmethod prepare-for-return :default [x _] x)
 
 ; A WriteResult means the operation was an update
 ; and the source is the model submitted for update
@@ -62,6 +49,7 @@
   [after source]
   (-> after
       (rename-keys {:_id :id})
+      ->clj-keys
       (qualify-keys (db/model-type source)
                     :ignore #{:id})
       after-read))
@@ -138,38 +126,6 @@
   (m/make-connection database
                      :username username
                      :password password))
-
-(defn- admin-conn []
-  (-> (db/config :mongo)
-      (assoc :database "admin"
-             :username (env :mongo-adm-user)
-             :password (env :mongo-adm-password))
-      connect))
-
-(defn init
-  "Initializes the users that will access the database"
-  []
-  (m/with-mongo (admin-conn)
-    (let [roles (doto (com.mongodb.BasicDBObject.)
-                  (.append "role" "readWrite")
-                  (.append "db" (env :mongo-database)))
-          cmd (doto (com.mongodb.BasicDBObject.)
-                (.append "createUser" (env :mongo-app-user))
-                (.append "pwd" (env :mongo-app-password))
-                (.append "roles" (to-array [roles])))]
-      (m/with-db (env :mongo-database)
-        (pprint {::init (m/command! cmd)})))))
-
-(defn index
-  "Apply any new indexes to the database"
-  []
-  (m/with-mongo (admin-conn)
-    (pprint {::users-email      (m/add-index! :users
-                                              [:email]
-                                              :unique true)})
-    (pprint {::users-identities (m/add-index! :users
-                                              [:identities.id :identities.provider]
-                                              :unique true)})))
 
 (defmethod db/reify-storage :mongo
   [config]

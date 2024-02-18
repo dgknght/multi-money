@@ -6,7 +6,7 @@
 
    :min-lein-version "2.7.1"
 
-   :dependencies [[org.clojure/clojure "1.10.0"]
+   :dependencies [[org.clojure/clojure "1.11.1"]
                   [org.clojure/clojurescript "1.11.4"]
                   [ch.qos.logback/logback-classic "1.2.3"]
                   [cljsjs/react "17.0.2-0"]
@@ -45,6 +45,7 @@
                :low-watermark 90
                :high-watermark 95
                :ns-exclude-regex [#"multi-money.db.sql.migrations"
+                                  #"multi-money.db.mongo.tasks"
                                   #"multi-money.repl"
                                   #"multi-money.server"
                                   #"multi-money.handler"]} ; I'd really like to cover everything except print-routes, but I can't get that working
@@ -56,8 +57,8 @@
              "fig:min"     ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
              "fig:prod"    ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
              "fig:test"    ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
-             "init-mongo"  ["run" "-m" "multi-money.db.mongo/init"]
-             "index-mongo" ["run" "-m" "multi-money.db.mongo/index"]
+             "init-mongo"  ["run" "-m" "multi-money.db.mongo.tasks/init"]
+             "index-mongo" ["run" "-m" "multi-money.db.mongo.tasks/index"]
              "init-sql"    ["run" "-m" "multi-money.db.sql.migrations/init"]
              "migrate"     ["run" "-m" "multi-money.db.sql.migrations/migrate"]
              "rollback"    ["run" "-m" "multi-money.db.sql.migrations/rollback"]

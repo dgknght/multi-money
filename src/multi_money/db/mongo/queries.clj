@@ -1,11 +1,17 @@
 (ns multi-money.db.mongo.queries
   (:require [clojure.set :refer [rename-keys]]
+            [clojure.pprint :refer [pprint]]
+            [clojure.walk :refer [postwalk]]
+            [clojure.string :as str]
             [somnium.congomongo.coerce :refer [coerce-ordered-fields]]
             [camel-snake-kebab.core :refer [->snake_case]]
-            [camel-snake-kebab.extras :refer [transform-keys]]
             [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.util :refer [unqualify-keys]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
+
+(derive clojure.lang.PersistentArrayMap ::map)
+(derive clojure.lang.PersistentHashMap ::map)
+(derive clojure.lang.PersistentVector ::vector)
 
 ; TODO: Move this into the mongo.accounts ns
 #_(defn apply-account-id
@@ -53,50 +59,76 @@
           (map #(update-in % [0] ->mongodb-op))
           (into {}))})
 
-(defmethod adjust-complex-criterion :or
+#_(defmethod adjust-complex-criterion :or
   [[f [_ & cs]]]
   {f {:$or (mapv (fn [[op v]]
                    {(->mongodb-op op) v})
                  cs)}})
 
-(defmulti ^:private ->mongodb-sort
-  (fn [x]
-    (when (vector? x)
-      :explicit)))
+(defmulti ^:private ->mongodb-sort type)
 
 (defmethod ->mongodb-sort :default
   [x]
-  [x 1])
+  [(->snake_case x) 1])
 
-(defmethod ->mongodb-sort :explicit
+(defmethod ->mongodb-sort ::vector
   [sort]
-  (update-in sort [1] #(if (= :asc %) 1 -1)))
+  (-> sort
+      (update-in [0] ->snake_case)
+      (update-in [1] #(if (= :asc %) 1 -1))))
+
 (defn- adjust-complex-criteria
   [criteria]
   (->> criteria
        (map adjust-complex-criterion)
        (into {})))
 
-(defn apply-criteria
-  [query criteria]
-  (if (seq criteria)
-    (assoc query :where (-> criteria
-                            unqualify-keys
-                            (update-in-if [:id] coerce-id)
-                            (rename-keys {:id :_id})
-                            adjust-complex-criteria))
-    query))
+(defn- contains-mongo-keys?
+  [m]
+  (->> (keys m)
+       (map name)
+       (some #(str/starts-with? % "$"))))
+
+; TODO: I think we need to be smarter about transforming model keys
+; verses mongo query keys, but this will keep us moving for now
+(defn- ->mongo-keys
+  [m]
+  (postwalk (fn [x]
+              (if (and (map? x)
+                       (not (contains-mongo-keys? x)))
+                (update-keys x ->snake_case)
+                x))
+            m))
+
+(defmulti ^:private translate-criteria type)
+
+(defmethod translate-criteria ::map
+  [criteria]
+  (-> criteria
+        unqualify-keys
+        ->mongo-keys
+        (update-in-if [:id] coerce-id)
+        (rename-keys {:id :_id})
+        adjust-complex-criteria))
+
+(defmethod translate-criteria ::vector
+  [[oper & crits :as c]]
+  (if (= :or oper)
+    {:$or (mapv translate-criteria crits)}
+    (throw (ex-info
+             (format "Unsupported conjunction %s" oper)
+             {:criteria c}))))
 
 (defn- apply-options
-  [query {:keys [limit order-by]}]
-  (cond-> query
-    limit (assoc :limit limit)
-    order-by (assoc :sort (coerce-ordered-fields (map ->mongodb-sort order-by)))))
+  [query {:keys [limit order-by sort]}]
+  (let [srt (or sort order-by)]
+    (cond-> query
+      limit (assoc :limit limit)
+      srt (assoc :sort (coerce-ordered-fields (map ->mongodb-sort srt))))))
 
 (defn criteria->query
   ([criteria] (criteria->query criteria {}))
   ([criteria options]
-   (-> {}
-       (apply-criteria (dissoc criteria :account-id)) ; TODO: remove dissoc once we've moved account-id logic into mongo.accounts ns
-       #_(apply-account-id criteria) ; TODO: Remove this once we've move account id logic into mongo.accounts ns
-       (apply-options options))))
+   (let [where (translate-criteria criteria)]
+     (cond-> (apply-options {} options)
+       (seq where) (assoc :where where)))))
