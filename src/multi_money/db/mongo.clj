@@ -125,10 +125,10 @@
   [{:keys [database username password host port]
     :or {host "localhost"
          port 27017}}]
-  (log/debug "make a connection to host %s on port %s and database %s"
-             host
-             port
-             database)
+  (pprint {::connect database
+           ::host host
+           ::port port
+           ::username username})
   (m/make-connection database
                      :instance {:host host :port port}
                      :username username
