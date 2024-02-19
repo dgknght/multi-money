@@ -44,7 +44,7 @@ docker compose -f dev-compose up -d
 
 #### SQL
 ```bash
-lein do create-db, migrate && lein with-profile +test do create-db, migrate
+lein do init-sql, migrate && lein with-profile +test do init-sql, migrate
 ```
 
 ## Development
