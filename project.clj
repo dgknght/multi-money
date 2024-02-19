@@ -41,10 +41,11 @@
                   [reagent "1.1.1" ]
                   [reagent-utils "0.3.3"]]
    :plugins [[lein-cloverage "1.2.2"]]
+  :jvm-opts ["-Duser.timezone=UTC"]
    :cloverage {:fail-threshold 90
                :low-watermark 90
                :high-watermark 95
-               :ns-exclude-regex [#"multi-money.db.sql.migrations"
+               :ns-exclude-regex [#"multi-money.db.sql.tasks"
                                   #"multi-money.db.mongo.tasks"
                                   #"multi-money.repl"
                                   #"multi-money.server"

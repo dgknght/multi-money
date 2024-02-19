@@ -6,27 +6,35 @@
             [cheshire.generate :refer [add-encoder]])
   (:import [org.bson.types ObjectId Decimal128]
            java.util.Date
-           [java.time LocalDate ZoneOffset]
+           java.math.BigDecimal
+           [java.time LocalDate ZoneId ZoneOffset]
            com.fasterxml.jackson.core.JsonGenerator))
 
 (add-encoder ObjectId
              (fn [^ObjectId id ^JsonGenerator g]
                (.writeString g (str id))))
 
+; This is actually not specified to MongoDB
 (add-encoder LocalDate
              (fn [^LocalDate d ^JsonGenerator g]
                (.writeString g (str d))))
 
 (extend-protocol ConvertibleToMongo
   LocalDate
-  (clojure->mongo [^LocalDate d] (t/java-date (.toInstant (.atStartOfDay d)
-                                                          (ZoneOffset/UTC)))))
+  (clojure->mongo [^LocalDate d]
+    (t/java-date
+      (.toInstant (.atStartOfDay d)
+                  (ZoneOffset/UTC))))
+  BigDecimal
+  (clojure->mongo [^BigDecimal d]
+    (Decimal128. d)))
 
 (extend-protocol ConvertibleFromMongo
   Date ; TODO: Will we ever want this to be a date-time?
   (mongo->clojure [^Date d _kwd]
-    (let [f (t/formatter "yyyy-MM-dd")]
-      (t/local-date f (t/format f d))))
+    (.toLocalDate
+      (.atZone (t/instant d)
+               (ZoneId/systemDefault))))
 
   Decimal128
   (mongo->clojure [^Decimal128 d _kwd] (.bigDecimalValue d)))
