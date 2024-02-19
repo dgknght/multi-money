@@ -18,7 +18,7 @@
   (m/with-mongo (admin-conn)
     (let [roles (doto (com.mongodb.BasicDBObject.)
                   (.append "role" "readWrite")
-                  (.append "db" (env :mongo-database)))
+                  (.append "db" (env :mongo-db-name)))
           cmd (doto (com.mongodb.BasicDBObject.)
                 (.append "createUser" (env :mongo-app-user))
                 (.append "pwd" (env :mongo-app-password))
