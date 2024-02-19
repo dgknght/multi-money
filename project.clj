@@ -59,10 +59,10 @@
              "fig:test"    ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
              "init-mongo"  ["run" "-m" "multi-money.db.mongo.tasks/init"]
              "index-mongo" ["run" "-m" "multi-money.db.mongo.tasks/index"]
-             "init-sql"    ["run" "-m" "multi-money.db.sql.migrations/init"]
-             "migrate"     ["run" "-m" "multi-money.db.sql.migrations/migrate"]
-             "rollback"    ["run" "-m" "multi-money.db.sql.migrations/rollback"]
-             "remigrate"   ["run" "-m" "multi-money.db.sql.migrations/remigrate"]
+             "init-sql"    ["run" "-m" "multi-money.db.sql.tasks/init"]
+             "migrate"     ["run" "-m" "multi-money.db.sql.tasks/migrate"]
+             "rollback"    ["run" "-m" "multi-money.db.sql.tasks/rollback"]
+             "remigrate"   ["run" "-m" "multi-money.db.sql.tasks/remigrate"]
              "routes"      ["run" "-m" "multi-money.handler/print-routes"]}
 
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
