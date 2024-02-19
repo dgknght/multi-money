@@ -1,21 +1,32 @@
 (ns multi-money.db.mongo.types
-  (:import org.bson.types.ObjectId
-           #_java.time.LocalDate
-           #_java.util.Date
-           #_org.bson.types.Decimal128
-           #_com.fasterxml.jackson.core.JsonGenerator))
+  (:require [clojure.pprint :refer [pprint]]
+            [java-time.api :as t]
+            [somnium.congomongo.coerce :refer [ConvertibleFromMongo
+                                               ConvertibleToMongo]]
+            [cheshire.generate :refer [add-encoder]])
+  (:import [org.bson.types ObjectId Decimal128]
+           java.util.Date
+           [java.time LocalDate ZoneOffset]
+           com.fasterxml.jackson.core.JsonGenerator))
 
-#_(add-encoder ObjectId
+(add-encoder ObjectId
              (fn [^ObjectId id ^JsonGenerator g]
                (.writeString g (str id))))
 
-#_(extend-protocol ConvertibleToMongo
-  LocalDate
-  (clojure->mongo [^LocalDate d] (t/java-date d)))
+(add-encoder LocalDate
+             (fn [^LocalDate d ^JsonGenerator g]
+               (.writeString g (str d))))
 
-#_(extend-protocol ConvertibleFromMongo
-  Date
-  (mongo->clojure [^Date d _kwd] (t/local-date d))
+(extend-protocol ConvertibleToMongo
+  LocalDate
+  (clojure->mongo [^LocalDate d] (t/java-date (.toInstant (.atStartOfDay d)
+                                                          (ZoneOffset/UTC)))))
+
+(extend-protocol ConvertibleFromMongo
+  Date ; TODO: Will we ever want this to be a date-time?
+  (mongo->clojure [^Date d _kwd]
+    (let [f (t/formatter "yyyy-MM-dd")]
+      (t/local-date f (t/format f d))))
 
   Decimal128
   (mongo->clojure [^Decimal128 d _kwd] (.bigDecimalValue d)))
