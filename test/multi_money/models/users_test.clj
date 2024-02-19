@@ -11,7 +11,7 @@
             [multi-money.test-context :refer [with-context
                                               find-user]]
             [multi-money.models.users :as usrs]
-            #_[multi-money.db.mongodb.ref]
+            [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]
             #_[multi-money.db.xtdb.ref]
             #_[multi-money.db.datomic.ref]))
@@ -65,7 +65,9 @@
 (dbtest update-a-user
   (with-context update-context
     (let [user (find-user "john@doe.com")
-          updated (usrs/put (assoc user :user/given-name "Johnnyboy"))]
+          updated (usrs/put (-> user
+                                (update-in [:id] str) ; test id coersion
+                                (assoc :user/given-name "Johnnyboy")))]
       (is (comparable? {:user/given-name "Johnnyboy"}
                        updated)
           "The result contains the updated attributes")
@@ -143,7 +145,7 @@
     (testing "current token"
       (let [user (find-user "john@doe.com")
             token (usrs/tokenize user)]
-        (is (= user (usrs/detokenize token))
+        (is (comparable? user (usrs/detokenize token))
             "The original user record is returned")))
     (testing "expired token"
       (let [user (find-user "john@doe.com")

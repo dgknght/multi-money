@@ -25,7 +25,9 @@
     :else   '(constantly true)))
 
 (def isolate (when-let [isolate (env :isolate)]
-               #{isolate}))
+               #{(if (string? isolate)
+                   (keyword isolate)
+                   isolate)}))
 (def ignore-strategy (if isolate
                        (complement isolate)
                        (->set (env :ignore-strategy))))
