@@ -20,14 +20,14 @@
 
                    :mongo
                    {:multi-money.db/provider :mongo
-                    :database :config/mongo-database
+                    :database :config/mongo-db-name
                     :username :config/mongo-app-user
                     :password :config/mongo-app-password}}}
  :mongo-adm-user "adm_user"
  :mongo-adm-password "please01"
  :mongo-app-user "app_user"
  :mongo-app-password "please02"
- :mongo-database "money_test"
+ :mongo-db-name "money_test"
  :sql-app-user "app_user"
  :sql-app-password "please03"
  :sql-ddl-user "ddl_user"

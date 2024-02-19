@@ -23,7 +23,7 @@
                 (.append "createUser" (env :mongo-app-user))
                 (.append "pwd" (env :mongo-app-password))
                 (.append "roles" (to-array [roles])))]
-      (m/with-db (env :mongo-database)
+      (m/with-db (env :mongo-db-name)
         (pprint {::init (m/command! cmd)})))))
 
 (defn index
