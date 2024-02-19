@@ -122,8 +122,11 @@
       (m/destroy! c {}))))
 
 (defn connect
-  [{:keys [database username password]}]
+  [{:keys [database username password host port]
+    :or {host "localhost"
+         port 27017}}]
   (m/make-connection database
+                     :instance {:host host :port port}
                      :username username
                      :password password))
 
