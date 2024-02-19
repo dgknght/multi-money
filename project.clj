@@ -6,7 +6,7 @@
 
    :min-lein-version "2.7.1"
 
-   :dependencies [[org.clojure/clojure "1.10.0"]
+   :dependencies [[org.clojure/clojure "1.11.1"]
                   [org.clojure/clojurescript "1.11.4"]
                   [ch.qos.logback/logback-classic "1.2.3"]
                   [cljsjs/react "17.0.2-0"]
@@ -27,6 +27,7 @@
                   [clj-commons/secretary "1.2.4"]
                   [com.github.seancorfield/next.jdbc "1.3.909" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
                   [org.postgresql/postgresql "42.6.0"]
+                  [congomongo "2.6.0" :exclusions [org.clojure/data.json]]
                   [dev.weavejester/ragtime "0.9.3" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha org.clojure/tools.logging]]
                   [com.github.dgknght/app-lib "0.3.10"
                    :exclusions [ring/ring-core
@@ -40,10 +41,12 @@
                   [reagent "1.1.1" ]
                   [reagent-utils "0.3.3"]]
    :plugins [[lein-cloverage "1.2.2"]]
+  :jvm-opts ["-Duser.timezone=UTC"]
    :cloverage {:fail-threshold 90
                :low-watermark 90
                :high-watermark 95
-               :ns-exclude-regex [#"multi-money.db.sql.migrations"
+               :ns-exclude-regex [#"multi-money.db.sql.tasks"
+                                  #"multi-money.db.mongo.tasks"
                                   #"multi-money.repl"
                                   #"multi-money.server"
                                   #"multi-money.handler"]} ; I'd really like to cover everything except print-routes, but I can't get that working
@@ -51,15 +54,17 @@
    :source-paths ["src"]
    :uberjar-name "multi-money.jar"
 
-   :aliases {"fig:build" ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
-             "fig:min"   ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
-             "fig:prod"  ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
-             "fig:test"  ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
-             "create-db" ["run" "-m" "multi-money.db.sql.migrations/create-db"]
-             "migrate"   ["run" "-m" "multi-money.db.sql.migrations/migrate"]
-             "rollback"  ["run" "-m" "multi-money.db.sql.migrations/rollback"]
-             "remigrate" ["run" "-m" "multi-money.db.sql.migrations/remigrate"]
-             "routes"    ["run" "-m" "multi-money.handler/print-routes"]}
+   :aliases {"fig:build"   ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
+             "fig:min"     ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
+             "fig:prod"    ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
+             "fig:test"    ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
+             "init-mongo"  ["run" "-m" "multi-money.db.mongo.tasks/init"]
+             "index-mongo" ["run" "-m" "multi-money.db.mongo.tasks/index"]
+             "init-sql"    ["run" "-m" "multi-money.db.sql.tasks/init"]
+             "migrate"     ["run" "-m" "multi-money.db.sql.tasks/migrate"]
+             "rollback"    ["run" "-m" "multi-money.db.sql.tasks/rollback"]
+             "remigrate"   ["run" "-m" "multi-money.db.sql.tasks/remigrate"]
+             "routes"      ["run" "-m" "multi-money.handler/print-routes"]}
 
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
                   :init-ns multi-money.repl}

@@ -20,6 +20,6 @@
 
 (defn icon-with-text
   [icon-id text & {:as opts}]
-  [:div.d-flex.align-items-center
+  [:span.d-flex.align-items-center
    (icon* icon-id opts)
    [:span.ms-2 text]])
