@@ -12,3 +12,13 @@ services:
       POSTGRES_PASSWORD: please01
       POSTGRES_USER: adm_user
       POSTGRES_DB: adm_user
+  mongo:
+    image: mongo:7.0
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - ~/.mongodb:/etc/mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: adm_user
+      MONGO_INITDB_ROOT_PASSWORD: please01
