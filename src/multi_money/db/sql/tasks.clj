@@ -1,4 +1,4 @@
-(ns multi-money.db.sql.migrations
+(ns multi-money.db.sql.tasks
   (:require [clojure.pprint :refer [pprint]]
             [config.core :refer [env]]
             [next.jdbc :as j]
