@@ -1,4 +1,4 @@
-(ns multi-money.db.sql.migrations
+(ns multi-money.db.sql.tasks
   (:require [clojure.pprint :refer [pprint]]
             [config.core :refer [env]]
             [next.jdbc :as j]
@@ -29,8 +29,8 @@
 (def ^:private role-cmd
   "create role %s with LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD '%s'")
 
-(defn create-db
-  "Creates the database specified in the configuration.
+(defn init
+  "Creates the database and users specified in the configuration.
 
   We assume that by default there is a database with the same
   name as the user. We connect using that database, and then create

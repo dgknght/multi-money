@@ -40,7 +40,7 @@
            (icns/icon :pencil :size :large)))))
 
 (deftest create-an-icon-element-with-text
-  (is (= [:div.d-flex.align-items-center
+  (is (= [:span.d-flex.align-items-center
           [:svg.bi
            {:fill "currentColor"
             :width 24
