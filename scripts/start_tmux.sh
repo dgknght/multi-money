@@ -31,7 +31,7 @@ tmux send-keys 'git status' C-m
 tmux new-window -t $session:2 -n 'sql' 'psql --host=localhost --username=adm_user -d adm_user -w'
 
 # MongoDB window
-# tmux new-window -t $session:3 -n 'mongodb' 'mongosh'
+tmux new-window -t $session:3 -n 'mongodb' 'mongosh mongodb://adm_user:please01@localhost:27017/admin'
 
 # Log window
 tmux new-window -t $session:4 -n 'logs'
