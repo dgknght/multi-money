@@ -17,6 +17,10 @@
   [_db model & _]
   (db/model-type model))
 
+(defn- id
+  [{:keys [id]}]
+  (coerce-id id))
+
 (defmulti insert dispatch)
 (defmulti select dispatch)
 (defmulti update dispatch)
@@ -40,12 +44,12 @@
     (get-in result [(keyword (name table) "id")])))
 
 (defmethod update :default
-  [db {:keys [id] :as model}]
+  [db model]
   {:pre [(:id model)]}
   (let [table (infer-table-name model)
         s (for-update table
                       (dissoc model :id)
-                      {:id id}
+                      {:id (id model)}
                       jdbc/snake-kebab-opts)
         result (jdbc/execute-one! db s {:return-keys [:id]})]
 
