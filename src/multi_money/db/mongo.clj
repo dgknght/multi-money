@@ -124,13 +124,7 @@
 (defn connect
   [{:keys [database username password host port]
     :or {host "localhost"
-         port 27017}
-    :as cfg}]
-  (pprint {::connect database
-           ::host host
-           ::port port
-           ::username username
-           ::cfg cfg})
+         port 27017}}]
   (m/make-connection database
                      :instance {:host host :port port}
                      :username username
