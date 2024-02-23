@@ -61,8 +61,7 @@
         ignore? (if ignore
                   (some-fn ignore namespace)
                   namespace)]
-    (prewalk (fn [x]
-               (qualify-key x k {:ignore? ignore?}))
+    (prewalk #(qualify-key % k {:ignore? ignore?})
              m)))
 
 (defn unqualify-keys
