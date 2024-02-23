@@ -9,6 +9,7 @@
    :dependencies [[org.clojure/clojure "1.11.1"]
                   [org.clojure/clojurescript "1.11.4"]
                   [ch.qos.logback/logback-classic "1.2.3"]
+                  [com.google.guava/guava "31.0.1-jre"] ; This is here because if I let com.datomic/dev-local resolve its dependencies naturally, I end up with the *-android build instead
                   [cljsjs/react "17.0.2-0"]
                   [cljsjs/react-dom "17.0.2-0"]
                   [clojure.java-time "1.4.2"]
@@ -26,9 +27,14 @@
                   [venantius/accountant "0.2.5"]
                   [clj-commons/secretary "1.2.4"]
                   [com.github.seancorfield/next.jdbc "1.3.909" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
-                  [org.postgresql/postgresql "42.6.0"]
-                  [congomongo "2.6.0" :exclusions [org.clojure/data.json]]
+                  [org.postgresql/postgresql "42.6.0" :exclusions [org.checkerframework/checker-qual]]
                   [dev.weavejester/ragtime "0.9.3" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha org.clojure/tools.logging]]
+                  [congomongo "2.6.0" :exclusions [org.clojure/data.json]]
+                  [com.datomic/client-pro "1.0.76"
+                   :exclusions [com.cognitect/transit-java
+                                com.datomic/client-impl-shared
+                                org.eclipse.jetty/jetty-client
+                                com.datomic/client-api]]
                   [com.github.dgknght/app-lib "0.3.10"
                    :exclusions [ring/ring-core
                                 org.clojure/clojure
@@ -69,7 +75,12 @@
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
                   :init-ns multi-money.repl}
    :profiles {:dev [:project/dev :profiles/dev]
-              :project/dev {:dependencies [[com.bhauman/figwheel-main "0.2.17" :exclusions [org.slf4j/slf4j-api]]
+              :project/dev {:dependencies [[com.datomic/dev-local "1.0.243"
+                                            :exclusions [com.cognitect/transit-java
+                                                         org.clojure/tools.reader
+                                                         com.cognitect/transit-clj]]
+                                           [com.bhauman/figwheel-main "0.2.17"
+                                            :exclusions [org.slf4j/slf4j-api]]
                                            [com.bhauman/rebel-readline-cljs "0.1.4"]]
                             :source-paths ["env/dev"]
                             :resource-paths ["target" "env/dev/resources" "config/dev"]

@@ -1,10 +1,13 @@
 {:test? true
  :db {:active :sql
-      :strategies {#_"datomic"
-                   #_{:system "money-test"}
-
-                   #_"xtdb"
+      :strategies {#_"xtdb"
                    ;^:replace {:multi-money.db/provider :xtdb}
+
+                   :datomic
+                   {:multi-money.db/provider :datomic
+                    :server-type :dev-local
+                    :system "money-dev"
+                    :storage-dir "/home/doug/.datomic-storage"}
 
                    :sql
                    {:multi-money.db/provider :sql
