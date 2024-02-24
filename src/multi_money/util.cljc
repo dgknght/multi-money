@@ -207,3 +207,11 @@
               (rename-keys % k-map)
               %)
            c))
+
+(defn +id
+  "Given a map without an :id value, adds one with a random UUID as a value"
+  ([m] (+id m random-uuid))
+  ([m id-fn]
+   (if (:id m)
+     m
+     (assoc m :id (id-fn)))))
