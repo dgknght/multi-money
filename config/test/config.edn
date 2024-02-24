@@ -6,7 +6,8 @@
                    :datomic
                    {:multi-money.db/provider :datomic
                     :server-type :dev-local
-                    :system "money-dev"
+                    :system "local-test"
+                    :db-name "money"
                     :storage-dir "/home/doug/.datomic-storage"}
 
                    :sql

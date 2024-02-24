@@ -51,8 +51,9 @@
    :cloverage {:fail-threshold 90
                :low-watermark 90
                :high-watermark 95
-               :ns-exclude-regex [#"multi-money.db.sql.tasks"
+               :ns-exclude-regex [#"multi-money.db.datomic.tasks"
                                   #"multi-money.db.mongo.tasks"
+                                  #"multi-money.db.sql.tasks"
                                   #"multi-money.repl"
                                   #"multi-money.server"
                                   #"multi-money.handler"]} ; I'd really like to cover everything except print-routes, but I can't get that working
@@ -60,17 +61,18 @@
    :source-paths ["src"]
    :uberjar-name "multi-money.jar"
 
-   :aliases {"fig:build"   ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
-             "fig:min"     ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
-             "fig:prod"    ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
-             "fig:test"    ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
-             "init-mongo"  ["run" "-m" "multi-money.db.mongo.tasks/init"]
-             "index-mongo" ["run" "-m" "multi-money.db.mongo.tasks/index"]
-             "init-sql"    ["run" "-m" "multi-money.db.sql.tasks/init"]
-             "migrate"     ["run" "-m" "multi-money.db.sql.tasks/migrate"]
-             "rollback"    ["run" "-m" "multi-money.db.sql.tasks/rollback"]
-             "remigrate"   ["run" "-m" "multi-money.db.sql.tasks/remigrate"]
-             "routes"      ["run" "-m" "multi-money.handler/print-routes"]}
+   :aliases {"fig:build"      ["trampoline" "run" "-m" "figwheel.main" "-b" "dev" "-r"]
+             "fig:min"        ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]
+             "fig:prod"       ["run" "-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
+             "fig:test"       ["run" "-m" "figwheel.main" "-co" "test.cljs.edn" "-m" "multi-money.test-runner"]
+             "datomic-schema" ["run" "-m" "multi-money.db.datomic.tasks/apply-schema"]
+             "init-mongo"     ["run" "-m" "multi-money.db.mongo.tasks/init"]
+             "index-mongo"    ["run" "-m" "multi-money.db.mongo.tasks/index"]
+             "init-sql"       ["run" "-m" "multi-money.db.sql.tasks/init"]
+             "migrate"        ["run" "-m" "multi-money.db.sql.tasks/migrate"]
+             "rollback"       ["run" "-m" "multi-money.db.sql.tasks/rollback"]
+             "remigrate"      ["run" "-m" "multi-money.db.sql.tasks/remigrate"]
+             "routes"         ["run" "-m" "multi-money.handler/print-routes"]}
 
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
                   :init-ns multi-money.repl}
