@@ -1,6 +1,7 @@
 (ns multi-money.db.datomic.tasks
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
+            [clojure.pprint :refer [pprint]]
             [config.core :refer [env]]
             [datomic.client.api :as d]
             [multi-money.db :as db]))
@@ -10,12 +11,12 @@
                 slurp
                 io/resource
                 #(format "datomic/schema/%s.edn" %))
-          ["user"
-           #_"account"
-           #_"commodity"
+          ["model"
+           "user"
            #_"entity"
-           "model"
+           #_"commodity"
            #_"price"
+           #_"account"
            #_"transaction"]))
 
 (defn apply-schema
