@@ -30,6 +30,7 @@
                   [org.postgresql/postgresql "42.6.0" :exclusions [org.checkerframework/checker-qual]]
                   [dev.weavejester/ragtime "0.9.3" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha org.clojure/tools.logging]]
                   [congomongo "2.6.0" :exclusions [org.clojure/data.json]]
+                  [com.cognitect/hmac-authn "0.1.211" :exclusions [org.clojure/tools.analyzer org.clojure/tools.analyzer.jvm]]
                   [com.datomic/client-pro "1.0.76"
                    :exclusions [com.cognitect/transit-java
                                 com.datomic/client-impl-shared
