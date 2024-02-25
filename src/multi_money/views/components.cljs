@@ -88,7 +88,7 @@
                         :active? (= s current)
                         :caption s
                         :on-click #(reset! db-strategy s)})
-                     [:sql :mongo])}))
+                     [:sql :mongo :datomic])}))
 
 (defn- build-nav-items []
   [(db-strategy-nav-item)])
