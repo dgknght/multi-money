@@ -1,6 +1,5 @@
 (ns multi-money.db.datomic.users
   (:require [clojure.pprint :refer [pprint]]
-            [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.db.datomic :as d]))
 
 ; reshape the identities from
@@ -27,7 +26,6 @@
 ;                    :github "def456"}}
 (defmethod d/after-read :user
   [user]
-  (update-in-if user
-                [:user/identities]
-                (fn [oauth-ids]
-                  (into {} oauth-ids))))
+  (update-in user
+             [:user/identities]
+             #(into {} %)))
