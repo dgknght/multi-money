@@ -2,7 +2,6 @@
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
             [clojure.pprint :refer [pprint]]
-            [config.core :refer [env]]
             [datomic.client.api :as d]
             [multi-money.db :as db]))
 
