@@ -23,9 +23,7 @@
   ([] (apply-schema :datomic))
   ([config-key]
    (let [{:as cfg
-          :keys [db-name]} (dissoc (get-in env [:db
-                                                :strategies
-                                                config-key])
+          :keys [db-name]} (dissoc (db/config config-key)
                                    ::db/provider)]
      (assert cfg (str "No datomic configuration found for " config-key))
      (apply-schema (d/client cfg)

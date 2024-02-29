@@ -8,7 +8,7 @@
                     :server-type :dev-local
                     :system "local-test"
                     :db-name "money"
-                    :storage-dir "/home/doug/.datomic-storage"}
+                    :storage-dir :config/datomic-storage-dir}
 
                    :sql
                    {:multi-money.db/provider :sql
@@ -27,6 +27,7 @@
                     :database :config/mongo-db-name
                     :username :config/mongo-app-user
                     :password :config/mongo-app-password}}}
+ :datomic-storage-dir "/home/doug/.datomic-storage"
  :mongo-adm-user "adm_user"
  :mongo-adm-password "please01"
  :mongo-app-user "app_user"
