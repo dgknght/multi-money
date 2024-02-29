@@ -177,6 +177,7 @@
 
 (defmethod db/reify-storage :datomic
   [{:as config :keys [db-name]}]
+  {:pre [(:db-name config)]}
   (let [client (d/client config)
         conn (d/connect client {:db-name db-name})]
     (reify db/Storage
