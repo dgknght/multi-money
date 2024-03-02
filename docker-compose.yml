@@ -22,3 +22,28 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: adm_user
       MONGO_INITDB_ROOT_PASSWORD: please01
+  datomic-transactor:
+    image: datomic-pro:1.0.7075
+    restart: always
+    ports:
+      - 4334:4334
+    command:
+      - /datomic-pro/bin/transactor
+      - /config/transactor.properties
+  datomic-peer-server:
+    image: datomic-pro:1.0.7075
+    restart: always
+    ports:
+      - 8998:8998
+    command:
+      - /datomic-pro/bin/run
+      - -m
+      - datomic.peer-server
+      - -h
+      - localhost
+      - -p
+      - "8998"
+      - -a
+      - dev-access-key,dev-secret
+      - -d
+      - money_development,datomic:sql://money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
