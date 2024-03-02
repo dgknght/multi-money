@@ -173,7 +173,7 @@
 (defn- reset*
   [client db-name]
   (d/delete-database client {:db-name db-name})
-  (tsks/apply-schema client db-name))
+  (tsks/apply-schema client db-name :suppress-output? true))
 
 (defmethod db/reify-storage :datomic
   [{:as config :keys [db-name]}]

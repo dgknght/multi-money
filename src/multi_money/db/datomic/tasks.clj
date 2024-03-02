@@ -27,8 +27,15 @@
      (assert cfg (str "No datomic configuration found for " config-key))
      (apply-schema (d/client cfg)
                    db-name)))
-  ([client db-name]
-   (d/create-database client {:db-name db-name})
-   (d/transact (d/connect client {:db-name db-name})
-               {:tx-data (schema)
-                :db-name db-name})))
+  ([client db-name & {:keys [suppress-output?]}]
+   (try
+     (let [res (d/create-database client {:db-name db-name})]
+       (when-not suppress-output?
+         (pprint {::create-database res})))
+     (catch AbstractMethodError _
+       (println "The create-database function is not availabled. Skipping database creation.")))
+   (let [res (d/transact (d/connect client {:db-name db-name})
+                        {:tx-data (schema)
+                         :db-name db-name})]
+     (when-not suppress-output?
+       (pprint {::transact-schema res})))))
