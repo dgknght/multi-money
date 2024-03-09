@@ -14,6 +14,7 @@ services:
       POSTGRES_DB: adm_user
     healthcheck:
       test: ["CMD-SHELL", "PGPASSWORD=please01 sh -c 'pg_isready -U adm_user -d adm_user'"]
+
   mongo:
     image: mongo:7.0
     restart: always
@@ -24,32 +25,43 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: adm_user
       MONGO_INITDB_ROOT_PASSWORD: please01
+
   datomic-transactor:
     depends_on:
       sql:
         condition: service_healthy
-    image: datomic-pro:1.0.7075
+    image: datomic-pro-transactor
+    build:
+      context: ./docker-compose/datomic-transactor
     restart: always
     ports:
       - 4334:4334
       - 9999:9999
-    command:
-      - /datomic-pro/bin/transactor
-        # - -Ddatomic.pingHost=localhost
-        # - -Ddatomic.pingPort=9999
-      - /config/transactor.properties
     healthcheck:
-      test: curl -v -k https://localhost:9999/health
+      test: wget localhost:9999/health
       interval: 10s
       timeout: 3s
       retries: 5
       start_period: 5s
+
+  datomic-console:
+    image: datomic-pro:1.0.7075
+    depends_on:
+      datomic-transactor:
+        condition: service_healthy
+      sql:
+        condition: service_healthy
+    restart: always
+    ports:
+      - 8080:8080
+    command: /datomic-pro/bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
+
   datomic-peer-server:
     depends_on:
       datomic-transactor:
         condition: service_healthy
       sql:
-        condition: service_started
+        condition: service_healthy
     image: datomic-pro:1.0.7075
     restart: always
     ports:
@@ -66,3 +78,9 @@ services:
       - dev-access-key,dev-secret
       - -d
       - money_development,datomic:sql://money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
+    healthcheck:
+      test: ["CMD", "curl", "-k", "https://localhost:8998/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
