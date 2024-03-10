@@ -26,10 +26,21 @@ services:
       MONGO_INITDB_ROOT_USERNAME: adm_user
       MONGO_INITDB_ROOT_PASSWORD: please01
 
+  memcached:
+    image: memcached:1.6-bullseye
+    ports:
+      - 11211:11211
+    restart: always
+    depends_on:
+      sql:
+        condition: service_started
+
   datomic-transactor:
     depends_on:
       sql:
         condition: service_healthy
+      memcached:
+        condition: service_started
     image: datomic-pro-transactor
     build:
       context: ./docker-compose/datomic-transactor
@@ -74,6 +85,7 @@ services:
       - localhost
       - -p
       - "8998"
+      - -Ddatomic.memcachedServers=memcached:11211
       - -a
       - dev-access-key,dev-secret
       - -d
