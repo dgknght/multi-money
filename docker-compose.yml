@@ -3,7 +3,7 @@ version: "3.9"
 services:
   sql:
     image: postgres:16
-    restart: always
+    restart: on-failure
     ports:
       - 5432:5432
     volumes:
@@ -17,7 +17,7 @@ services:
 
   mongo:
     image: mongo:7.0
-    restart: always
+    restart: on-failure
     ports:
       - 27017:27017
     volumes:
@@ -30,7 +30,7 @@ services:
     image: memcached:1.6-bullseye
     ports:
       - 11211:11211
-    restart: always
+    restart: on-failure
     depends_on:
       sql:
         condition: service_started
@@ -44,7 +44,7 @@ services:
     image: datomic-pro-transactor
     build:
       context: ./docker-compose/datomic-transactor
-    restart: always
+    restart: on-failure
     ports:
       - 4334:4334
       - 9999:9999
@@ -62,7 +62,7 @@ services:
         condition: service_healthy
       sql:
         condition: service_healthy
-    restart: always
+    restart: on-failure
     ports:
       - 8080:8080
     command: /datomic-pro/bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
@@ -74,7 +74,7 @@ services:
       sql:
         condition: service_healthy
     image: datomic-pro:1.0.7075
-    restart: always
+    restart: on-failure
     ports:
       - 8998:8998
     command:
