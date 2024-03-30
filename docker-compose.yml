@@ -14,6 +14,8 @@ services:
       POSTGRES_DB: adm_user
     healthcheck:
       test: ["CMD-SHELL", "PGPASSWORD=please01 sh -c 'pg_isready -U adm_user -d adm_user'"]
+      interval: 10s
+      retries: 60
 
   sql-init:
     image: multi-money-util
