@@ -73,7 +73,7 @@ services:
         condition: service_healthy
       memcached:
         condition: service_started
-    image: datomic-pro:1.0.7075
+    image: dgknght/datomic-pro:1.0.7075
     volumes:
       - ./logs/datomic-transactor:/datomic-pro/log
       - ./docker-compose/datomic-transactor:/opt/datomic-pro/config
@@ -90,7 +90,7 @@ services:
       start_period: 5s
 
   datomic-console:
-    image: datomic-pro:1.0.7075
+    image: dgknght/datomic-pro:1.0.7075
     depends_on:
       datomic-transactor:
         condition: service_healthy
@@ -103,7 +103,9 @@ services:
     depends_on:
       datomic-transactor:
         condition: service_healthy
-    image: datomic-pro:1.0.7075
+      sql:
+        condition: service_healthy
+    image: dgknght/datomic-pro:1.0.7075
     restart: on-failure
     volumes:
       - ./logs/datomic-peer-server:/datomic-pro/log
