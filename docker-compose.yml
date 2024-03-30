@@ -7,13 +7,22 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ~/.postgres:/var/lib/postgresql/data
+      - ~/.postgres-multi-money:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: please01
       POSTGRES_USER: adm_user
       POSTGRES_DB: adm_user
     healthcheck:
       test: ["CMD-SHELL", "PGPASSWORD=please01 sh -c 'pg_isready -U adm_user -d adm_user'"]
+
+  sql-init:
+    image: multi-money-util
+    build:
+      target: util
+    command: lein do init-sql, migrate
+    depends_on:
+      sql:
+        condition: service_healthy
 
   mongo:
     image: mongo:7.0
@@ -25,6 +34,25 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: adm_user
       MONGO_INITDB_ROOT_PASSWORD: please01
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongo",
+          "--quiet",
+          "127.0.0.1/test",
+          "--eval",
+          "'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'"
+        ]
+
+  mongo-init:
+    image: multi-money-util
+    build:
+      target: util
+    command: lein do init-mongo, index-mongo
+    depends_on:
+      sql:
+        condition: service_healthy
 
   memcached:
     image: memcached:1.6-bullseye
@@ -34,6 +62,10 @@ services:
     depends_on:
       sql:
         condition: service_started
+    healthcheck:
+      test: echo stats | nc 127.0.0.1 11211
+      interval: 10s
+      retries: 60
 
   datomic-transactor:
     depends_on:
@@ -41,9 +73,11 @@ services:
         condition: service_healthy
       memcached:
         condition: service_started
-    image: datomic-pro-transactor
-    build:
-      context: ./docker-compose/datomic-transactor
+    image: datomic-pro:1.0.7075
+    volumes:
+      - ./logs/datomic-transactor:/datomic-pro/log
+      - ./docker-compose/datomic-transactor:/opt/datomic-pro/config
+    command: ./bin/transactor ./config/transactor.properties
     restart: on-failure
     ports:
       - 4334:4334
@@ -60,25 +94,23 @@ services:
     depends_on:
       datomic-transactor:
         condition: service_healthy
-      sql:
-        condition: service_healthy
     restart: on-failure
     ports:
       - 8080:8080
-    command: /datomic-pro/bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
+    command: ./bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
 
   datomic-peer-server:
     depends_on:
       datomic-transactor:
         condition: service_healthy
-      sql:
-        condition: service_healthy
     image: datomic-pro:1.0.7075
     restart: on-failure
+    volumes:
+      - ./logs/datomic-peer-server:/datomic-pro/log
     ports:
       - 8998:8998
     command:
-      - /datomic-pro/bin/run
+      - ./bin/run
       - -m
       - datomic.peer-server
       - -h
