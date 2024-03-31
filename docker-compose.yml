@@ -25,6 +25,9 @@ services:
     depends_on:
       sql:
         condition: service_healthy
+    volumes:
+      - ./config/integration:/usr/local/src/multi-money/config/dev
+      - ./logs/sql-init-tmp:/tmp
 
   mongo:
     image: mongo:7.0
@@ -55,6 +58,8 @@ services:
     depends_on:
       sql:
         condition: service_healthy
+    volumes:
+      - ./config/integration:/usr/local/src/multi-money/config/dev
 
   memcached:
     image: memcached:1.6-bullseye
