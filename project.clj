@@ -78,7 +78,7 @@
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
                   :init-ns multi-money.repl}
    :profiles {:dev [:project/dev :profiles/dev]
-              :project/dev {:dependencies [[com.datomic/dev-local "1.0.243"
+              :project/dev {:dependencies [[com.datomic/local "1.0.277"
                                             :exclusions [com.cognitect/transit-java
                                                          org.clojure/tools.reader
                                                          com.cognitect/transit-clj]]
