@@ -37,34 +37,9 @@ Set the following environment variables
 ### Docker
 Start the necessary services with docker compose
 ```bash
-docker compose -f dev-compose up -d
+docker compose up -d
 ```
-
-### Create and Migrate the databases
-
-#### SQL
-```bash
-lein do init-sql, migrate && lein with-profile +test do init-sql, migrate
-```
-
-## Development
-### Back end
-#### SQL
-Create and initialize the postgresql database.
-1. [Install docker-compose](https://docs.docker.com/compose/install/standalone/).
-2. Start docker compose with `docker-compose -f dev-compose.yml up -d`.
-3. Create the development database:
-```bash
-psql --username=app_user --host=localhost -W --command="CREATE DATABASE multi_money_development;"
-```
-4. Create the test database:
-```bash
-psql --username=app_user --host=localhost -W --command="CREATE DATABASE multi_money_test;"
-```
-5. Migrate the databases:
-```bash
-lein migrate && lein with-profile +test migrate
-```
+The compose file will launch jobs that initialize each data storage strategy.
 
 ### Test the server
 ```bash
