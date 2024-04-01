@@ -5,6 +5,8 @@ COPY project.clj .
 RUN <<EOF
 echo "{:dev {}}" > profiles.clj
 lein deps
+apt-get update
+apt-get install -y postgresql-client
 EOF
 COPY . .
 

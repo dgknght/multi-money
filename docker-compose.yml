@@ -1,5 +1,4 @@
 ---
-version: "3.9"
 services:
   sql:
     image: postgres:16
@@ -66,13 +65,23 @@ services:
     ports:
       - 11211:11211
     restart: on-failure
-    depends_on:
-      sql:
-        condition: service_started
     healthcheck:
       test: echo stats | nc 127.0.0.1 11211
       interval: 10s
       retries: 60
+
+  datomic-sql-init:
+    image: multi-money-util
+    build:
+      target: util
+    command: ./scripts/datomic-init.sh
+    environment:
+      SQL_HOST: sql
+      SQL_ADM_USER: adm_user
+      SQL_ADM_PASSWORD: please01
+    depends_on:
+      sql:
+        condition: service_healthy
 
   datomic-transactor:
     depends_on:
