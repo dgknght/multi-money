@@ -83,10 +83,21 @@ services:
       sql:
         condition: service_healthy
 
+  datomic-schema:
+    image: multi-money-util
+    build:
+      target: util
+    command: lein datomic-schema
+    volumes:
+      - ./config/integration:/usr/local/src/multi-money/config/dev
+    depends_on:
+      datomic-transactor:
+        condition: service_healthy
+
   datomic-transactor:
     depends_on:
-      sql:
-        condition: service_healthy
+      datomic-sql-init:
+        condition: service_completed_successfully
       memcached:
         condition: service_started
     image: dgknght/datomic-pro:1.0.7075
@@ -108,8 +119,8 @@ services:
   datomic-console:
     image: dgknght/datomic-pro:1.0.7075
     depends_on:
-      datomic-transactor:
-        condition: service_healthy
+      datomic-sql-init:
+        condition: service_completed_successfully
     restart: on-failure
     ports:
       - 8080:8080
@@ -119,8 +130,8 @@ services:
     depends_on:
       datomic-transactor:
         condition: service_healthy
-      sql:
-        condition: service_healthy
+      datomic-sql-init:
+        condition: service_completed_successfully
     image: dgknght/datomic-pro:1.0.7075
     restart: on-failure
     volumes:
