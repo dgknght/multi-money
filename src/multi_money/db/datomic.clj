@@ -3,16 +3,15 @@
             [clojure.pprint :refer [pprint]]
             [datomic.client.api :as d]
             [datomic.client.api.protocols :refer [Connection]]
-            [clj-time.coerce :as tc]
+            [multi-money.db.datomic.types :refer [coerce-id
+                                                  ->storable]]
             [multi-money.datalog :as dtl]
             [multi-money.util :refer [+id
                                       prepend
                                       apply-sort
                                       split-nils]]
             [multi-money.db :as db]
-            [multi-money.db.datomic.tasks :as tsks])
-  (:import org.joda.time.LocalDate
-           java.lang.String))
+            [multi-money.db.datomic.tasks :as tsks]))
 
 (derive clojure.lang.PersistentVector ::vector)
 (derive clojure.lang.PersistentArrayMap ::map)
@@ -20,16 +19,6 @@
 
 (defn- conj* [& args]
   (apply (fnil conj []) args))
-
-(defmulti coerce-id type)
-(defmethod coerce-id :default [id] id)
-(defmethod coerce-id String
-  [id]
-  (Long/parseLong id))
-
-(defmulti ->storable type)
-(defmethod ->storable :default [x] x)
-(defmethod ->storable LocalDate [d] (tc/to-long d))
 
 (defn apply-id
   [query {:keys [id]}]
