@@ -1,14 +1,17 @@
-{:test? true
- :db {:active :sql
+{:db {:active :sql
       :strategies {#_"xtdb"
                    ;^:replace {:multi-money.db/provider :xtdb}
 
-                   :datomic
-                   {:multi-money.db/provider :datomic
+                   :datomic/client
+                   {:multi-money.db/provider :datomic/client
                     :server-type :dev-local
                     :system "local-test"
                     :db-name "money"
                     :storage-dir :config/datomic-storage-dir}
+
+                   :datomic/peer
+                   {:multi-money.db/provider :datomic/peer
+                    :uri "datomic:sql://multi_money_test?jdbc:postgresql://localhost:5432/datomic?user=app_user&password=please03"}
 
                    :sql
                    {:multi-money.db/provider :sql

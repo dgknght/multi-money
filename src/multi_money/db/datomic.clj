@@ -1,13 +1,12 @@
 (ns multi-money.db.datomic
   (:require [clojure.set :refer [rename-keys]]
             [clojure.pprint :refer [pprint]]
-            [datomic.client.api :as d]
-            [datomic.client.api.protocols :refer [Connection]]
+            [datomic.api :as d-peer]
+            [datomic.client.api :as d-client]
             [multi-money.db.datomic.types :refer [coerce-id
                                                   ->storable]]
             [multi-money.datalog :as dtl]
             [multi-money.util :refer [+id
-                                      prepend
                                       apply-sort
                                       split-nils]]
             [multi-money.db :as db]
@@ -16,6 +15,14 @@
 (derive clojure.lang.PersistentVector ::vector)
 (derive clojure.lang.PersistentArrayMap ::map)
 (derive clojure.lang.PersistentHashMap ::map)
+
+(derive :datomic/peer :datomic/service)
+(derive :datomic/client :datomic/service)
+
+(defprotocol DatomicAPI
+  (transact [this tx-data options])
+  (query [this arg-map])
+  (reset [this]))
 
 (defn- conj* [& args]
   (apply (fnil conj []) args))
@@ -105,14 +112,13 @@
   [args])
 
 (defn- put*
-  [models {:keys [conn]}]
-  {:pre [(satisfies? Connection conn)]}
+  [models {:keys [api]}]
   (let [prepped (->> models
                      (map #(+id % (comp str random-uuid)))
                      (mapcat deconstruct)
                      (mapcat prep-for-put)
                      vec)
-        {:keys [tempids]} (d/transact conn {:tx-data prepped})]
+        {:keys [tempids]} (transact api prepped {})]
     (map #(or (tempids (:db/id %))
               (:db/id %))
          prepped)))
@@ -138,14 +144,9 @@
        (into {})))
 
 (defn- select*
-  [criteria options {:keys [conn]}]
-  (let [query (-> criteria
-                  (criteria->query options)
-                  (update-in [:args]
-                             prepend
-                             (or (::db options)
-                                 (d/db conn))))
-        raw-result (d/q query)]
+  [criteria options {:keys [api]}]
+  (let [qry (criteria->query criteria options)
+        raw-result (query api qry)]
     (->> raw-result
          (map first)
          (remove naked-id?)
@@ -155,23 +156,72 @@
          (apply-sort options))))
 
 (defn- delete*
-  [models {:keys [conn]}]
-  (d/transact conn {:tx-data (mapv #(vector :db/add (:id %) :model/deleted? true)
-                                   models)}))
+  [models {:keys [api]}]
+  (transact api
+            (mapv #(vector :db/add (:id %) :model/deleted? true)
+                  models)
+            {}))
 
-(defn- reset*
-  [client db-name]
-  (d/delete-database client {:db-name db-name})
-  (tsks/apply-schema client db-name :suppress-output? true))
+(defmulti init-api ::db/provider)
 
-(defmethod db/reify-storage :datomic
+(defmethod init-api :datomic/peer
+  [{:keys [uri] :as config}]
+  (reify DatomicAPI
+    (transact [_ tx-data options]
+      (let [conn (d-peer/connect uri)]
+        @(apply d-peer/transact conn tx-data (mapcat identity options))))
+    (query [_ {:keys [query args]}]
+      ; TODO: take in the as-of date-time
+      (let [conn (d-peer/connect uri)
+            db (d-peer/db conn)]
+        (apply d-peer/q query (cons db args))))
+    (reset [_]
+      (d-peer/delete-database uri)
+      (d-peer/create-database uri)
+      (tsks/apply-schema config {:suppress-output? true}))))
+
+(defmethod init-api :datomic/client
   [{:as config :keys [db-name]}]
-  {:pre [(:db-name config)]}
-  (let [client (d/client config)
-        conn (d/connect client {:db-name db-name})]
+  (let [client (d-client/client config)
+        conn (d-client/connect client {:db-name db-name})]
+    (reify DatomicAPI
+      (transact [_ tx-data options]
+        (let [result (apply d-client/transact
+                            conn
+                            {:txt-data tx-data}
+                            (mapcat identity options))]
+
+          (pprint {::client client
+                   ::conn conn
+                   ::transact tx-data
+                   ::options options
+                   ::result result
+                   ::users (try
+                             (d-client/q '{:find [(pull ?e [*])]
+                                           :where [[?e :user/email ?email]]}
+                                         (d-client/db conn))
+                             (catch clojure.lang.ExceptionInfo e
+                               {:error (.getMessage e)
+                                :data (ex-data e)}))})
+
+          result))
+      (query [_ {:as arg-map :keys [args]}]
+        ; TODO: take in the as-of date-time
+        (apply d-client/q
+               arg-map
+               (cons (d-client/db conn) args)))
+      (reset [_]
+        (d-client/delete-database client {:db-name db-name})
+        (d-client/create-database client {:db-name db-name})
+        (d-client/transact (d-client/connect client {:db-name db-name})
+                                                   {:tx-data (tsks/schema)})))))
+
+(defmethod db/reify-storage :datomic/service
+  [config]
+  (let [api (init-api config)]
     (reify db/Storage
-      (put [_ models]       (put* models {:conn conn}))
-      (select [_ crit opts] (select* crit opts {:conn conn}))
-      (delete [_ models]    (delete* models {:conn conn}))
+      (put [_ models]       (put* models {:api api}))
+      (select [_ crit opts] (select* crit opts {:api api}))
+      (delete [_ models]    (delete* models {:api api}))
       (close [_])
-      (reset [_]            (reset* client db-name)))))
+      (reset [_]            (reset api)))))

@@ -1,6 +1,7 @@
 (ns multi-money.helpers
   (:require [clojure.test :refer [deftest testing]]
             [clojure.pprint :refer [pprint]]
+            [clojure.string :as str]
             [config.core :refer [env]]
             [ring.mock.request :as req]
             [dgknght.app-lib.test :refer [parse-json-body]]
@@ -24,13 +25,20 @@
     exclude `(complement ~(->set exclude))
     :else   '(constantly true)))
 
+(defn- ->keyword
+  [s]
+  (let [[k n-space] (reverse (str/split s #"(?i)[^a-z0-9]+"))]
+    (keyword n-space k)))
+
 (def isolate (when-let [isolate (env :isolate)]
                #{(if (string? isolate)
-                   (keyword isolate)
+                   (->keyword isolate)
                    isolate)}))
+
 (def ignore-strategy (if isolate
                        (complement isolate)
                        (->set (env :ignore-strategy))))
+
 (def honor-strategy (complement ignore-strategy))
 
 (defn reset-db [f]

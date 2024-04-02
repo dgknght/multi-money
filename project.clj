@@ -30,12 +30,19 @@
                   [org.postgresql/postgresql "42.6.0" :exclusions [org.checkerframework/checker-qual]]
                   [dev.weavejester/ragtime "0.9.3" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha org.clojure/tools.logging]]
                   [congomongo "2.6.0" :exclusions [org.clojure/data.json]]
+                  [commons-io/commons-io "2.16.0"]
                   [com.cognitect/hmac-authn "0.1.211" :exclusions [org.clojure/tools.analyzer org.clojure/tools.analyzer.jvm]]
                   [com.datomic/client-pro "1.0.76"
                    :exclusions [com.cognitect/transit-java
                                 com.datomic/client-impl-shared
                                 org.eclipse.jetty/jetty-client
+                                org.clojure/tools.reader
                                 com.datomic/client-api]]
+                  [com.datomic/peer "1.0.7075"
+                   :exclusions [com.google.errorprone/error_prone_annotations
+                                commons-io
+                                org.slf4j/slf4j-api
+                                org.checkerframework/checker-qual]]
                   [com.github.dgknght/app-lib "0.3.10"
                    :exclusions [ring/ring-core
                                 org.clojure/clojure
@@ -80,6 +87,8 @@
    :profiles {:dev [:project/dev :profiles/dev]
               :project/dev {:dependencies [[com.datomic/local "1.0.277"
                                             :exclusions [com.cognitect/transit-java
+                                                         com.datomic/client
+                                                         commons-io
                                                          org.clojure/tools.reader
                                                          com.cognitect/transit-clj]]
                                            [com.bhauman/figwheel-main "0.2.17"

@@ -19,6 +19,7 @@
                                                       multi-money.db.sql.tasks/remigrate
                                                       multi-money.db.mongo.tasks/init
                                                       multi-money.db.mongo.tasks/index
+                                                      multi-money.db.datomic.tasks/apply-schema
                                                       multi-money.util/local-date?
                                                       multi-money.util/<-storable-date
                                                       multi-money.util/qualify-keys

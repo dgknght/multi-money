@@ -2,10 +2,10 @@
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
             [clojure.pprint :refer [pprint]]
-            [datomic.client.api :as d]
+            [datomic.api :as d]
             [multi-money.db :as db]))
 
-(defn- schema []
+(defn schema []
   (mapcat (comp edn/read-string
                 slurp
                 io/resource
@@ -19,23 +19,17 @@
            #_"transaction"]))
 
 (defn apply-schema
-  ([] (apply-schema :datomic))
+  ([] (apply-schema :datomic/peer))
   ([config-key]
    (let [{:as cfg
           :keys [db-name]} (dissoc (db/config config-key)
                                    ::db/provider)]
      (assert cfg (str "No datomic configuration found for " config-key))
-     (apply-schema (d/client cfg)
+     (apply-schema cfg
                    db-name)))
-  ([client db-name & {:keys [suppress-output?]}]
-   (try
-     (let [res (d/create-database client {:db-name db-name})]
-       (when-not suppress-output?
-         (pprint {::create-database res})))
-     (catch AbstractMethodError _
-       (println "The create-database function is not availabled. Skipping database creation.")))
-   (let [res (d/transact (d/connect client {:db-name db-name})
-                        {:tx-data (schema)
-                         :db-name db-name})]
+  ([{:keys [uri]} {:keys [suppress-output?]}]
+   (d/create-database uri)
+   (let [res (d/transact (d/connect uri)
+                         (schema))]
      (when-not suppress-output?
-       (pprint {::transact-schema res})))))
+       (pprint {::transact-schema @res})))))
