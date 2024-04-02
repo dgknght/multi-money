@@ -83,8 +83,6 @@ services:
       sql:
         condition: service_healthy
 
-  # TODO: This is where the database money_development is created, but it can't start because it depends on the peer server, which can't start because the database hasn't been created yet
-  # Can I connect directly to the transctor instead?
   datomic-schema:
     image: multi-money-util
     build:
@@ -94,7 +92,7 @@ services:
       - ./config/integration:/usr/local/src/multi-money/config/dev
       - ./logs/datomic-schema-tmp:/tmp
     depends_on:
-      datomic-peer-server:
+      datomic-transactor:
         condition: service_healthy
 
   datomic-transactor:
@@ -129,8 +127,8 @@ services:
       - 8080:8080
     command: ./bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
 
-  # TODO: This is failing to start because the database "money_development" does not exist yet
   datomic-peer-server:
+    profiles: [donotstart]
     depends_on:
       datomic-transactor:
         condition: service_healthy
