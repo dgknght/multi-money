@@ -23,5 +23,4 @@
 (add-watch db-strategy
            ::state
            (fn [_cursor _id _before strategy]
-             (pprint {::db-strategy-changed strategy})
              (cookies/set! :db-strategy (name strategy))))
