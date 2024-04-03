@@ -1,6 +1,10 @@
 ---
 services:
   sql:
+    profiles:
+      - sql
+      - datomic-peer
+      - datomic-client
     image: postgres:16
     restart: on-failure
     ports:
@@ -17,6 +21,10 @@ services:
       retries: 60
 
   sql-init:
+    profiles:
+      - sql
+      - datomic-peer
+      - datomic-client
     image: multi-money-util
     build:
       target: util
@@ -29,6 +37,8 @@ services:
       - ./logs/sql-init-tmp:/tmp
 
   mongo:
+    profiles:
+      - mongo
     image: mongo:7.0
     restart: on-failure
     ports:
@@ -50,17 +60,22 @@ services:
         ]
 
   mongo-init:
+    profiles:
+      - mongo
     image: multi-money-util
     build:
       target: util
     command: lein do init-mongo, index-mongo
     depends_on:
-      sql:
+      mongo:
         condition: service_healthy
     volumes:
       - ./config/integration:/usr/local/src/multi-money/config/dev
 
   memcached:
+    profiles:
+      - datomic-peer # Is this needed in the peer profile?
+      - datomic-client
     image: memcached:1.6-bullseye
     ports:
       - 11211:11211
@@ -71,6 +86,10 @@ services:
       retries: 60
 
   datomic-sql-init:
+    profiles:
+      - sql
+      - datomic-peer
+      - datomic-client
     image: multi-money-util
     build:
       target: util
@@ -83,19 +102,10 @@ services:
       sql:
         condition: service_healthy
 
-  datomic-schema:
-    image: multi-money-util
-    build:
-      target: util
-    command: lein datomic-schema
-    volumes:
-      - ./config/integration:/usr/local/src/multi-money/config/dev
-      - ./logs/datomic-schema-tmp:/tmp
-    depends_on:
-      datomic-transactor:
-        condition: service_healthy
-
   datomic-transactor:
+    profiles:
+      - datomic-peer
+      - datomic-client
     depends_on:
       datomic-sql-init:
         condition: service_completed_successfully
@@ -117,17 +127,37 @@ services:
       retries: 5
       start_period: 5s
 
+  datomic-schema:
+    profiles:
+      - datomic-peer
+      - datomic-client
+    image: multi-money-util
+    build:
+      target: util
+    command: lein datomic-schema
+    volumes:
+      - ./config/integration:/usr/local/src/multi-money/config/dev
+      - ./logs/datomic-schema-tmp:/tmp
+    depends_on:
+      datomic-transactor:
+        condition: service_healthy
+
   datomic-console:
+    profiles:
+      - datomic-peer
+      - datomic-client
     image: dgknght/datomic-pro:1.0.7075
     depends_on:
-      datomic-sql-init:
-        condition: service_completed_successfully
+      datomic-transactor:
+        condition: service_healthy
     restart: on-failure
     ports:
       - 8080:8080
     command: ./bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
 
   datomic-peer-server:
+    profiles:
+      - datomic-client
     depends_on:
       datomic-transactor:
         condition: service_healthy
