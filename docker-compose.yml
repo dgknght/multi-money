@@ -33,7 +33,7 @@ services:
       sql:
         condition: service_healthy
     volumes:
-      - ./config/integration:/usr/local/src/multi-money/config/dev
+      - ./config/dev:/usr/local/src/multi-money/config/dev
       - ./logs/sql-init-tmp:/tmp
 
   mongo:
@@ -70,7 +70,7 @@ services:
       mongo:
         condition: service_healthy
     volumes:
-      - ./config/integration:/usr/local/src/multi-money/config/dev
+      - ./config/dev:/usr/local/src/multi-money/config/dev
 
   memcached:
     profiles:
@@ -87,7 +87,6 @@ services:
 
   datomic-sql-init:
     profiles:
-      - sql
       - datomic-peer
       - datomic-client
     image: multi-money-util
@@ -136,7 +135,7 @@ services:
       target: util
     command: lein datomic-schema
     volumes:
-      - ./config/integration:/usr/local/src/multi-money/config/dev
+      - ./config/dev:/usr/local/src/multi-money/config/dev
       - ./logs/datomic-schema-tmp:/tmp
     depends_on:
       datomic-transactor:
