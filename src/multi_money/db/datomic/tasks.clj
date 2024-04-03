@@ -19,7 +19,7 @@
            #_"transaction"]))
 
 (defn apply-schema
-  ([] (apply-schema :datomic/peer))
+  ([] (apply-schema :datomic-peer))
   ([config-key]
    (let [{:as cfg
           :keys [db-name]} (dissoc (db/config config-key)
