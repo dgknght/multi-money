@@ -166,19 +166,22 @@
 
 (defmethod init-api :datomic/peer
   [{:keys [uri] :as config}]
-  (reify DatomicAPI
-    (transact [_ tx-data options]
-      (let [conn (d-peer/connect uri)]
-        @(apply d-peer/transact conn tx-data (mapcat identity options))))
-    (query [_ {:keys [query args]}]
-      ; TODO: take in the as-of date-time
-      (let [conn (d-peer/connect uri)
-            db (d-peer/db conn)]
-        (apply d-peer/q query (cons db args))))
-    (reset [_]
-      (d-peer/delete-database uri)
-      (d-peer/create-database uri)
-      (tsks/apply-schema config {:suppress-output? true}))))
+  (let [conn (d-peer/connect uri)]
+    (reify DatomicAPI
+      (transact [_ tx-data options]
+        @(apply d-peer/transact
+                conn
+                tx-data
+                (mapcat identity options)))
+      (query [_ {:keys [query args]}]
+        ; TODO: take in the as-of date-time
+        (apply d-peer/q
+               query
+               (cons (d-peer/db conn) args)))
+      (reset [_]
+        (d-peer/delete-database uri)
+        (d-peer/create-database uri)
+        (tsks/apply-schema config {:suppress-output? true})))))
 
 (defmethod init-api :datomic/client
   [{:as config :keys [db-name]}]
@@ -186,29 +189,14 @@
         conn (d-client/connect client {:db-name db-name})]
     (reify DatomicAPI
       (transact [_ tx-data options]
-        (let [result (apply d-client/transact
-                            conn
-                            {:txt-data tx-data}
-                            (mapcat identity options))]
-
-          (pprint {::client client
-                   ::conn conn
-                   ::transact tx-data
-                   ::options options
-                   ::result result
-                   ::users (try
-                             (d-client/q '{:find [(pull ?e [*])]
-                                           :where [[?e :user/email ?email]]}
-                                         (d-client/db conn))
-                             (catch clojure.lang.ExceptionInfo e
-                               {:error (.getMessage e)
-                                :data (ex-data e)}))})
-
-          result))
-      (query [_ {:as arg-map :keys [args]}]
+        (apply d-client/transact
+               conn
+               {:tx-data tx-data}
+               (mapcat identity options)))
+      (query [_ {:keys [query args]}]
         ; TODO: take in the as-of date-time
         (apply d-client/q
-               arg-map
+               query
                (cons (d-client/db conn) args)))
       (reset [_]
         (d-client/delete-database client {:db-name db-name})
