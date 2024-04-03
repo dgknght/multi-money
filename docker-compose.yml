@@ -128,7 +128,6 @@ services:
     command: ./bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
 
   datomic-peer-server:
-    profiles: [donotstart]
     depends_on:
       datomic-transactor:
         condition: service_healthy
@@ -143,14 +142,14 @@ services:
       - -m
       - datomic.peer-server
       - -h
-      - localhost
+      - datomic-peer-server
       - -p
       - "8998"
       - -Ddatomic.memcachedServers=memcached:11211
       - -a
       - dev-access-key,dev-secret
       - -d
-      - money_development,datomic:sql://money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
+      - multi_money_development,datomic:sql://multi_money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:8998/health"]
       interval: 30s
