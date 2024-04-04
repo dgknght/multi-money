@@ -140,6 +140,8 @@ services:
     depends_on:
       datomic-transactor:
         condition: service_healthy
+    environment:
+      DATOMIC_STORAGE_URI: datomic:sql://multi_money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
 
   datomic-console:
     profiles:
