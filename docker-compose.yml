@@ -5,16 +5,19 @@ services:
       - sql
       - datomic-peer
       - datomic-client
+      - all
     image: postgres:16
     restart: on-failure
     ports:
       - 5432:5432
     volumes:
-      - ~/.postgres-multi-money:/var/lib/postgresql/data
+      - ~/.volumes/multi-money/postgres:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: please01
       POSTGRES_USER: adm_user
       POSTGRES_DB: adm_user
+      LOG_STATEMENT: all
+      LOG_MIN_MESSAGES: INFO
     healthcheck:
       test: ["CMD-SHELL", "PGPASSWORD=please01 sh -c 'pg_isready -U adm_user -d adm_user'"]
       interval: 10s
@@ -25,26 +28,31 @@ services:
       - sql
       - datomic-peer
       - datomic-client
+      - all
     image: multi-money-util
     build:
       target: util
-    command: lein do init-sql, migrate
+    command: lein with-profile util init-sql
     depends_on:
       sql:
         condition: service_healthy
     volumes:
-      - ./config/dev:/usr/local/src/multi-money/config/dev
+      - ./config/dev:/usr/local/src/multi-money/config
       - ./logs/sql-init-tmp:/tmp
+      - ~/.volumes/multi-money/maven:/opt/maven
+    environment:
+      SQL_HOST: sql
 
   mongo:
     profiles:
       - mongo
+      - all
     image: mongo:7.0
     restart: on-failure
     ports:
       - 27017:27017
     volumes:
-      - ~/.mongodb:/etc/mongo
+      - ~/.volumes/multi-money/mongodb:/etc/mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: adm_user
       MONGO_INITDB_ROOT_PASSWORD: please01
@@ -62,20 +70,23 @@ services:
   mongo-init:
     profiles:
       - mongo
+      - all
     image: multi-money-util
     build:
       target: util
-    command: lein do init-mongo, index-mongo
+    command: lein with-profile util do init-mongo, index-mongo
     depends_on:
       mongo:
         condition: service_healthy
     volumes:
-      - ./config/dev:/usr/local/src/multi-money/config/dev
+      - ./config/dev:/usr/local/src/multi-money/config
+      - ~/.volumes/multi-money/maven:/opt/maven
 
   memcached:
     profiles:
       - datomic-peer # Is this needed in the peer profile?
       - datomic-client
+      - all
     image: memcached:1.6-bullseye
     ports:
       - 11211:11211
@@ -89,6 +100,7 @@ services:
     profiles:
       - datomic-peer
       - datomic-client
+      - all
     image: multi-money-util
     build:
       target: util
@@ -105,6 +117,7 @@ services:
     profiles:
       - datomic-peer
       - datomic-client
+      - all
     depends_on:
       datomic-sql-init:
         condition: service_completed_successfully
@@ -130,23 +143,27 @@ services:
     profiles:
       - datomic-peer
       - datomic-client
+      - all
     image: multi-money-util
     build:
       target: util
-    command: lein datomic-schema
+    command: lein with-profile util datomic-schema
     volumes:
-      - ./config/dev:/usr/local/src/multi-money/config/dev
+      - ./config/dev:/usr/local/src/multi-money/config
       - ./logs/datomic-schema-tmp:/tmp
+      - ~/.volumes/multi-money/maven:/opt/maven
     depends_on:
       datomic-transactor:
         condition: service_healthy
     environment:
       DATOMIC_STORAGE_URI: datomic:sql://multi_money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
+      SQL_HOST: sql
 
   datomic-console:
     profiles:
       - datomic-peer
       - datomic-client
+      - all
     image: dgknght/datomic-pro:1.0.7075
     depends_on:
       datomic-transactor:
@@ -159,9 +176,10 @@ services:
   datomic-peer-server:
     profiles:
       - datomic-client
+      - all
     depends_on:
-      datomic-transactor:
-        condition: service_healthy
+      datomic-schema:
+        condition: service_completed_successfully
     image: dgknght/datomic-pro:1.0.7075
     restart: on-failure
     volumes:
