@@ -76,7 +76,8 @@
              "datomic-schema" ["run" "-m" "multi-money.db.datomic.tasks/apply-schema"]
              "init-mongo"     ["run" "-m" "multi-money.db.mongo.tasks/init"]
              "index-mongo"    ["run" "-m" "multi-money.db.mongo.tasks/index"]
-             "init-sql"       ["run" "-m" "multi-money.db.sql.tasks/init"]
+             "create-sql"     ["run" "-m" "multi-money.db.sql.tasks/create"]
+             "init-sql"       ["do" "create-sql," "migrate"]
              "migrate"        ["run" "-m" "multi-money.db.sql.tasks/migrate"]
              "rollback"       ["run" "-m" "multi-money.db.sql.tasks/rollback"]
              "remigrate"      ["run" "-m" "multi-money.db.sql.tasks/remigrate"]
@@ -84,23 +85,26 @@
 
    :repl-options {:welcome (println "Welcome to accounting with multiple, persistent storage options!")
                   :init-ns multi-money.repl}
-   :profiles {:dev [:project/dev :profiles/dev]
-              :project/dev {:dependencies [[com.datomic/local "1.0.277"
-                                            :exclusions [com.cognitect/transit-java
-                                                         com.datomic/client
-                                                         commons-io
-                                                         org.clojure/tools.reader
-                                                         com.cognitect/transit-clj]]
-                                           [com.bhauman/figwheel-main "0.2.17"
-                                            :exclusions [org.slf4j/slf4j-api]]
-                                           [com.bhauman/rebel-readline-cljs "0.1.4"]]
-                            :source-paths ["env/dev"]
-                            :resource-paths ["target" "env/dev/resources" "config/dev"]
-                            ;; need to add the compiled assets to the :clean-targets
-                            :clean-targets ^{:protect false} ["target"]}
-              :test [:project/test :profiles/test]
-              :project/test {:source-paths ^:replace ["env/dev" "src"]
-                             :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]}
+   :profiles {:dev {:dependencies [[com.datomic/local "1.0.277"
+                                    :exclusions [com.cognitect/transit-java
+                                                 com.datomic/client
+                                                 commons-io
+                                                 org.clojure/tools.reader
+                                                 com.cognitect/transit-clj]]
+                                   [com.bhauman/figwheel-main "0.2.17"
+                                    :exclusions [org.slf4j/slf4j-api]]
+                                   [com.bhauman/rebel-readline-cljs "0.1.4"]]
+                    :source-paths ["env/dev"]
+                    :resource-paths ["target" "env/dev/resources" "config/dev"]
+                    ;; need to add the compiled assets to the :clean-targets
+                    :clean-targets ^{:protect false} ["target"]}
+              :test {:source-paths ^:replace ["env/dev" "src"]
+                     :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]}
+              :util [:default :util*]
+              :util* {:resource-paths ^:replace ["target" "resources" "env/prod/resources" "config"]
+                      :local-repo "/opt/maven"}
+              :docker [:default :local-repo]
+              :local-repo {:local-repo "local-m2"}
               :uberjar {:source-paths ["env/prod"]
                         :resource-paths ["env/prod/resources" "config/prod"]
                         :dependencies [[com.bhauman/figwheel-main "0.2.17"]]

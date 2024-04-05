@@ -13,7 +13,7 @@
                                          (multi-money.core/dbfn)
                                          (multi-money.helpers/dbtest)]}
            :clojure-lsp/unused-public-var {:exclude #{multi-money.repl
-                                                      multi-money.db.sql.tasks/init
+                                                      multi-money.db.sql.tasks/create
                                                       multi-money.db.sql.tasks/migrate
                                                       multi-money.db.sql.tasks/rollback
                                                       multi-money.db.sql.tasks/remigrate
