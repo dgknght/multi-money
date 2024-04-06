@@ -32,12 +32,15 @@
                   [congomongo "2.6.0" :exclusions [org.clojure/data.json]]
                   [commons-io/commons-io "2.16.0"]
                   [com.cognitect/hmac-authn "0.1.211" :exclusions [org.clojure/tools.analyzer org.clojure/tools.analyzer.jvm]]
-                  [com.datomic/client-pro "1.0.76"
+                  [org.ow2.asm/asm "9.7"]
+                  [com.datomic/client-pro "1.0.78"
                    :exclusions [com.cognitect/transit-java
                                 com.datomic/client-impl-shared
                                 org.eclipse.jetty/jetty-client
-                                org.clojure/tools.reader
-                                com.datomic/client-api]]
+                                org.eclipse.jetty/jetty-http
+                                org.eclipse.jetty/jetty-io
+                                org.eclipse.jetty/jetty-util
+                                org.clojure/tools.reader]]
                   [com.datomic/peer "1.0.7075"
                    :exclusions [com.google.errorprone/error_prone_annotations
                                 commons-io
@@ -55,7 +58,8 @@
                   [reagent "1.1.1" ]
                   [reagent-utils "0.3.3"]]
    :plugins [[lein-cloverage "1.2.2"]]
-  :jvm-opts ["-Duser.timezone=UTC"]
+   :repositories [["sonatype" "https://oss.sonatype.org/content/repositories/releases"]]
+   :jvm-opts ["-Duser.timezone=UTC"]
    :cloverage {:fail-threshold 90
                :low-watermark 90
                :high-watermark 95
@@ -106,11 +110,8 @@
                                                  commons-io
                                                  org.clojure/tools.reader
                                                  com.cognitect/transit-clj]]]}
-              :util [:default :util*]
-              :util* {:resource-paths ^:replace ["target" "resources" "env/prod/resources" "config"]
-                      :local-repo "/opt/maven"}
-              :docker [:default :local-repo]
-              :local-repo {:local-repo "local-m2"}
+              :util {:resource-paths ^:replace ["target" "resources" "env/prod/resources" "config"]}
+              :docker {:local-repo "/root/.m2"}
               :uberjar {:source-paths ["env/prod"]
                         :resource-paths ["env/prod/resources" "config/prod"]
                         :dependencies [[com.bhauman/figwheel-main "0.2.17"]]

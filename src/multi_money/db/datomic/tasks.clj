@@ -29,12 +29,16 @@
      (apply-schema cfg
                    db-name)))
   ([{:keys [uri]} {:keys [suppress-output?]}]
-   (log/info "creating the database...")
-   (d/create-database uri)
-   (log/info "database created.")
-   (log/info "applying the schema...")
-   (let [res @(d/transact (d/connect uri)
-                         (schema))]
-     (when-not suppress-output?
-       (pprint {::transact-schema res})))
-   (log/info "done applying the schema.")))
+   (try
+     (log/info "creating the database...")
+     (d/create-database uri)
+     (log/info "database created.")
+     (log/info "applying the schema...")
+     (let [res @(d/transact (d/connect uri)
+                            (schema))]
+       (when-not suppress-output?
+         (pprint {::transact-schema res})))
+     (log/info "done applying the schema.")
+     (catch Exception e
+       (log/error e "error when applying the schema."))
+     (finally (d/shutdown true)))))

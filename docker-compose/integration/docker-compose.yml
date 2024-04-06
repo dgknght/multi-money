@@ -1,17 +1,12 @@
 ---
 services:
   sql:
-    profiles:
-      - sql
-      - datomic-peer
-      - datomic-client
-      - all
     image: postgres:16
     restart: on-failure
     ports:
       - 5432:5432
     volumes:
-      - ~/.volumes/multi-money/postgres:/var/lib/postgresql/data
+      - ~/.volumes/multi-money-integration/postgres:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: please01
       POSTGRES_USER: adm_user
@@ -24,35 +19,26 @@ services:
       retries: 60
 
   sql-init:
-    profiles:
-      - sql
-      - datomic-peer
-      - datomic-client
-      - all
     image: multi-money-util
     build:
+      context: ../../
       target: util
-    command: lein with-profile util init-sql
+    command: lein with-profile +util init-sql
     depends_on:
       sql:
         condition: service_healthy
     volumes:
-      - ./docker-compose/dev/config:/usr/local/src/multi-money/config
+      - ./config:/usr/local/src/multi-money/config
       - ./logs/sql-init-tmp:/tmp
-      - ~/.volumes/multi-money/maven:/opt/maven
-    environment:
-      SQL_HOST: sql
+      - ~/.volumes/multi-money/maven:/root/.m2
 
   mongo:
-    profiles:
-      - mongo
-      - all
     image: mongo:7.0
     restart: on-failure
     ports:
       - 27017:27017
     volumes:
-      - ~/.volumes/multi-money/mongodb:/etc/mongo
+      - ~/.volumes/multi-money-integration/mongodb:/etc/mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: adm_user
       MONGO_INITDB_ROOT_PASSWORD: please01
@@ -68,27 +54,21 @@ services:
       retries: 60
 
   mongo-init:
-    profiles:
-      - mongo
-      - all
     image: multi-money-util
     build:
+      context: ../../
       target: util
-    command: lein with-profile util do init-mongo, index-mongo
+    command: lein with-profile +util do init-mongo, index-mongo
     depends_on:
       mongo:
         condition: service_healthy
     volumes:
-      - ./docker-compose/dev/config:/usr/local/src/multi-money/config
-      - ~/.volumes/multi-money/maven:/opt/maven
+      - ./config:/usr/local/src/multi-money/config
+      - ~/.volumes/multi-money/maven:/root/.m2
     environment:
       MONGO_HOST: mongo
 
   memcached:
-    profiles:
-      - datomic-peer # Is this needed in the peer profile?
-      - datomic-client
-      - all
     image: memcached:1.6-bullseye
     ports:
       - 11211:11211
@@ -99,12 +79,9 @@ services:
       retries: 60
 
   datomic-sql-init:
-    profiles:
-      - datomic-peer
-      - datomic-client
-      - all
     image: multi-money-util
     build:
+      context: ../../
       target: util
     command: ./scripts/datomic-init.sh
     environment:
@@ -112,14 +89,10 @@ services:
       SQL_ADM_USER: adm_user
       SQL_ADM_PASSWORD: please01
     depends_on:
-      sql:
-        condition: service_healthy
+      sql-init:
+        condition: service_completed_successfully
 
   datomic-transactor:
-    profiles:
-      - datomic-peer
-      - datomic-client
-      - all
     depends_on:
       datomic-sql-init:
         condition: service_completed_successfully
@@ -128,7 +101,7 @@ services:
     image: dgknght/datomic-pro:1.0.7075
     volumes:
       - ./logs/datomic-transactor:/datomic-pro/log
-      - ./docker-compose/dev/datomic-transactor:/opt/datomic-pro/config
+      - ./datomic-transactor:/opt/datomic-pro/config
     command: ./bin/transactor ./config/transactor.properties
     restart: on-failure
     ports:
@@ -142,30 +115,23 @@ services:
       start_period: 5s
 
   datomic-schema:
-    profiles:
-      - datomic-peer
-      - datomic-client
-      - all
     image: multi-money-util
     build:
+      context: ../../
       target: util
-    command: lein with-profile util datomic-schema
+    command: lein with-profile +util datomic-schema
     volumes:
-      - ./docker-compose/dev/config:/usr/local/src/multi-money/config
+      - ./config:/usr/local/src/multi-money/config
       - ./logs/datomic-schema-tmp:/tmp
-      - ~/.volumes/multi-money/maven:/opt/maven
+      - ~/.volumes/multi-money/maven:/root/.m2
     depends_on:
       datomic-transactor:
         condition: service_healthy
     environment:
-      DATOMIC_STORAGE_URI: datomic:sql://multi_money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
+      DATOMIC_STORAGE_URI: datomic:sql://money_integration?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
       SQL_HOST: sql
 
   datomic-console:
-    profiles:
-      - datomic-peer
-      - datomic-client
-      - all
     image: dgknght/datomic-pro:1.0.7075
     depends_on:
       datomic-transactor:
@@ -176,9 +142,6 @@ services:
     command: ./bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
 
   datomic-peer-server:
-    profiles:
-      - datomic-client
-      - all
     depends_on:
       datomic-schema:
         condition: service_completed_successfully
@@ -198,12 +161,28 @@ services:
       - "8998"
       - -Ddatomic.memcachedServers=memcached:11211
       - -a
-      - dev-access-key,dev-secret
+      - integration-access-key,integration-secret
       - -d
-      - multi_money_development,datomic:sql://multi_money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
+      - money_integration,datomic:sql://money_integration?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:8998/health"]
       interval: 30s
       timeout: 30s
       retries: 5
       start_period: 10s
+
+  web:
+    image: multi-money-web
+    build:
+      context: ../../
+    command: java clojure.main -m multi-money.server
+    environment:
+      CLASSPATH: /opt/multi-money/config:/opt/multi-money/multi-money.jar
+    depends_on:
+      datomic-peer-server:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./config:/opt/multi-money/config
+      - ~/.volumes/multi-money/maven:/root/.m2

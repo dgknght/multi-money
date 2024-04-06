@@ -1,28 +1,4 @@
-FROM clojure:lein-2.10.0-jammy AS datomic-pro
-WORKDIR /tmp
-
-# Install maven
-ENV M2_HOME /opt/maven
-ENV PATH $M2_HOME/bin:$PATH
-
-RUN <<EOF
-apt-get update
-apt-get install -y curl unzip
-curl https://mirrors.estointernet.in/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz -O
-tar -xvf apache-maven-3.6.3-bin.tar.gz
-mv apache-maven-3.6.3 /opt/maven
-mvn -version
-EOF
-
-# Install datomic
-RUN <<EOF
-curl https://datomic-pro-downloads.s3.amazonaws.com/1.0.7075/datomic-pro-1.0.7075.zip -O
-unzip datomic-pro-1.0.7075.zip
-EOF
-WORKDIR /tmp/datomic-pro-1.0.7075
-RUN bin/maven-install
-
-FROM datomic-pro AS util
+FROM clojure:lein-2.10.0-jammy AS util
 RUN mkdir -p /usr/local/src/multi-money
 WORKDIR /usr/local/src/multi-money
 COPY project.clj .
@@ -34,7 +10,6 @@ COPY . .
 
 FROM util AS build
 RUN <<EOF
-apt-get update
 apt-get install --yes nodejs npm
 npm install --global sass
 EOF
