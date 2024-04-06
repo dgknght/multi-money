@@ -99,7 +99,13 @@
                     ;; need to add the compiled assets to the :clean-targets
                     :clean-targets ^{:protect false} ["target"]}
               :test {:source-paths ^:replace ["env/dev" "src"]
-                     :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]}
+                     :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]
+                     :dependencies [[com.datomic/local "1.0.277"
+                                    :exclusions [com.cognitect/transit-java
+                                                 com.datomic/client
+                                                 commons-io
+                                                 org.clojure/tools.reader
+                                                 com.cognitect/transit-clj]]]}
               :util [:default :util*]
               :util* {:resource-paths ^:replace ["target" "resources" "env/prod/resources" "config"]
                       :local-repo "/opt/maven"}
