@@ -35,11 +35,20 @@ Set the following environment variables
 - GOOGLE_OAUTH_CLIENT_SECRET
 
 ### Docker
+Create a file at `docker-compose/config/config.edn`. Start with the contents
+of `config/test/config.edn` and edit as necessary.
+
 Start the necessary services with docker compose
 ```bash
-docker compose up -d
+docker compose up -d --profile all
 ```
 The compose file will launch jobs that initialize each data storage strategy.
+
+Optionally, you can specify one of the following profiles:
+- sql
+- mongo
+- datomic-peer
+- datomic-client
 
 ### Test the server
 ```bash
