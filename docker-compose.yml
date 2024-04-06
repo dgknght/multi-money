@@ -58,14 +58,14 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: please01
     healthcheck:
       test:
-        [
-          "CMD",
-          "mongo",
-          "--quiet",
-          "127.0.0.1/test",
-          "--eval",
-          "'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'"
-        ]
+        - CMD-SHELL
+        - "echo \"quit(db.runCommand('ping').ok ? 0 : 2)\""
+        - "|"
+        - mongosh
+        - "127.0.0.1/test"
+        - "--quiet"
+      interval: 10s
+      retries: 60
 
   mongo-init:
     profiles:
@@ -81,6 +81,8 @@ services:
     volumes:
       - ./config/dev:/usr/local/src/multi-money/config
       - ~/.volumes/multi-money/maven:/opt/maven
+    environment:
+      MONGO_HOST: mongo
 
   memcached:
     profiles:
