@@ -1,5 +1,6 @@
 (ns multi-money.db.datomic.tasks
   (:require [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [clojure.edn :as edn]
             [clojure.pprint :refer [pprint]]
             [datomic.api :as d]
@@ -28,8 +29,12 @@
      (apply-schema cfg
                    db-name)))
   ([{:keys [uri]} {:keys [suppress-output?]}]
+   (log/info "creating the database...")
    (d/create-database uri)
-   (let [res (d/transact (d/connect uri)
+   (log/info "database created.")
+   (log/info "applying the schema...")
+   (let [res @(d/transact (d/connect uri)
                          (schema))]
      (when-not suppress-output?
-       (pprint {::transact-schema @res})))))
+       (pprint {::transact-schema res})))
+   (log/info "done applying the schema.")))
