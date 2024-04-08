@@ -25,7 +25,7 @@ lein do fig:prod, uberjar
 EOF
 
 FROM eclipse-temurin:11-jre-jammy as web
-WORKDIR /usr/local/bin
+WORKDIR /opt/multi-money
 COPY --from=build /usr/local/src/multi-money/target/multi-money.jar .
 CMD ["java", "-cp", "multi-money.jar", "clojure.main", "-m", "multi-money.server"]
 
