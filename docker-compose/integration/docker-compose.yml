@@ -29,7 +29,7 @@ services:
         condition: service_healthy
     volumes:
       - ./config:/usr/local/src/multi-money/config
-      - ./logs/sql-init-tmp:/tmp
+      - ../../logs/sql-init-tmp:/tmp
       - ~/.volumes/multi-money/maven:/root/.m2
 
   mongo:
@@ -100,7 +100,7 @@ services:
         condition: service_started
     image: dgknght/datomic-pro:1.0.7075
     volumes:
-      - ./logs/datomic-transactor:/datomic-pro/log
+      - ../../logs/datomic-transactor:/datomic-pro/log
       - ./datomic-transactor:/opt/datomic-pro/config
     command: ./bin/transactor ./config/transactor.properties
     restart: on-failure
@@ -122,7 +122,7 @@ services:
     command: lein with-profile +util datomic-schema
     volumes:
       - ./config:/usr/local/src/multi-money/config
-      - ./logs/datomic-schema-tmp:/tmp
+      - ../../logs/datomic-schema-tmp:/tmp
       - ~/.volumes/multi-money/maven:/root/.m2
     depends_on:
       datomic-transactor:
@@ -148,7 +148,7 @@ services:
     image: dgknght/datomic-pro:1.0.7075
     restart: on-failure
     volumes:
-      - ./logs/datomic-peer-server:/datomic-pro/log
+      - ../../logs/datomic-peer-server:/datomic-pro/log
     ports:
       - 8998:8998
     command:
@@ -165,10 +165,10 @@ services:
       - -d
       - money_integration,datomic:sql://money_integration?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
     healthcheck:
-      test: ["CMD", "curl", "-k", "https://localhost:8998/health"]
+      test: curl -k https://localhost:8998/health
       interval: 30s
       timeout: 30s
-      retries: 5
+      retries: 10
       start_period: 10s
 
   web:
@@ -176,11 +176,13 @@ services:
     build:
       context: ../../
     command: java clojure.main -m multi-money.server
+    ports:
+      - 3010:3000
     environment:
       CLASSPATH: /opt/multi-money/config:/opt/multi-money/multi-money.jar
     depends_on:
       datomic-peer-server:
-        condition: service_healthy
+        condition: service_started # don't know why the health check is failing
       mongo:
         condition: service_healthy
     volumes:
