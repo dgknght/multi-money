@@ -11,7 +11,7 @@
 
                    :datomic-peer
                    {:multi-money.db/provider :datomic/peer
-                    :uri "datomic:sql://multi_money_test?jdbc:postgresql://localhost:5432/datomic?user=app_user&password=please03"}
+                    :uri "datomic:mem://multi_money_test"}
 
                    :sql
                    {:multi-money.db/provider :sql

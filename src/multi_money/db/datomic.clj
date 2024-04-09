@@ -166,22 +166,20 @@
 
 (defmethod init-api :datomic/peer
   [{:keys [uri] :as config}]
-  (let [conn (d-peer/connect uri)]
-    (reify DatomicAPI
-      (transact [_ tx-data options]
-        @(apply d-peer/transact
-                conn
-                tx-data
-                (mapcat identity options)))
-      (query [_ {:keys [query args]}]
-        ; TODO: take in the as-of date-time
-        (apply d-peer/q
-               query
-               (cons (d-peer/db conn) args)))
-      (reset [_]
-        (d-peer/delete-database uri)
-        (d-peer/create-database uri)
-        (tsks/apply-schema config {:suppress-output? true})))))
+  (reify DatomicAPI
+    (transact [_ tx-data options]
+      @(apply d-peer/transact
+              (d-peer/connect uri)
+              tx-data
+              (mapcat identity options)))
+    (query [_ {:keys [query args]}]
+      ; TODO: take in the as-of date-time
+      (apply d-peer/q
+             query
+             (cons (-> uri d-peer/connect d-peer/db)
+                   args)))
+    (reset [_]
+      (tsks/apply-schema config {:suppress-output? true}))))
 
 (defmethod init-api :datomic/client
   [{:as config :keys [db-name]}]
@@ -199,10 +197,8 @@
                query
                (cons (d-client/db conn) args)))
       (reset [_]
-        (d-client/delete-database client {:db-name db-name})
-        (d-client/create-database client {:db-name db-name})
-        (d-client/transact (d-client/connect client {:db-name db-name})
-                                                   {:tx-data (tsks/schema)})))))
+        ; probably should not ever get here, as this is for unit tests only
+        ))))
 
 (defmethod db/reify-storage :datomic/service
   [config]
