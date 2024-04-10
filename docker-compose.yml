@@ -32,14 +32,14 @@ services:
     image: multi-money-util
     build:
       target: util
-    command: lein with-profile +util init-sql
+    command: lein with-profile +util,+docker init-sql
     depends_on:
       sql:
         condition: service_healthy
     volumes:
       - ./docker-compose/dev/config:/usr/src/multi-money/config
       - ./logs/sql-init-tmp:/tmp
-      - ~/.volumes/multi-money/maven:/usr/src/multi-money
+      - ~/.volumes/multi-money/maven:/root/.m2
     environment:
       SQL_HOST: sql
 
@@ -74,13 +74,13 @@ services:
     image: multi-money-util
     build:
       target: util
-    command: lein with-profile +util do init-mongo, index-mongo
+    command: lein with-profile +util,+docker do init-mongo, index-mongo
     depends_on:
       mongo:
         condition: service_healthy
     volumes:
       - ./docker-compose/dev/config:/usr/src/multi-money/config
-      - ~/.volumes/multi-money/maven:/opt/maven
+      - ~/.volumes/multi-money/maven:/root/.m2
     environment:
       MONGO_HOST: mongo
 
@@ -149,11 +149,11 @@ services:
     image: multi-money-util
     build:
       target: util
-    command: lein with-profile +util datomic-schema
+    command: lein with-profile +util,+docker datomic-schema
     volumes:
       - ./docker-compose/dev/config:/usr/src/multi-money/config
       - ./logs/datomic-schema-tmp:/tmp
-      - ~/.volumes/multi-money/maven:/opt/maven
+      - ~/.volumes/multi-money/maven:/root/.m2
     depends_on:
       datomic-transactor:
         condition: service_healthy
