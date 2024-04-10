@@ -13,15 +13,16 @@ services:
     volumes:
       - ~/.volumes/multi-money/postgres:/var/lib/postgresql/data
     environment:
+      PGPASSWORD: please01
       POSTGRES_PASSWORD: please01
       POSTGRES_USER: adm_user
       POSTGRES_DB: adm_user
       LOG_STATEMENT: all
       LOG_MIN_MESSAGES: INFO
     healthcheck:
-      test: ["CMD-SHELL", "PGPASSWORD=please01 sh -c 'pg_isready -U adm_user -d adm_user'"]
-      interval: 10s
-      retries: 60
+      test: pg_isready -U adm_user -d adm_user
+      interval: 3s
+      retries: 10
 
   sql-init:
     profiles:
@@ -64,8 +65,8 @@ services:
         - mongosh
         - "127.0.0.1/test"
         - "--quiet"
-      interval: 10s
-      retries: 60
+      interval: 3s
+      retries: 10
 
   mongo-init:
     profiles:
