@@ -1,11 +1,12 @@
-FROM clojure:lein-2.10.0-jammy AS util
-RUN mkdir -p /usr/src/multi-money
-WORKDIR /usr/src/multi-money
-COPY project.clj .
+FROM clojure:lein-2.10.0-jammy AS psql
 RUN <<EOF
 apt-get update
 apt-get install -y postgresql-client
 EOF
+
+FROM psql AS util
+RUN mkdir -p /usr/src/multi-money
+WORKDIR /usr/src/multi-money
 COPY . .
 
 FROM util AS build
