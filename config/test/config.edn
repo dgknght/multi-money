@@ -1,10 +1,17 @@
-{:test? true
- :db {:active :sql
-      :strategies {#_"datomic"
-                   #_{:system "money-test"}
-
-                   #_"xtdb"
+{:db {:active :sql
+      :strategies {#_"xtdb"
                    ;^:replace {:multi-money.db/provider :xtdb}
+
+                   #_:datomic-client
+                   #_{:multi-money.db/provider :datomic/client
+                    :server-type :dev-local
+                    :system "local-test"
+                    :db-name "money"
+                    :storage-dir :config/datomic-storage-dir}
+
+                   :datomic-peer
+                   {:multi-money.db/provider :datomic/peer
+                    :uri "datomic:mem://multi_money_test"}
 
                    :sql
                    {:multi-money.db/provider :sql
@@ -23,6 +30,7 @@
                     :database :config/mongo-db-name
                     :username :config/mongo-app-user
                     :password :config/mongo-app-password}}}
+ :datomic-storage-dir "/home/doug/.datomic-storage"
  :mongo-adm-user "adm_user"
  :mongo-adm-password "please01"
  :mongo-app-user "app_user"
