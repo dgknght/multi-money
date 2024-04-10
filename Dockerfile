@@ -1,6 +1,6 @@
 FROM clojure:lein-2.10.0-jammy AS util
-RUN mkdir -p /usr/local/src/multi-money
-WORKDIR /usr/local/src/multi-money
+RUN mkdir -p /usr/src/multi-money
+WORKDIR /usr/src/multi-money
 COPY project.clj .
 RUN <<EOF
 apt-get update
@@ -26,7 +26,7 @@ EOF
 
 FROM eclipse-temurin:11-jre-jammy as web
 WORKDIR /opt/multi-money
-COPY --from=build /usr/local/src/multi-money/target/multi-money.jar .
+COPY --from=build /usr/src/multi-money/target/multi-money.jar .
 CMD ["java", "-cp", "multi-money.jar", "clojure.main", "-m", "multi-money.server"]
 
 # Default port for the service
