@@ -56,6 +56,17 @@ lein test
 ```
 
 ### Front End
+Install sass
+```bash
+apt-get install nodejs npm
+npm install --global sass
+```
+
+Build the stylesheet with sass
+```bash
+sass src/scss/site.scss resources/public/css/site.css
+```
+
 To get an interactive development environment run:
 ```bash
 lein fig:build
