@@ -159,7 +159,7 @@ services:
       datomic-transactor:
         condition: service_healthy
     environment:
-      DATOMIC_STORAGE_URI: datomic:sql://multi_money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
+      DATOMIC_STORAGE_URI: datomic:sql://money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
       SQL_HOST: sql
 
   datomic-console:
@@ -201,7 +201,7 @@ services:
       - -a
       - dev-access-key,dev-secret
       - -d
-      - multi_money_development,datomic:sql://multi_money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
+      - money_development,datomic:sql://money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:8998/health"]
       interval: 30s
