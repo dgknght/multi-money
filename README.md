@@ -35,36 +35,20 @@ Set the following environment variables
 - GOOGLE_OAUTH_CLIENT_SECRET
 
 ### Docker
+Create a file at `docker-compose/config/config.edn`. Start with the contents
+of `config/test/config.edn` and edit as necessary.
+
 Start the necessary services with docker compose
 ```bash
-docker compose -f dev-compose up -d
+docker compose up -d --profile all
 ```
+The compose file will launch jobs that initialize each data storage strategy.
 
-### Create and Migrate the databases
-
-#### SQL
-```bash
-lein do init-sql, migrate && lein with-profile +test do init-sql, migrate
-```
-
-## Development
-### Back end
-#### SQL
-Create and initialize the postgresql database.
-1. [Install docker-compose](https://docs.docker.com/compose/install/standalone/).
-2. Start docker compose with `docker-compose -f dev-compose.yml up -d`.
-3. Create the development database:
-```bash
-psql --username=app_user --host=localhost -W --command="CREATE DATABASE multi_money_development;"
-```
-4. Create the test database:
-```bash
-psql --username=app_user --host=localhost -W --command="CREATE DATABASE multi_money_test;"
-```
-5. Migrate the databases:
-```bash
-lein migrate && lein with-profile +test migrate
-```
+Optionally, you can specify one of the following profiles:
+- sql
+- mongo
+- datomic-peer
+- datomic-client
 
 ### Test the server
 ```bash
@@ -72,6 +56,17 @@ lein test
 ```
 
 ### Front End
+Install sass
+```bash
+apt-get install nodejs npm
+npm install --global sass
+```
+
+Build the stylesheet with sass
+```bash
+sass src/scss/site.scss resources/public/css/site.css
+```
+
 To get an interactive development environment run:
 ```bash
 lein fig:build
