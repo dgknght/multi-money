@@ -30,6 +30,6 @@
   (testing "header"
     (let [res (test-request {:headers {"db-strategy" "mongo"}})]
       (is (= :mongo (:db-strategy (first (:calls res)))))))
-  (testing "namespaced keyword" ; Note that I've decided not to use this strategy, but left the capability in place
-    (let [res (test-request {:headers {"db-strategy" "datomic_peer"}})]
-      (is (= :datomic/peer (:db-strategy (first (:calls res))))))))
+  (testing "fallback"
+    (let [res (test-request {})]
+      (is (= :sql (:db-strategy (first (:calls res))))))))
