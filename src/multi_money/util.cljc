@@ -1,6 +1,7 @@
 (ns multi-money.util
   (:require [clojure.walk :refer [prewalk]]
             [clojure.string :as string]
+            [clojure.walk :refer [postwalk]]
             [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.core :refer [update-in-if]]
             #?(:clj [clojure.pprint :refer [pprint]]
@@ -215,3 +216,16 @@
    (if (:id m)
      m
      (assoc m :id (id-fn)))))
+
+(defn mask-values
+  [data & ks]
+  (postwalk (fn [x]
+              (if (map? x)
+                (reduce (fn [m k]
+                          (if (contains? m k)
+                            (assoc m k "********")
+                            m))
+                        x
+                        ks)
+                x))
+            data))

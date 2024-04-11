@@ -1,9 +1,11 @@
 (ns multi-money.db.sql.tasks
   (:require [clojure.pprint :refer [pprint]]
+            [clojure.tools.logging :as log]
             [config.core :refer [env]]
             [next.jdbc :as j]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as repl]
+            [multi-money.util :refer [mask-values]]
             [multi-money.db :as db]))
 
 (defn- config []
@@ -59,6 +61,9 @@
   name as the user. We connect using that database, and then create
   the one that the app is configured to us."
   []
+  (log/tracef "Creating database with config %s" (mask-values (env :sql)
+                                                              :user
+                                                              :password))
   (let [{:keys [dbname] :as cfg} (db/config :sql)
         ds (-> cfg
                (assoc :dbname   (env :sql-adm-user)

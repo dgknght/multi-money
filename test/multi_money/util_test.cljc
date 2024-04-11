@@ -182,3 +182,10 @@
       "An :id attribute is added if none is present")
   (is (= {:id 2} (utl/+id {:id 2} (constantly 1)))
       "An :id attribute is left as-is if it is already present"))
+
+(deftest mask-values-in-a-data-structure
+  (is (= {:password "********"
+          :safe-value "this should not be masked"}
+         (utl/mask-values {:password "password"
+                           :safe-value "this should not be masked"}
+                          :password))))
