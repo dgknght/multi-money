@@ -61,7 +61,7 @@
   name as the user. We connect using that database, and then create
   the one that the app is configured to us."
   []
-  (log/tracef "Creating database with config %s" (mask-values (env :sql)
+  (log/tracef "Creating database with config %s" (mask-values (env :db)
                                                               :user
                                                               :password))
   (let [{:keys [dbname] :as cfg} (db/config :sql)
