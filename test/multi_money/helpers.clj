@@ -28,9 +28,11 @@
                #{(if (string? isolate)
                    (keyword isolate)
                    isolate)}))
+
 (def ignore-strategy (if isolate
                        (complement isolate)
                        (->set (env :ignore-strategy))))
+
 (def honor-strategy (complement ignore-strategy))
 
 (defn reset-db [f]
