@@ -28,7 +28,8 @@
      (assert cfg (str "No datomic configuration found for " config-key))
      (apply-schema cfg
                    db-name)))
-  ([{:keys [uri]} {:keys [suppress-output?]}]
+  ([{:keys [uri] :as cfg} {:keys [suppress-output?]}]
+   {:pre [(:uri cfg)]}
    (try
      (log/info "creating the database...")
      (d/create-database uri)
