@@ -4,6 +4,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [union]]
             [config.core :refer [env]]
+            [multi-money.db :as db]
             [multi-money.util :refer [valid-id?]]))
 
 (def comparison-opers #{:< :<= :> :>=})
@@ -65,7 +66,10 @@
        (get-in env [:db :strategies])))
 
 (defn config [k]
-  (resolve-config-refs (get-in env [:db :strategies k])))
+  (let [c (resolve-config-refs (get-in env [:db :strategies k]))]
+    (assert c (format "No db strategy configured for %s" k))
+    (assert (::db/provider c) (format "The configuration for %s is missing the provider key." k))
+    c))
 
 (defn storage []
   (or *storage*
