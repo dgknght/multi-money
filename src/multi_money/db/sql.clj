@@ -170,6 +170,8 @@
 
 (defmethod db/reify-storage :sql
   [config]
+  {:pre [(:user config)
+         (:password config)]}
   (let [db (jdbc/get-datasource config)]
     (reify
       db/Storage

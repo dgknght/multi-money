@@ -176,3 +176,16 @@
       "The value at :id is returned from map")
   (is (= 101 (utl/->id {:user/id 101}))
       "The value at a namespaced key with name \"id\" is returned"))
+
+(deftest ensure-a-model-has-an-id
+  (is (= {:id 1} (utl/+id {} (constantly 1)))
+      "An :id attribute is added if none is present")
+  (is (= {:id 2} (utl/+id {:id 2} (constantly 1)))
+      "An :id attribute is left as-is if it is already present"))
+
+(deftest mask-values-in-a-data-structure
+  (is (= {:password "********"
+          :safe-value "this should not be masked"}
+         (utl/mask-values {:password "password"
+                           :safe-value "this should not be masked"}
+                          :password))))
