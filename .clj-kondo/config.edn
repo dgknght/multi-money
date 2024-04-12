@@ -13,12 +13,13 @@
                                          (multi-money.core/dbfn)
                                          (multi-money.helpers/dbtest)]}
            :clojure-lsp/unused-public-var {:exclude #{multi-money.repl
-                                                      multi-money.db.sql.tasks/init
+                                                      multi-money.db.sql.tasks/create
                                                       multi-money.db.sql.tasks/migrate
                                                       multi-money.db.sql.tasks/rollback
                                                       multi-money.db.sql.tasks/remigrate
                                                       multi-money.db.mongo.tasks/init
                                                       multi-money.db.mongo.tasks/index
+                                                      multi-money.db.datomic.tasks/apply-schema
                                                       multi-money.util/local-date?
                                                       multi-money.util/<-storable-date
                                                       multi-money.util/qualify-keys

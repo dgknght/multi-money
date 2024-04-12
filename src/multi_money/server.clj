@@ -1,8 +1,12 @@
 (ns multi-money.server
   (:require [clojure.tools.logging :as log]
+            [clojure.pprint :refer [pprint]]
             [clojure.tools.cli :refer [parse-opts]]
-            [multi-money.handler :refer [app]]
-            [ring.adapter.jetty :refer [run-jetty]])
+            [clojure.java.io :as io]
+            [ring.adapter.jetty :refer [run-jetty]]
+            [config.core :refer [env]]
+            [multi-money.util :refer [mask-values]]
+            [multi-money.handler :refer [app]])
   (:gen-class))
 
 (def ^:private opt-specs
@@ -27,6 +31,12 @@
   (log/infof "Web service is started on port %s." port))
 
 (defn -main [& args]
+
+  (pprint {::config (mask-values env :google-oauth-client-id :google-oauth-client-secret)})
+  (let [f (io/as-file ".")]
+    (pprint {::root f
+           ::dir (.list f)}))
+
   (let [{:keys [options errors] :as parsed} (parse-opts args opt-specs)]
     (if (seq errors)
       (write-errors parsed)
