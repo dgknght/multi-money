@@ -2,10 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [clojure.tools.cli :refer [parse-opts]]
-            [clojure.java.io :as io]
             [ring.adapter.jetty :refer [run-jetty]]
-            [config.core :refer [env]]
-            [multi-money.util :refer [mask-values]]
             [multi-money.handler :refer [app]])
   (:gen-class))
 
@@ -17,12 +14,9 @@
 
 (defn- write-errors
   [{:keys [errors summary]}]
-  (println "ERROR")
-  (doseq [e errors]
-    (println (format "  %s" e)))
-  (println "")
-  (println "USAGE:")
-  (println summary))
+  (log/errorf "Unable to start the service due to the following errors: %s"
+              errors)
+  (log/infof "Usage: %s" summary))
 
 (defn- launch-service
   [{:keys [port]}]
@@ -31,12 +25,6 @@
   (log/infof "Web service is started on port %s." port))
 
 (defn -main [& args]
-
-  (pprint {::config (mask-values env :google-oauth-client-id :google-oauth-client-secret)})
-  (let [f (io/as-file ".")]
-    (pprint {::root f
-           ::dir (.list f)}))
-
   (let [{:keys [options errors] :as parsed} (parse-opts args opt-specs)]
     (if (seq errors)
       (write-errors parsed)
