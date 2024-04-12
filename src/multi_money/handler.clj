@@ -21,6 +21,7 @@
                                                   wrap-fetch-oauth-profile
                                                   wrap-issue-auth-token
                                                   wrap-user-lookup]]
+            [multi-money.util :refer [mask-values]]
             [multi-money.mount-point :refer [js-path]]
             [multi-money.api.users :as u]
             [multi-money.db.datomic.ref]
@@ -71,6 +72,11 @@
              :scheme (:web-server-scheme env)
              :port   (:web-server-port env))
       str))
+
+(when-not (env :google-oauth-client-id)
+  (pprint {::no-google-oauth-config (mask-values env
+                                                 :google-oauth-client-id
+                                                 :google-oauth-client-secret)}))
 
 (def ^:private wrap-oauth
   [wrap-oauth2
