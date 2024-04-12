@@ -73,11 +73,6 @@
              :port   (:web-server-port env))
       str))
 
-(when-not (env :google-oauth-client-id)
-  (pprint {::no-google-oauth-config (mask-values env
-                                                 :google-oauth-client-id
-                                                 :google-oauth-client-secret)}))
-
 (def ^:private wrap-oauth
   [wrap-oauth2
    {:google
