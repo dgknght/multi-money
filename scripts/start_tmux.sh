@@ -28,7 +28,7 @@ tmux send-keys 'git status' C-m
 # SQL window
 # Note that you need a file at ~/.pgpass with perms 0600 and content like this following:
 # hostname:port:database:username:password
-tmux new-window -t $session:2 -n 'sql' 'psql --host=localhost --username=adm_user -d adm_user -w'
+tmux new-window -t $session:2 -n 'sql' 'PGPASSWORD=please01 psql --host=localhost --username=adm_user -d adm_user --no-password'
 
 # MongoDB window
 tmux new-window -t $session:3 -n 'mongodb' 'mongosh mongodb://adm_user:please01@localhost:27017/admin'

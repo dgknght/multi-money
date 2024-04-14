@@ -1,6 +1,7 @@
 (ns multi-money.util
   (:require [clojure.walk :refer [prewalk]]
             [clojure.string :as string]
+            [clojure.walk :refer [postwalk]]
             [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.core :refer [update-in-if]]
             #?(:clj [clojure.pprint :refer [pprint]]
@@ -207,3 +208,24 @@
               (rename-keys % k-map)
               %)
            c))
+
+(defn +id
+  "Given a map without an :id value, adds one with a random UUID as a value"
+  ([m] (+id m random-uuid))
+  ([m id-fn]
+   (if (:id m)
+     m
+     (assoc m :id (id-fn)))))
+
+(defn mask-values
+  [data & ks]
+  (postwalk (fn [x]
+              (if (map? x)
+                (reduce (fn [m k]
+                          (if (contains? m k)
+                            (assoc m k "********")
+                            m))
+                        x
+                        ks)
+                x))
+            data))
