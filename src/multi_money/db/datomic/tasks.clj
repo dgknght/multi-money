@@ -41,5 +41,6 @@
          (pprint {::transact-schema res})))
      (log/info "done applying the schema.")
      (catch Exception e
-       (log/error e "error when applying the schema."))
+       (log/error e "error when applying the schema.")
+       (throw e))
      (finally (d/shutdown true)))))
