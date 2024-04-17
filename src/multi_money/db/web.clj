@@ -35,6 +35,6 @@
           storage-config (db/config storage-key)]
       (log/debugf "Handling request with db strategy %s -> %s"
                   storage-key
-                  (mask-values storage-config [:username :user :password]))
+                  (mask-values storage-config [:username :user :password :secret :access-key]))
       (with-db [storage-config]
         (handler (assoc req :db-strategy storage-key))))))
