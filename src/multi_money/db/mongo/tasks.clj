@@ -29,10 +29,11 @@
 (defn index
   "Apply any new indexes to the database"
   []
-  (m/with-mongo (admin-conn)
-    (pprint {::users-email      (m/add-index! :users
-                                              [:email]
-                                              :unique true)})
-    (pprint {::users-identities (m/add-index! :users
-                                              [:identities.id :identities.provider]
-                                              :unique true)})))
+  (m/with-mongo (mongo/connect (db/config :mongo))
+    (m/with-db (env :mongo-db-name)
+      (pprint {::users-email      (m/add-index! :users
+                                                [:email]
+                                                :unique true)})
+      (pprint {::users-identities (m/add-index! :users
+                                                [:identities.id :identities.provider]
+                                                :unique true)}))))

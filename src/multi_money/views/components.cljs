@@ -79,16 +79,22 @@
                    expand-nav-item))
         doall)])
 
+(def ^:private db-strategies
+  {"sql" "SQL"
+   "mongo" "MongoDB"
+   "datomic-peer" "Datomic Peer"
+   "datomic-client" "Datomic Client"})
+
 (defn- db-strategy-nav-item []
   (let [current @db-strategy]
-    {:caption (icon-with-text :database current)
+    {:caption (icon-with-text :database (db-strategies current))
      :active? true
-     :children (mapv (fn [s]
-                       {:id (format "%s-db-strategy" (name s))
-                        :active? (= s current)
-                        :caption s
-                        :on-click #(reset! db-strategy s)})
-                     [:sql :mongo])}))
+     :children (mapv (fn [[id caption]]
+                       {:id (format "%s-db-strategy" id)
+                        :active? (= id current)
+                        :caption caption
+                        :on-click #(reset! db-strategy id)})
+                     db-strategies)}))
 
 (defn- build-nav-items []
   [(db-strategy-nav-item)])
