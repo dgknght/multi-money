@@ -65,6 +65,12 @@
                                                               :user
                                                               :password))
   (let [{:keys [dbname] :as cfg} (db/config :sql)
+        _ (assert (and (:dbtype cfg)
+                       (:dbname cfg)
+                       (:user cfg)
+                       (:password cfg)
+                       (:host cfg))
+                  "The configuration is not valid.")
         ds (-> cfg
                (assoc :dbname   (env :sql-adm-user)
                       :user     (env :sql-adm-user)
