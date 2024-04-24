@@ -1,4 +1,8 @@
 ---
+volumes:
+  sql-data:
+  mongo-data:
+  maven-data:
 services:
   sql:
     profiles:
@@ -11,7 +15,9 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ~/.volumes/multi-money/postgres:/var/lib/postgresql/data
+      - type: volume
+        source: sql-data
+        target: /var/lib/postgresql/data
     environment:
       PGPASSWORD: please01
       POSTGRES_PASSWORD: please01
@@ -23,6 +29,14 @@ services:
       test: pg_isready -U adm_user -d adm_user
       interval: 3s
       retries: 10
+
+  lein-deps:
+    image: multi-money-util
+    command: lein deps
+    volumes:
+      - type: volume
+        source: maven-data
+        target: /root/.m2
 
   sql-init:
     profiles:
@@ -37,10 +51,20 @@ services:
     depends_on:
       sql:
         condition: service_healthy
+      lein-deps:
+        condition: service_completed_successfully
     volumes:
-      - ./docker-compose/dev/config:/usr/src/multi-money/config
-      - ./logs/sql-init-tmp:/tmp
-      - ~/.volumes/multi-money/maven:/root/.m2
+      - type: bind
+        source: ./docker-compose/dev/config
+        target: /usr/src/multi-money/config
+        read_only: true
+      - type: bind
+        source: ./logs/sql-init-tmp
+        target: /tmp
+        read_only: false
+      - type: volume
+        source: maven-data
+        target: /root/.m2
     environment:
       SQL_HOST: sql
 
@@ -53,7 +77,9 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ~/.volumes/multi-money/mongodb:/data/db
+      - type: volume
+        source: mongo-data
+        target: /data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: adm_user
       MONGO_INITDB_ROOT_PASSWORD: please01
@@ -79,9 +105,16 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      lein-deps:
+        condition: service_completed_successfully
     volumes:
-      - ./docker-compose/dev/config:/usr/src/multi-money/config
-      - ~/.volumes/multi-money/maven:/root/.m2
+      - type: bind
+        source: ./docker-compose/dev/config
+        target: /usr/src/multi-money/config
+        read_only: true
+      - type: volume
+        source: maven-data
+        target: /root/.m2
     environment:
       MONGO_HOST: mongo
 
@@ -112,6 +145,7 @@ services:
       SQL_HOST: sql
       SQL_ADM_USER: adm_user
       SQL_ADM_PASSWORD: please01
+      PGPASSWORD: please01
     depends_on:
       sql:
         condition: service_healthy
@@ -128,8 +162,14 @@ services:
         condition: service_started
     image: dgknght/datomic-pro:1.0.7075
     volumes:
-      - ./logs/datomic-transactor:/datomic-pro/log
-      - ./docker-compose/dev/datomic-transactor:/opt/datomic-pro/config
+      - type: bind
+        source: ./logs/datomic-transactor
+        target: /opt/datomic-pro/log
+        read_only: false
+      - type: bind
+        source: ./docker-compose/dev/datomic-transactor
+        target: /opt/datomic-pro/config
+        read_only: true
     command: ./bin/transactor ./config/transactor.properties
     restart: on-failure
     ports:
@@ -152,12 +192,22 @@ services:
       target: util
     command: lein with-profile +util,+docker datomic-schema
     volumes:
-      - ./docker-compose/dev/config:/usr/src/multi-money/config
-      - ./logs/datomic-schema-tmp:/tmp
-      - ~/.volumes/multi-money/maven:/root/.m2
+      - type: bind
+        source: ./docker-compose/dev/config
+        target: /usr/src/multi-money/config
+        read_only: true
+      - type: bind
+        source: ./logs/datomic-schema-tmp
+        target: /tmp
+        read_only: false
+      - type: volume
+        source: maven-data
+        target: /root/.m2
     depends_on:
       datomic-transactor:
         condition: service_healthy
+      lein-deps:
+        condition: service_completed_successfully
     environment:
       DATOMIC_STORAGE_URI: datomic:sql://money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
       SQL_HOST: sql
@@ -186,7 +236,10 @@ services:
     image: dgknght/datomic-pro:1.0.7075
     restart: on-failure
     volumes:
-      - ./logs/datomic-peer-server:/datomic-pro/log
+      - type: bind
+        source: ./logs/datomic-peer-server
+        target: /opt/datomic-pro/log
+        read_only: false
     ports:
       - 8998:8998
     command:
