@@ -11,7 +11,7 @@
 
                    :datomic-peer
                    {:multi-money.db/provider :datomic/peer
-                    :uri "datomic:mem://multi_money_test"}
+                    :uri "datomic:mem://money_test"}
 
                    :sql
                    {:multi-money.db/provider :sql
