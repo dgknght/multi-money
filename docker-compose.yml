@@ -18,15 +18,17 @@ services:
       - type: volume
         source: sql-data
         target: /var/lib/postgresql/data
+    env_file:
+      - .env
     environment:
-      PGPASSWORD: please01
-      POSTGRES_PASSWORD: please01
-      POSTGRES_USER: adm_user
-      POSTGRES_DB: adm_user
+      PGPASSWORD: $(SQL_ADM_PASSWORD)
+      POSTGRES_PASSWORD: $(SQL_ADM_PASSWORD)
+      POSTGRES_USER: $(SQL_ADM_USER)
+      POSTGRES_DB: $(SQL_ADM_USER)
       LOG_STATEMENT: all
       LOG_MIN_MESSAGES: INFO
     healthcheck:
-      test: pg_isready -U adm_user -d adm_user
+      test: pg_isready -U $(SQL_ADM_USER) -d $(SQL_ADM_USER)
       interval: 3s
       retries: 10
 
@@ -65,6 +67,8 @@ services:
       - type: volume
         source: maven-data
         target: /root/.m2
+    env_file:
+      - .env
     environment:
       SQL_HOST: sql
 
@@ -80,9 +84,11 @@ services:
       - type: volume
         source: mongo-data
         target: /data/db
+    env_file:
+      - .env
     environment:
-      MONGO_INITDB_ROOT_USERNAME: adm_user
-      MONGO_INITDB_ROOT_PASSWORD: please01
+      MONGO_INITDB_ROOT_USERNAME: $(MONGO_ADM_USER)
+      MONGO_INITDB_ROOT_PASSWORD: $(MONGO_ADM_PASSWORD)
     healthcheck:
       test:
         - CMD-SHELL
@@ -115,8 +121,8 @@ services:
       - type: volume
         source: maven-data
         target: /root/.m2
-    environment:
-      MONGO_HOST: mongo
+    env_file:
+      - .env
 
   memcached:
     profiles:
@@ -141,14 +147,14 @@ services:
     build:
       target: util
     command: ./scripts/datomic-init.sh
+    env_file:
+      - .env
     environment:
+      PGPASSWORD: $(SQL_ADM_PASSWORD)
       SQL_HOST: sql
-      SQL_ADM_USER: adm_user
-      SQL_ADM_PASSWORD: please01
-      PGPASSWORD: please01
     depends_on:
-      sql:
-        condition: service_healthy
+      sql-init:
+        condition: service_completed_successfully
 
   datomic-transactor:
     profiles:
@@ -208,9 +214,8 @@ services:
         condition: service_healthy
       lein-deps:
         condition: service_completed_successfully
-    environment:
-      DATOMIC_STORAGE_URI: datomic:sql://money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
-      SQL_HOST: sql
+    env_file:
+      - .env
 
   datomic-console:
     profiles:
@@ -224,7 +229,9 @@ services:
     restart: on-failure
     ports:
       - 8080:8080
-    command: ./bin/console -p 8080 sql "datomic:sql://?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03"
+    command: ./bin/console -p 8080 sql $(DATOMIC_NO_DB_URI)
+    env_file:
+      - .env
 
   datomic-peer-server:
     profiles:
@@ -247,14 +254,16 @@ services:
       - -m
       - datomic.peer-server
       - -h
-      - datomic-peer-server
+      - $(DATOMIC_PEER_SERVER)
       - -p
       - "8998"
       - -Ddatomic.memcachedServers=memcached:11211
       - -a
-      - dev-access-key,dev-secret
+      - $(DATOMIC_ACCESS_KEY),$(DATOMIC_SECRET)
       - -d
-      - money_development,datomic:sql://money_development?jdbc:postgresql://sql:5432/datomic?user=app_user&password=please03
+      - $(DATOMIC_DB_NAME),$(DATOMIC_STORAGE_URI)
+    env_file:
+      - .env
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:8998/health"]
       interval: 30s
