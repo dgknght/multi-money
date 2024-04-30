@@ -8,15 +8,22 @@ on:
 
 jobs:
   build:
+    env:
+      MONGO_ADM_USER: adm_user
+      MONGO_ADM_PASSWORD: please01
+      MONGO_APP_USER: app_user
+      MONGO_APP_PASSWORD: please02
+      SQL_APP_USER: app_user
+      SQL_APP_PASSWORD: please01
+      SQL_DDL_USER: ddl_user
+      SQL_DDL_PASSWORD: please01
+      SQL_ADM_USER: adm_user
+      SQL_ADM_PASSWORD: please01
     runs-on: ubuntu-latest
     services:
       mongo:
         image: mongo:7.0
         env:
-          MONGO_ADM_USER: adm_user
-          MONGO_ADM_PASSWORD: please01
-          MONGO_APP_USER: app_user
-          MONGO_APP_PASSWORD: please02
           MONGO_INITDB_ROOT_USERNAME: adm_user
           MONGO_INITDB_ROOT_PASSWORD: please01
           MONGO_INITDB_DATABASE: admin
@@ -33,12 +40,6 @@ jobs:
           POSTGRES_PASSWORD: please01
           POSTGRES_USER: adm_user
           POSTGRES_DB: adm_user
-          SQL_APP_USER: app_user
-          SQL_APP_PASSWORD: please01
-          SQL_DDL_USER: ddl_user
-          SQL_DDL_PASSWORD: please01
-          SQL_ADM_USER: adm_user
-          SQL_ADM_PASSWORD: please01
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
