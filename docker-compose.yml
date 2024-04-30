@@ -250,7 +250,7 @@ services:
       - .env
     environment:
       SQL_HOST: sql
-      DATOMIC_STORAGE_URI: datomic:sql://${DATOMIC_DB_NAME}?jdbc:postgresql://sql:5432/datomic?user=${SQL_APP_USER}&password=${SQL_APP_PASSWORD}
+      DATOMIC_NO_DB_URI: datomic:sql://?jdbc:postgresql://${SQL_HOST}:5432/datomic?user=${SQL_APP_USER}&password=${SQL_APP_PASSWORD}
 
   datomic-peer-server:
     profiles:
