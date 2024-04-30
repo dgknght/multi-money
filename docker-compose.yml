@@ -95,6 +95,7 @@ services:
     env_file:
       - .env
     environment:
+      MONGO_HOST: mongo
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ADM_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ADM_PASSWORD}
     healthcheck:
@@ -131,6 +132,8 @@ services:
         target: /root/.m2
     env_file:
       - .env
+    environment:
+      MONGO_HOST: mongo
 
   memcached:
     profiles:
@@ -228,6 +231,7 @@ services:
       - .env
     environment:
       SQL_HOST: sql
+      DATOMIC_STORAGE_URI: datomic:sql://${DATOMIC_DB_NAME}?jdbc:postgresql://sql:5432/datomic?user=${SQL_APP_USER}&password=${SQL_APP_PASSWORD}
 
   datomic-console:
     profiles:
@@ -244,6 +248,9 @@ services:
     command: ./bin/console -p 8080 sql ${DATOMIC_NO_DB_URI}
     env_file:
       - .env
+    environment:
+      SQL_HOST: sql
+      DATOMIC_STORAGE_URI: datomic:sql://${DATOMIC_DB_NAME}?jdbc:postgresql://sql:5432/datomic?user=${SQL_APP_USER}&password=${SQL_APP_PASSWORD}
 
   datomic-peer-server:
     profiles:
@@ -276,6 +283,9 @@ services:
       - ${DATOMIC_DB_NAME},${DATOMIC_STORAGE_URI}
     env_file:
       - .env
+    environment:
+      SQL_HOST: sql
+      DATOMIC_STORAGE_URI: datomic:sql://${DATOMIC_DB_NAME}?jdbc:postgresql://sql:5432/datomic?user=${SQL_APP_USER}&password=${SQL_APP_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:8998/health"]
       interval: 30s
