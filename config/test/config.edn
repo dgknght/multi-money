@@ -16,8 +16,8 @@
                    :sql
                    {:multi-money.db/provider :sql
                     :dbtype "postgresql"
-                    :dbname "multi_money_test"
-                    :host "localhost"
+                    :dbname :config/sql-db-name
+                    :host :config/sql-host
                     :port 5432
                     ; Note that we're using ddl-user here to enable truncation
                     ; for test reset. In the live app, app-user is the correct
@@ -42,6 +42,8 @@
  :sql-ddl-password "please02"
  :sql-adm-user "adm_user"
  :sql-adm-password "please01"
+ :sql-host "localhost"
+ :sql-db-name "multi_money_test"
  :web-server-host "lvh.me"
  :web-server-port "3000"
  :web-server-scheme "http"

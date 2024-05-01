@@ -13,12 +13,16 @@ jobs:
       MONGO_ADM_PASSWORD: please01
       MONGO_APP_USER: app_user
       MONGO_APP_PASSWORD: please02
+      MONGO_HOST: mongo
+      MONGO_DB_NAME: money
       SQL_APP_USER: app_user
       SQL_APP_PASSWORD: please01
       SQL_DDL_USER: ddl_user
       SQL_DDL_PASSWORD: please01
       SQL_ADM_USER: adm_user
       SQL_ADM_PASSWORD: please01
+      SQL_HOST: postgres
+      SQL_DB_NAME: money
     runs-on: ubuntu-latest
     services:
       mongo:
