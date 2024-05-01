@@ -3,7 +3,8 @@
             [clojure.pprint :refer [pprint]]
             [somnium.congomongo :as m]
             [multi-money.db :as db]
-            [multi-money.db.mongo :as mongo]))
+            [multi-money.db.mongo :as mongo])
+  (:import com.mongodb.MongoCommandException))
 
 (defn- admin-conn []
   (-> (db/config :mongo)
@@ -24,15 +25,25 @@
                 (.append "pwd" (env :mongo-app-password))
                 (.append "roles" (to-array [roles])))]
       (m/with-db (env :mongo-db-name)
-        (pprint {::init (m/command! cmd)})))))
+        (pprint {::init (try (m/command! cmd)
+                             (catch MongoCommandException e
+                               {:code (.getErrorCode e)
+                                :message (.getErrorMessage e)}))})))))
 
 (defn index
   "Apply any new indexes to the database"
   []
-  (m/with-mongo (admin-conn)
-    (pprint {::users-email      (m/add-index! :users
-                                              [:email]
-                                              :unique true)})
-    (pprint {::users-identities (m/add-index! :users
-                                              [:identities.id :identities.provider]
-                                              :unique true)})))
+  (let [cfg (db/config :mongo)]
+    (assert (and (:host cfg)
+                 (:database cfg)
+                 (:username cfg)
+                 (:password cfg))
+            "The configuration is missing or incomplete.")
+    (m/with-mongo (mongo/connect cfg)
+      (m/with-db (env :mongo-db-name)
+        (pprint {::users-email      (m/add-index! :users
+                                                  [:email]
+                                                  :unique true)})
+        (pprint {::users-identities (m/add-index! :users
+                                                  [:identities.id :identities.provider]
+                                                  :unique true)})))))
