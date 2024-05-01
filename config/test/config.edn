@@ -27,6 +27,7 @@
 
                    :mongo
                    {:multi-money.db/provider :mongo
+                    :host :config/mongo-host
                     :database :config/mongo-db-name
                     :username :config/mongo-app-user
                     :password :config/mongo-app-password}}}
