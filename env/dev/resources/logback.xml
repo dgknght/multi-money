@@ -12,6 +12,7 @@
   <logger name="io.netty" level="WARN" />
   <logger name="org.apache" level="WARN" />
   <logger name="org.eclipse" level="WARN" />
+  <logger name="com.mongodb" level="WARN" />
 
   <root level="DEBUG">
     <appender-ref ref="FILE" />
