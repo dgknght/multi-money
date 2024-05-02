@@ -17,18 +17,20 @@
   "Initializes the users that will access the database"
   []
   (m/with-mongo (admin-conn)
-    (let [roles (doto (com.mongodb.BasicDBObject.)
-                  (.append "role" "readWrite")
-                  (.append "db" (env :mongo-db-name)))
-          cmd (doto (com.mongodb.BasicDBObject.)
-                (.append "createUser" (env :mongo-app-user))
-                (.append "pwd" (env :mongo-app-password))
-                (.append "roles" (to-array [roles])))]
-      (m/with-db (env :mongo-db-name)
-        (pprint {::init (try (m/command! cmd)
-                             (catch MongoCommandException e
-                               {:code (.getErrorCode e)
-                                :message (.getErrorMessage e)}))})))))
+    (if (empty? (m/fetch :system.users :where {:user (env :mongo-app-user)}))
+      (let [roles (doto (com.mongodb.BasicDBObject.)
+                    (.append "role" "readWrite")
+                    (.append "db" (env :mongo-db-name)))
+            cmd (doto (com.mongodb.BasicDBObject.)
+                  (.append "createUser" (env :mongo-app-user))
+                  (.append "pwd" (env :mongo-app-password))
+                  (.append "roles" (to-array [roles])))]
+        (m/with-db (env :mongo-db-name)
+          (pprint {::init (try (m/command! cmd)
+                               (catch MongoCommandException e
+                                 {:code (.getErrorCode e)
+                                  :message (.getErrorMessage e)}))})))
+      (println (format "%s already exists." (env :mongo-app-user))))))
 
 (defn index
   "Apply any new indexes to the database"
@@ -40,10 +42,9 @@
                  (:password cfg))
             "The configuration is missing or incomplete.")
     (m/with-mongo (mongo/connect cfg)
-      (m/with-db (env :mongo-db-name)
-        (pprint {::users-email      (m/add-index! :users
-                                                  [:email]
-                                                  :unique true)})
-        (pprint {::users-identities (m/add-index! :users
-                                                  [:identities.id :identities.provider]
-                                                  :unique true)})))))
+      (pprint {::users-email      (m/add-index! :users
+                                                [:email]
+                                                :unique true)})
+      (pprint {::users-identities (m/add-index! :users
+                                                [:identities.id :identities.provider]
+                                                :unique true)}))))
