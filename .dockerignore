@@ -7,5 +7,5 @@ resources/public/cljs-out/
 resources/public/css/
 resources/public/test.html
 scripts/headless-chrome
-scripts/start_tmux.sh
+scripts/start-tmux
 target/
