@@ -123,7 +123,7 @@
               :util {:resource-paths ^:replace ["target" "resources" "env/prod/resources" "config"]}
               :docker {:local-repo "/root/.m2"}
               :uberjar {:source-paths ["env/prod"]
-                        :resource-paths ["env/prod/resources" "config/prod"]
+                        :resource-paths ["env/prod/resources"]
                         :dependencies [[com.bhauman/figwheel-main "0.2.17"]]
                         :prep-tasks ["compile"
                                      "fig:prod"]

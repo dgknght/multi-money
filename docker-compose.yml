@@ -63,7 +63,7 @@ services:
         condition: service_completed_successfully
     volumes:
       - type: bind
-        source: ./docker-compose/dev/config
+        source: ./docker-compose/config
         target: /usr/src/multi-money/config
         read_only: true
       - type: bind
@@ -116,7 +116,7 @@ services:
         condition: service_completed_successfully
     volumes:
       - type: bind
-        source: ./docker-compose/dev/config
+        source: ./docker-compose/config
         target: /usr/src/multi-money/config
         read_only: true
       - type: volume
@@ -174,7 +174,7 @@ services:
         target: /opt/datomic-pro/log
         read_only: false
       - type: bind
-        source: ./docker-compose/dev/datomic-transactor
+        source: ./docker-compose/datomic-transactor
         target: /opt/datomic-pro/config
         read_only: true
     command:
@@ -203,7 +203,7 @@ services:
     command: lein with-profile +util,+docker datomic-schema
     volumes:
       - type: bind
-        source: ./docker-compose/dev/config
+        source: ./docker-compose/config
         target: /usr/src/multi-money/config
         read_only: true
       - type: bind
