@@ -7,7 +7,12 @@
     </encoder>
   </appender>
 
-  <logger name="org.eclipse.jetty" level="WARN" />
+  <logger name="datomic" level="WARN" />
+  <logger name="datomic.slf4j" level="ERROR" />
+  <logger name="io.methvin" level="WARN" />
+  <logger name="io.netty" level="ERROR" />
+  <logger name="org.apache" level="WARN" />
+  <logger name="org.eclipse" level="WARN" />
 
   <root level="trace">
     <appender-ref ref="STDOUT" />

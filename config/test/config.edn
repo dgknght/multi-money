@@ -1,16 +1,23 @@
-{:test? true
- :db {:active :sql
-      :strategies {#_"datomic"
-                   #_{:system "money-test"}
-
-                   #_"xtdb"
+{:db {:active :sql
+      :strategies {#_"xtdb"
                    ;^:replace {:multi-money.db/provider :xtdb}
+
+                   #_:datomic-client
+                   #_{:multi-money.db/provider :datomic/client
+                    :server-type :dev-local
+                    :system "local-test"
+                    :db-name "money"
+                    :storage-dir :config/datomic-storage-dir}
+
+                   :datomic-peer
+                   {:multi-money.db/provider :datomic/peer
+                    :uri "datomic:mem://money_test"}
 
                    :sql
                    {:multi-money.db/provider :sql
                     :dbtype "postgresql"
-                    :dbname "multi_money_test"
-                    :host "localhost"
+                    :dbname :config/sql-db-name
+                    :host :config/sql-host
                     :port 5432
                     ; Note that we're using ddl-user here to enable truncation
                     ; for test reset. In the live app, app-user is the correct
@@ -20,20 +27,25 @@
 
                    :mongo
                    {:multi-money.db/provider :mongo
+                    :host :config/mongo-host
                     :database :config/mongo-db-name
                     :username :config/mongo-app-user
                     :password :config/mongo-app-password}}}
+ :datomic-storage-dir "/home/doug/.datomic-storage"
  :mongo-adm-user "adm_user"
  :mongo-adm-password "please01"
  :mongo-app-user "app_user"
  :mongo-app-password "please02"
  :mongo-db-name "money_test"
+ :mongo-host "localhost"
  :sql-app-user "app_user"
  :sql-app-password "please03"
  :sql-ddl-user "ddl_user"
  :sql-ddl-password "please02"
  :sql-adm-user "adm_user"
  :sql-adm-password "please01"
+ :sql-host "localhost"
+ :sql-db-name "multi_money_test"
  :web-server-host "lvh.me"
  :web-server-port "3000"
  :web-server-scheme "http"

@@ -6,5 +6,6 @@ node_modules/
 resources/public/cljs-out/
 resources/public/css/
 resources/public/test.html
-scripts/
+scripts/headless-chrome
+scripts/start_tmux.sh
 target/

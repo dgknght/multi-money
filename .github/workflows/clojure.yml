@@ -8,15 +8,24 @@ on:
 
 jobs:
   build:
+    env:
+      MONGO_ADM_USER: adm_user
+      MONGO_ADM_PASSWORD: please01
+      MONGO_APP_USER: app_user
+      MONGO_APP_PASSWORD: please02
+      MONGO_DB_NAME: money
+      SQL_APP_USER: app_user
+      SQL_APP_PASSWORD: please01
+      SQL_DDL_USER: ddl_user
+      SQL_DDL_PASSWORD: please01
+      SQL_ADM_USER: adm_user
+      SQL_ADM_PASSWORD: please01
+      SQL_DB_NAME: money
     runs-on: ubuntu-latest
     services:
       mongo:
         image: mongo:7.0
         env:
-          MONGO_ADM_USER: adm_user
-          MONGO_ADM_PASSWORD: please01
-          MONGO_APP_USER: app_user
-          MONGO_APP_PASSWORD: please02
           MONGO_INITDB_ROOT_USERNAME: adm_user
           MONGO_INITDB_ROOT_PASSWORD: please01
           MONGO_INITDB_DATABASE: admin
@@ -33,12 +42,6 @@ jobs:
           POSTGRES_PASSWORD: please01
           POSTGRES_USER: adm_user
           POSTGRES_DB: adm_user
-          SQL_APP_USER: app_user
-          SQL_APP_PASSWORD: please01
-          SQL_DDL_USER: ddl_user
-          SQL_DDL_PASSWORD: please01
-          SQL_ADM_USER: adm_user
-          SQL_ADM_PASSWORD: please01
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -61,17 +64,8 @@ jobs:
       - name: Run linter
         run: clj-kondo --lint src:test --dependencies
 
-      - name: Create the postgres database
-        run: lein with-profile +test init-sql
-
-      - name: Migrate the postgres database
-        run: lein with-profile +test migrate
-
-      - name: Initialize the MongoDB database
-        run: lein with-profile +test init-mongo
-
-      - name: Index the MongoDB database
-        run: lein with-profile +test index-mongo
+      - name: Create the data stores
+        run: lein with-profile +test do init-sql, migrate, init-mongo, index-mongo, datomic-schema
 
       - name: Run server-side tests
         run: lein with-profile +test cloverage
