@@ -25,3 +25,5 @@ resources/public/css
 .clj-kondo/.cache
 .clj-kondo/hiccup
 .clj-kondo/com.github.seancorfield
+docker-compose/**/config.edn
+/**/*.env

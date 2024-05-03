@@ -7,8 +7,12 @@
     </encoder>
   </appender>
 
-  <logger name="org.eclipse.jetty" level="WARN" />
-  <logger name="io.methvin.watcher.DirectoryWatcher" level="WARN" />
+  <logger name="datomic" level="WARN" />
+  <logger name="io.methvin" level="WARN" />
+  <logger name="io.netty" level="WARN" />
+  <logger name="org.apache" level="WARN" />
+  <logger name="org.eclipse" level="WARN" />
+  <logger name="com.mongodb" level="WARN" />
 
   <root level="DEBUG">
     <appender-ref ref="FILE" />

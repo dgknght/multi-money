@@ -14,7 +14,7 @@
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]
             #_[multi-money.db.xtdb.ref]
-            #_[multi-money.db.datomic.ref]))
+            [multi-money.db.datomic.ref]))
 
 (use-fixtures :each reset-db)
 

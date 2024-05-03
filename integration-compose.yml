@@ -1,0 +1,26 @@
+---
+services:
+  web:
+    profiles:
+      - sql
+      - mongo
+      - datomic-peer
+      - datomic-client
+      - all
+    image: multi-money-web
+    build: ./
+    command: java clojure.main -m multi-money.server
+    ports:
+      - 3010:3000
+    env_file:
+      - .env
+    environment:
+      CLASSPATH: /opt/multi-money/config:/opt/multi-money/multi-money.jar
+    depends_on:
+      datomic-peer-server:
+        condition: service_started # don't know why the health check is failing
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./docker-compose/config:/opt/multi-money/config:ro
+      - maven-data:/root/.m2
