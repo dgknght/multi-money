@@ -232,8 +232,12 @@ services:
     restart: on-failure
     ports:
       - 8080:8080
-        #command: ./bin/console -p 8080 sql ${DATOMIC_NO_DB_URI}
-    command: echo ${DATOMIC_NO_DB_URI}
+    command:
+      - ./bin/console
+      - -p
+      - "8080"
+      - sql
+      - "${DATOMIC_NO_DB_URI}"
     env_file: .env
 
   datomic-peer-server:
