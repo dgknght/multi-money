@@ -1,8 +1,9 @@
 (ns multi-money.server
   (:require [clojure.tools.logging :as log]
+            [clojure.pprint :refer [pprint]]
             [clojure.tools.cli :refer [parse-opts]]
-            [multi-money.handler :refer [app]]
-            [ring.adapter.jetty :refer [run-jetty]])
+            [ring.adapter.jetty :refer [run-jetty]]
+            [multi-money.handler :refer [app]])
   (:gen-class))
 
 (def ^:private opt-specs
@@ -13,12 +14,9 @@
 
 (defn- write-errors
   [{:keys [errors summary]}]
-  (println "ERROR")
-  (doseq [e errors]
-    (println (format "  %s" e)))
-  (println "")
-  (println "USAGE:")
-  (println summary))
+  (log/errorf "Unable to start the service due to the following errors: %s"
+              errors)
+  (log/infof "Usage: %s" summary))
 
 (defn- launch-service
   [{:keys [port]}]
