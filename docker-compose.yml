@@ -261,14 +261,14 @@ services:
       - -m
       - datomic.peer-server
       - -h
-      - ${DATOMIC_PEER_SERVER}
+      - "${DATOMIC_PEER_SERVER}"
       - -p
       - "8998"
       - -Ddatomic.memcachedServers=memcached:11211
       - -a
-      - ${DATOMIC_ACCESS_KEY},${DATOMIC_SECRET}
+      - "${DATOMIC_ACCESS_KEY},${DATOMIC_SECRET}"
       - -d
-      - ${DATOMIC_DB_NAME},${DATOMIC_STORAGE_URI}
+      - "${DATOMIC_DB_NAME},${DATOMIC_STORAGE_URI}"
     env_file: .env
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:8998/health"]
