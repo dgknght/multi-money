@@ -35,7 +35,7 @@
  :mongo-adm-user "adm_user"
  :mongo-adm-password "please01"
  :mongo-app-user "app_user"
- :mongo-app-password "please02"
+ :mongo-app-password "please03"
  :mongo-db-name "money_test"
  :mongo-host "localhost"
  :sql-app-user "app_user"
