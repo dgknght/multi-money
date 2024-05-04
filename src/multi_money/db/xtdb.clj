@@ -3,6 +3,7 @@
             [xtdb.node :as xtn]
             [xtdb.client :as xtc]
             [xtdb.api :as xt]
+            [multi-money.db.xtdb.xtql :as ql]
             [multi-money.db :as db]))
 
 (derive clojure.lang.PersistentArrayMap ::map)
@@ -11,10 +12,10 @@
   "Give a list of model maps, or vector tuples with an action in the
   1st position and a model in the second, execute the actions and
   return the id values of the models"
-  [_node docs]
+  [node docs]
   {:pre [(sequential? docs)]}
 
-  (pprint {::put* docs}))
+  (xt/submit-tx node (ql/extract-puts docs)))
 
 (defn- select*
   [_node criteria options]
