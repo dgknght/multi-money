@@ -136,6 +136,7 @@
                     :clean-targets ^{:protect false} ["target"]}
               :test {:source-paths ^:replace ["env/dev" "src"]
                      :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]
+                     :jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]
                      :dependencies [[com.datomic/local "1.0.277"
                                     :exclusions [com.cognitect/transit-java
                                                  com.datomic/client
