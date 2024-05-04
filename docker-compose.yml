@@ -151,7 +151,7 @@ services:
     environment:
       PGPASSWORD: ${SQL_ADM_PASSWORD}
       PGHOST: sql
-      PGDATABASE: datomic
+      PGDATABASE: ${SQL_ADM_USER}
       PGUSER: ${SQL_ADM_USER}
     depends_on:
       sql-init:
