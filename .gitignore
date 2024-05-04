@@ -22,8 +22,7 @@ profiles.clj
 node_modules/
 resources/public/cljs-out/
 resources/public/css
-.clj-kondo/.cache
-.clj-kondo/hiccup
-.clj-kondo/com.github.seancorfield
+.clj-kondo/
+!.clj-kondo/config.edn
 docker-compose/**/config.edn
 /**/*.env
