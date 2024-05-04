@@ -55,6 +55,27 @@
                                 org.eclipse.jetty/jetty-util
                                 org.clojure/tools.reader
                                 com.cognitect/transit-clj]]
+                  [com.xtdb/xtdb-core "2.0.0-SNAPSHOT"
+                   :exclusions [io.netty/netty-buffer
+                                org.jetbrains.kotlin/kotlin-stdlib-common
+                                org.clojure/tools.reader
+                                com.cognitect/transit-clj
+                                io.netty/netty-common
+                                com.github.ben-manes.caffeine/caffeine
+                                org.slf4j/slf4j-api
+                                com.fasterxml.jackson.core/jackson-core
+                                org.clojure/data.json]]
+                  [com.xtdb/xtdb-api "2.0.0-SNAPSHOT"
+                   :exclusions [io.netty/netty-buffer
+                                org.jetbrains.kotlin/kotlin-stdlib-common
+                                com.cognitect/transit-clj
+                                io.netty/netty-common
+                                com.github.ben-manes.caffeine/caffeine
+                                org.slf4j/slf4j-api
+                                com.fasterxml.jackson.core/jackson-core]]
+                  [com.xtdb/xtdb-http-client-jvm "2.0.0-SNAPSHOT"
+                   :exclusions [com.cognitect/transit-clj
+                                com.github.ben-manes.caffeine/caffeine]]
                   [com.github.dgknght/app-lib "0.3.10"
                    :exclusions [ring/ring-core
                                 org.clojure/clojure
@@ -67,7 +88,8 @@
                   [reagent "1.1.1" ]
                   [reagent-utils "0.3.3"]]
    :plugins [[lein-cloverage "1.2.2"]]
-   :repositories [["sonatype" "https://oss.sonatype.org/content/repositories/releases"]]
+   :repositories [["sonatype" "https://oss.sonatype.org/content/repositories/releases"]
+                  ["ossrh-snapshots" "https://s01.oss.sonatype.org/content/repositories/snapshots"]]
    :jvm-opts ["-Duser.timezone=UTC"]
    :cloverage {:fail-threshold 90
                :low-watermark 90

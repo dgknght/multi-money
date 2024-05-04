@@ -21,11 +21,11 @@
                                                   wrap-fetch-oauth-profile
                                                   wrap-issue-auth-token
                                                   wrap-user-lookup]]
-            [multi-money.util :refer [mask-values]]
             [multi-money.mount-point :refer [js-path]]
             [multi-money.api.users :as u]
             [multi-money.db.datomic.ref]
             [multi-money.db.mongo.ref]
+            [multi-money.db.xtdb.ref]
             [multi-money.db.sql.ref]))
 
 (defn- mount-point

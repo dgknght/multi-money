@@ -1,6 +1,7 @@
 {:db {:active :sql
-      :strategies {#_"xtdb"
-                   ;^:replace {:multi-money.db/provider :xtdb}
+      :strategies {:xtdb
+                   {:multi-money.db/provider :xtdb
+                    :config {}}
 
                    #_:datomic-client
                    #_{:multi-money.db/provider :datomic/client

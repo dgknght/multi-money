@@ -13,7 +13,7 @@
             [multi-money.models.users :as usrs]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]
-            #_[multi-money.db.xtdb.ref]
+            [multi-money.db.xtdb.ref]
             [multi-money.db.datomic.ref]))
 
 (use-fixtures :each reset-db)
