@@ -55,9 +55,20 @@
                                 org.eclipse.jetty/jetty-util
                                 org.clojure/tools.reader
                                 com.cognitect/transit-clj]]
+                  [com.xtdb/xtdb-api "2.0.0-SNAPSHOT"
+                   :exclusions [io.netty/netty-buffer
+                                io.netty/netty-common
+                                com.fasterxml.jackson.core/jackson-core
+                                com.github.ben-manes.caffeine/caffeine
+                                org.slf4j/slf4j-api
+                                com.cognitect/transit-clj]]
+                  [com.xtdb/xtdb-http-client-jvm "2.0.0-SNAPSHOT"
+                   :exclusions [com.github.ben-manes.caffeine/caffeine
+                                org.slf4j/slf4j-api
+                                com.cognitect/transit-clj]]
                   [com.xtdb/xtdb-core "2.0.0-SNAPSHOT"
                    :exclusions [io.netty/netty-buffer
-                                org.jetbrains.kotlin/kotlin-stdlib-common
+                                org.jetbrains.kotlinx/kotlinx-serialization-core-jvm
                                 org.clojure/tools.reader
                                 com.cognitect/transit-clj
                                 io.netty/netty-common
@@ -65,17 +76,6 @@
                                 org.slf4j/slf4j-api
                                 com.fasterxml.jackson.core/jackson-core
                                 org.clojure/data.json]]
-                  [com.xtdb/xtdb-api "2.0.0-SNAPSHOT"
-                   :exclusions [io.netty/netty-buffer
-                                org.jetbrains.kotlin/kotlin-stdlib-common
-                                com.cognitect/transit-clj
-                                io.netty/netty-common
-                                com.github.ben-manes.caffeine/caffeine
-                                org.slf4j/slf4j-api
-                                com.fasterxml.jackson.core/jackson-core]]
-                  [com.xtdb/xtdb-http-client-jvm "2.0.0-SNAPSHOT"
-                   :exclusions [com.cognitect/transit-clj
-                                com.github.ben-manes.caffeine/caffeine]]
                   [com.github.dgknght/app-lib "0.3.10"
                    :exclusions [ring/ring-core
                                 org.clojure/clojure
@@ -88,8 +88,8 @@
                   [reagent "1.1.1" ]
                   [reagent-utils "0.3.3"]]
    :plugins [[lein-cloverage "1.2.2"]]
-   :repositories [["sonatype" "https://oss.sonatype.org/content/repositories/releases"]
-                  ["ossrh-snapshots" "https://s01.oss.sonatype.org/content/repositories/snapshots"]]
+   :repositories [["sonatype" "https://oss.sonatype.org/content/repositories/releases"] ; for datomic
+                  ["ossrh-snapshots" "https://s01.oss.sonatype.org/content/repositories/snapshots"]] ; for xtdb
    :jvm-opts ["-Duser.timezone=UTC"]
    :cloverage {:fail-threshold 90
                :low-watermark 90
@@ -136,13 +136,14 @@
                     :clean-targets ^{:protect false} ["target"]}
               :test {:source-paths ^:replace ["env/dev" "src"]
                      :resource-paths ^:replace ["target" "env/test/resources" "resources" "config/test"]
-                     :jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]
                      :dependencies [[com.datomic/local "1.0.277"
-                                    :exclusions [com.cognitect/transit-java
-                                                 com.datomic/client
-                                                 commons-io
-                                                 org.clojure/tools.reader
-                                                 com.cognitect/transit-clj]]]}
+                                     :exclusions [com.cognitect/transit-java
+                                                  com.datomic/client
+                                                  commons-io
+                                                  org.clojure/tools.reader
+                                                  com.cognitect/transit-clj]]]}
+              :xtdb {:jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"
+                                "-Dio.netty.tryReflectionSetAccessible=true"]}
               :util {:resource-paths ^:replace ["target" "resources" "env/prod/resources" "config"]}
               :docker {:local-repo "/root/.m2"}
               :uberjar {:source-paths ["env/prod"]
