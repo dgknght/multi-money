@@ -32,11 +32,13 @@
           "The result contains an :id value"))))
 
 (def ^:private update-context
-  {:entities [#:entity{:name "Personal"}]
-   #_:commodities #_[{:name "United States Dollar"
-                  :symbol "USD"
-                  :type :currency
-                  :entity-id "Personal"}]})
+  (assoc context
+         :entities [#:entity{:name "Personal"
+                             :owner "john@doe.com"}]
+         #_:commodities #_[{:name "United States Dollar"
+                            :symbol "USD"
+                            :type :currency
+                            :entity-id "Personal"}]))
 
 (dbtest update-an-entity
   (with-context update-context

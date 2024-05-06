@@ -1,5 +1,6 @@
 (ns multi-money.test-context
   (:require [clojure.pprint :refer [pprint]]
+            [multi-money.db :as db]
             [multi-money.models.users :as usrs]
             [multi-money.models.entities :as ents]))
 
@@ -38,13 +39,23 @@
     (or m
         (throw (RuntimeException. (format "Unable to create the %s" model-type))))))
 
+(defmulti ^:private prepare-for-put
+  (fn [m _ctx] (db/model-type m)))
+
+(defmethod prepare-for-put :default [m _] m)
+
+(defmethod prepare-for-put :entity
+  [entity ctx]
+  (update-in entity [:entity/owner] #(find-user % ctx)))
+
 (defn- realize-collection
   [ctx coll-key desc put-fn]
   (update-in ctx
              [coll-key]
              (fn [coll]
                (mapv (comp (throw-on-failure desc)
-                           #(put-with % put-fn))
+                           #(put-with % put-fn)
+                           #(prepare-for-put % ctx))
                      coll))))
 (defn realize
   [ctx]
