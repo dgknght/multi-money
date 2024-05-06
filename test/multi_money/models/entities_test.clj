@@ -41,18 +41,18 @@
 (dbtest update-an-entity
   (with-context update-context
     (let [entity (find-entity "Personal")
-          updated (ents/put (assoc entity :name "My Money"))]
+          updated (ents/put (assoc entity :entity/name "My Money"))]
       (is (= "My Money"
-             (:name updated))
+             (:entity/name updated))
           "The result contains the updated attributes")
       (is (= "My Money"
-             (:name (ents/find entity)))
+             (:entity/name (ents/find entity)))
           "A retrieved model has the updated attributes"))))
 
-(dbtest fetch-all-entities
+(dbtest fetch-all-entities-for-an-owner
   (with-context update-context
     (is (seq-of-maps-like? [#:entity{:name "Personal"}]
-                           (ents/select {})))))
+                           (ents/select {:entity/owner (find-user "john@doe.com")})))))
 
 (dbtest delete-an-entity
   (with-context update-context
