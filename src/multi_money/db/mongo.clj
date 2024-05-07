@@ -18,13 +18,13 @@
 (derive com.mongodb.WriteResult ::write-result)
 
 (defmulti before-save db/model-type)
-#_(defmethod before-save :default [m] m)
+(defmethod before-save :default [m] m)
 
 (defmulti after-read db/model-type)
-#_(defmethod after-read :default [m] m)
+(defmethod after-read :default [m] m)
 
 (defmulti prepare-criteria db/model-type)
-#_(defmethod prepare-criteria :default [c] c)
+(defmethod prepare-criteria :default [c] c)
 
 (def ^:private ->mongo-keys (partial transform-keys ->snake_case))
 (def ^:private ->clj-keys (partial transform-keys ->kebab-case))

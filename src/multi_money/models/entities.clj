@@ -1,6 +1,7 @@
 (ns multi-money.models.entities
   (:refer-clojure :exclude [find])
   (:require [clojure.spec.alpha :as s]
+            [clojure.pprint :refer [pprint]]
             [multi-money.util :refer [->id]]
             [multi-money.db :as db]))
 
