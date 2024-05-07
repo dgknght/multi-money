@@ -147,7 +147,9 @@
 
 (defn- select*
   [criteria options {:keys [api]}]
-  (let [qry (criteria->query criteria options)
+  (let [qry (-> criteria
+                prepare-criteria
+                (criteria->query options))
         raw-result (query api qry)]
     (->> raw-result
          (map first)

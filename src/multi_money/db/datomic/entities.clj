@@ -7,3 +7,7 @@
 (defmethod d/before-save :entity
   [entity]
   (update-in-if entity [:entity/owner] ->id))
+
+(defmethod d/prepare-criteria :entity
+  [criteria]
+  (update-in-if criteria [:entity/owner] ->id))
