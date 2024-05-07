@@ -6,12 +6,14 @@
             [reagent.dom :as rdom]
             [multi-money.state :as state :refer [current-page
                                                  current-user
+                                                 current-entities
                                                  +busy
                                                  -busy]]
             [multi-money.views.components :refer [title-bar
                                                   footer]]
             [multi-money.views.pages]
-            [multi-money.api.users :as usrs]))
+            [multi-money.api.users :as usrs]
+            [multi-money.api.entities :as ents]))
 
 (defn get-app-element []
   (gdom/getElement "app"))
@@ -37,12 +39,25 @@
     (usrs/me :on-success #(reset! current-user %)
              :callback -busy)))
 
+(defn- fetch-entities []
+  (ents/select :on-success #(reset! current-entities %)
+               :callback -busy))
+
+(defn- watch-current-user []
+  (add-watch current-user
+             ::current-user
+             (fn [_ _ _ user]
+               (if user
+                 (fetch-entities)
+                 (reset! current-entities [])))))
+
 (defn- init! []
   (act/configure-navigation!
     {:nav-handler sct/dispatch!
      :path-exists? sct/locate-route-value})
   (act/dispatch-current!)
   (mount-app-element)
+  (watch-current-user)
   (fetch-user))
 
 (init!)

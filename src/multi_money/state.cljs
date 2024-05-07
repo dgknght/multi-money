@@ -10,6 +10,7 @@
 
 (def current-page (r/cursor app-state [:current-page]))
 (def current-user (r/cursor app-state [:current-user]))
+(def current-entities (r/cursor app-state [:current-entities]))
 (def db-strategy (r/cursor app-state [:db-strategy]))
 (def auth-token (r/cursor app-state [:auth-token]))
 (def nav-items (r/cursor app-state [:nav-items]))
