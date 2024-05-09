@@ -23,6 +23,7 @@
                                                   wrap-user-lookup]]
             [multi-money.mount-point :refer [js-path]]
             [multi-money.api.users :as usrs]
+            [multi-money.api.entities :as ents]
             [multi-money.db.datomic.ref]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]))
@@ -111,7 +112,8 @@
                              wrap-json-response
                              wrap-db
                              [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
-        usrs/routes]])
+        usrs/routes
+        ents/routes]])
     (ring/routes
       (ring/create-resource-handler {:path "/"})
       (ring/create-default-handler))))
