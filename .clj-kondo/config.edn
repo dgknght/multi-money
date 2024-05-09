@@ -1,5 +1,6 @@
 {:linters {:unresolved-symbol {:exclude [(clojure.test/is [comparable?
                                                            html-response-with-content?
+                                                           http-created?
                                                            http-success?
                                                            http-not-found?
                                                            http-no-content?

@@ -59,7 +59,7 @@
                     app
                     parse-json-body)
             [c :as cs] @calls]
-        (is (http-success? res))
+        (is (http-created? res))
         (is (comparable? {"Content-Type" "application/json; charset=utf-8"}
                          (:headers res))
             "The response has the correct content type")
@@ -72,42 +72,52 @@
         (is (= [{}] c)
             "The ents/select fn is called with the correct arguments")))))
 
-(deftest update-an-entity
+(deftest an-authenticated-user-can-update-his-entity
   (testing "update an existing entity"
-    (let [calls (atom [])]
+    (let [calls (atom [])
+          owner-id 201]
       (with-redefs [ents/put (fn [& args]
                                (swap! calls conj args)
                                (first args))
                     ents/select (constantly [{:id 101
-                                              :name "The old name"}])]
-        (let [res (-> (req/request :patch (path :api :entities 101))
-                      (req/json-body {:name "The new name"})
-                      app
-                      parse-json-body)
+                                              :owner-id owner-id
+                                              :name "The old name"}])
+                    usrs/find (fn [id]
+                                (when (= owner-id id)
+                                  {:id owner-id}))]
+        (let [res (request :patch (path :api :entities 101)
+                           :user {:id owner-id}
+                           :json-body {:name "The new name"})
               [c :as cs] @calls]
           (is (http-success? res))
           (is (= 1 (count cs))
               "The entities update fn is called once")
-          (is (= [{:id 101
-                   :name "The new name"}]
-                 c)
+          (is (comparable? [{:id 101
+                             :name "The new name"}]
+                           c)
               "The entities update fn is called with the updated entity map")
-          (is (= {:id 101
-                  :name "The new name"}
-                 (:json-body res))
+          (is (comparable? {:id 101
+                            :name "The new name"}
+                           (:json-body res))
               "The result of the update fn is returned")))))
   (testing "attempt to update an non-existing entity"
-    (let [calls (atom [])]
+    (let [calls (atom [])
+          owner-id 201]
       (with-redefs [ents/put (fn [& args]
                                (swap! calls conj args)
                                (first args))
-                    ents/select (constantly [])]
-        (is (http-not-found? (-> (req/request :patch (path :api :entities 101))
-                                 (req/json-body {:name "The new name"})
-                                 app
-                                 parse-json-body)))
+                    ents/select (constantly [])
+                    usrs/find (fn [id]
+                                (when (= owner-id id)
+                                  {:id owner-id}))]
+        (is (http-not-found? (request :patch (path :api :entities 101)
+                                      :user {:id owner-id}
+                                      :json-body {:name "The new name"})))
         (is (zero? (count @calls))
             "The entities update fn is not called")))))
+
+(deftest an-unauthenticated-user-cannot-update-an-entity
+  (is false "Need to write the test"))
 
 (deftest delete-an-entity
   (testing "delete an existing entity"
