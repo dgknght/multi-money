@@ -4,18 +4,21 @@
             [dgknght.app-lib.authorization :refer [+scope]]
             [dgknght.app-lib.api :as api]
             [multi-money.db :as db]
+            [multi-money.util :refer [qualify-keys]]
             [multi-money.models.entities :as ents]
             [multi-money.authorization.entities]))
 
 (defn- extract-entity
   [{:keys [body]}]
-  (select-keys body [:name]))
+  (-> body
+      (select-keys [:name])
+      (qualify-keys :entity)))
 
 (defn- create
   [{:as req :keys [authenticated]}]
   (-> req
       extract-entity
-      (assoc :entity/owner-id (:id authenticated))
+      (assoc :entity/owner authenticated)
       ents/put
       api/creation-response))
 

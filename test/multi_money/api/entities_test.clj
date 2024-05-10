@@ -9,29 +9,41 @@
             [multi-money.models.users :as usrs]
             [multi-money.handler :refer [app]]))
 
+(defmacro with-mocks
+  [bindings & body]
+  `(let [calls# (atom [])
+         f# (fn* [~(first bindings)] ~@body)]
+     (with-redefs [ents/put (fn [& args#]
+                              (swap! calls# conj args#)
+                              (assoc (first args#) :id 123))
+                   ents/select (fn [& args#]
+                                 (swap! calls# conj args#)
+                                 [{:id 101
+                                   :entity/name "Personal"}
+                                  {:id 102
+                                   :entity/name "Business"}])
+                   usrs/find (fn [id#]
+                               (when (= 101 id#)
+                                 {:id id#}))]
+       (f# calls#))))
+
 (deftest an-authenticated-user-can-create-an-entity
-  (let [calls (atom [])]
-    (with-redefs [ents/put (fn [& args]
-                             (swap! calls conj args)
-                             (assoc (first args) :id 123))
-                  usrs/find (fn [id]
-                              (when (= 101 id)
-                                {:id id}))]
-      (let [res (request :post (path :api :entities)
-                         :json-body {:name "Personal"}
-                         :user {:id 101})
-            [c :as cs] @calls]
-        (is (http-created? res))
-        (is (= 1 (count cs))
-            "The entities/put fn is called once")
-        (is (= [{:name "Personal"
-                 :user-id 101}] c)
-            "The entities/create fn is called with the correct arguments")
-        (is (= {:id 123
-                :name "Personal"
-                :user-id 101}
-               (:json-body res))
-            "The created entity is returned")))))
+  (with-mocks [calls]
+    (let [res (request :post (path :api :entities)
+                       :json-body {:name "Personal"}
+                       :user {:id 101})
+          [c :as cs] @calls]
+      (is (http-created? res))
+      (is (= 1 (count cs))
+          "The entities/put fn is called once")
+      (is (= [{:entity/name "Personal"
+               :entity/owner {:id 101}}] c)
+          "The entities/create fn is called with the correct arguments")
+      (is (= {:id 123
+              :entity/name "Personal"
+              :entity/owner {:id 101}}
+             (:json-body res))
+          "The created entity is returned"))))
 
 (deftest an-unauthenticated-user-cannot-create-an-entity
   (let [calls (atom [])]
