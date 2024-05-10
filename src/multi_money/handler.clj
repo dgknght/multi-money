@@ -16,7 +16,8 @@
             [reitit.ring :as ring]
             [lambdaisland.uri :refer [uri]]
             [dgknght.app-lib.api :refer [wrap-authentication]]
-            [multi-money.db.web :refer [wrap-db]]
+            [multi-money.db.web :refer [wrap-db
+                                        wrap-auth-config]]
             [multi-money.models.users.web :refer [validate-token-and-lookup-user
                                                   wrap-fetch-oauth-profile
                                                   wrap-issue-auth-token
@@ -110,6 +111,7 @@
        ["/api" {:middleware [[wrap-defaults (assoc-in api-defaults [:security :anti-forgery] false)]
                              [wrap-json-body {:keywords? true :bigdecimals? true}]
                              wrap-json-response
+                             wrap-auth-config
                              wrap-db
                              [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
         usrs/routes

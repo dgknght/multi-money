@@ -3,6 +3,7 @@
             [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
             [config.core :refer [env]]
+            [dgknght.app-lib.authorization :as auth]
             [multi-money.db :refer [with-db] :as db]))
 
 (defn- parse-db-strategy
@@ -38,3 +39,9 @@
                   (mask-values storage-config [:username :user :password :secret :access-key]))
       (with-db [storage-config]
         (handler (assoc req :db-strategy storage-key))))))
+
+(defn wrap-auth-config
+  [h]
+  (fn [req]
+    (auth/with-config {:type-fn db/model-type}
+      (h req))))

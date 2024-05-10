@@ -4,7 +4,6 @@
             [ring.mock.request :as req]
             [dgknght.app-lib.test-assertions]
             [dgknght.app-lib.web :refer [path]]
-            [dgknght.app-lib.test :refer [parse-json-body]]
             [multi-money.helpers :refer [request]]
             [multi-money.models.entities :as ents]
             [multi-money.models.users :as usrs]
@@ -22,7 +21,7 @@
                          :json-body {:name "Personal"}
                          :user {:id 101})
             [c :as cs] @calls]
-        (is (http-success? res))
+        (is (http-created? res))
         (is (= 1 (count cs))
             "The entities/put fn is called once")
         (is (= [{:name "Personal"
@@ -47,6 +46,7 @@
         (is (http-unauthorized? res))
         (is (empty? @calls)
             "The entities/put fn is not called")))))
+
 (deftest an-authenticated-user-can-get-a-list-of-his-entities
   (let [calls (atom [])]
     (with-redefs [ents/select (fn [& args]
@@ -54,22 +54,24 @@
                                 [{:id 101
                                   :name "Personal"}
                                  {:id 102
-                                  :name "Business"}])]
-      (let [res (-> (req/request :get "/api/entities")
-                    app
-                    parse-json-body)
+                                  :name "Business"}])
+                  usrs/find (fn [id]
+                              (when (= 201 id)
+                                {:id id}))]
+      (let [res (request :get (path :api :entities)
+                         :user {:id 201})
             [c :as cs] @calls]
-        (is (http-created? res))
+        (is (http-success? res))
         (is (comparable? {"Content-Type" "application/json; charset=utf-8"}
                          (:headers res))
             "The response has the correct content type")
-        (is (= [{:id 101 :name "Personal"}
-                {:id 102 :name "Business"}]
-               (:json-body res))
+        (is (seq-of-maps-like? [{:id 101 :name "Personal"}
+                                {:id 102 :name "Business"}]
+                               (:json-body res))
             "The entity data is returned")
         (is (= 1 (count cs))
             "The ents/select fn is called once")
-        (is (= [{}] c)
+        (is (= [{:entity/owner-id 201}] c)
             "The ents/select fn is called with the correct arguments")))))
 
 (deftest an-authenticated-user-can-update-his-entity
@@ -115,6 +117,9 @@
                                       :json-body {:name "The new name"})))
         (is (zero? (count @calls))
             "The entities update fn is not called")))))
+
+(deftest an-authenticate-user-cannot-update-anothers-entity
+  (is false "Need to write the test"))
 
 (deftest an-unauthenticated-user-cannot-update-an-entity
   (is false "Need to write the test"))

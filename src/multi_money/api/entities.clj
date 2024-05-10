@@ -1,8 +1,11 @@
 (ns multi-money.api.entities
   (:refer-clojure :exclude [update])
   (:require [clojure.pprint :refer [pprint]]
+            [dgknght.app-lib.authorization :refer [+scope]]
+            [dgknght.app-lib.api :as api]
+            [multi-money.db :as db]
             [multi-money.models.entities :as ents]
-            [dgknght.app-lib.api :as api]))
+            [multi-money.authorization.entities]))
 
 (defn- extract-entity
   [{:keys [body]}]
@@ -12,7 +15,7 @@
   [{:as req :keys [authenticated]}]
   (-> req
       extract-entity
-      (assoc :user-id (:id authenticated))
+      (assoc :entity/owner-id (:id authenticated))
       ents/put
       api/creation-response))
 
@@ -21,9 +24,11 @@
   {})
 
 (defn- index
-  [req]
+  [{:as req :keys [authenticated]}]
   (-> req
       extract-criteria
+      (db/model-type :entity)
+      (+scope authenticated)
       ents/select
       api/response))
 
