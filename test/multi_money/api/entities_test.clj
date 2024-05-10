@@ -11,13 +11,13 @@
 
 (defmacro with-mocks
   [bindings & body]
-  `(let [calls# (atom [])
+  `(let [calls# (atom {:put [] :select []})
          f# (fn* [~(first bindings)] ~@body)]
      (with-redefs [ents/put (fn [& args#]
-                              (swap! calls# conj args#)
+                              (swap! calls# update-in [:put] conj args#)
                               (assoc (first args#) :id 123))
                    ents/select (fn [& args#]
-                                 (swap! calls# conj args#)
+                                 (swap! calls# update-in [:select] conj args#)
                                  [{:id 101
                                    :entity/name "Personal"}
                                   {:id 102
@@ -32,13 +32,13 @@
     (let [res (request :post (path :api :entities)
                        :json-body {:name "Personal"}
                        :user {:id 101})
-          [c :as cs] @calls]
+          {[c :as cs] :put} @calls]
       (is (http-created? res))
       (is (= 1 (count cs))
           "The entities/put fn is called once")
       (is (= [{:entity/name "Personal"
                :entity/owner {:id 101}}] c)
-          "The entities/create fn is called with the correct arguments")
+          "The entities/put fn is called with the correct arguments")
       (is (= {:id 123
               :entity/name "Personal"
               :entity/owner {:id 101}}
@@ -50,7 +50,7 @@
     (let [res (request :post (path :api :entities)
                        :json-body {:name "Personal"})]
       (is (http-unauthorized? res))
-      (is (empty? @calls)
+      (is (empty? (:put @calls))
           "The entities/put fn is not called"))))
 
 (deftest an-authenticated-user-can-get-a-list-of-his-entities
