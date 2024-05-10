@@ -46,18 +46,12 @@
           "The created entity is returned"))))
 
 (deftest an-unauthenticated-user-cannot-create-an-entity
-  (let [calls (atom [])]
-    (with-redefs [ents/put (fn [& args]
-                             (swap! calls conj args)
-                             (assoc (first args) :id 123))
-                  usrs/find (fn [id]
-                              (when (= 101 id)
-                                {:id id}))]
-      (let [res (request :post (path :api :entities)
-                         :json-body {:name "Personal"})]
-        (is (http-unauthorized? res))
-        (is (empty? @calls)
-            "The entities/put fn is not called")))))
+  (with-mocks [calls]
+    (let [res (request :post (path :api :entities)
+                       :json-body {:name "Personal"})]
+      (is (http-unauthorized? res))
+      (is (empty? @calls)
+          "The entities/put fn is not called"))))
 
 (deftest an-authenticated-user-can-get-a-list-of-his-entities
   (let [calls (atom [])]
