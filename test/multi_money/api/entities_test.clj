@@ -15,12 +15,12 @@
          f# (fn* [~(first bindings)] ~@body)]
      (with-redefs [ents/put (fn [& args#]
                               (swap! calls# update-in [:put] conj args#)
-                              (assoc (first args#) :id 123))
+                              (assoc (first args#) :id 200))
                    ents/select (fn [& args#]
                                  (swap! calls# update-in [:select] conj args#)
-                                 [{:id 101
+                                 [{:id 201
                                    :entity/name "Personal"}
-                                  {:id 102
+                                  {:id 202
                                    :entity/name "Business"}])
                    usrs/find (fn [id#]
                                (when (= 101 id#)
@@ -39,7 +39,7 @@
       (is (= [{:entity/name "Personal"
                :entity/owner {:id 101}}] c)
           "The entities/put fn is called with the correct arguments")
-      (is (= {:id 123
+      (is (= {:id 200
               :entity/name "Personal"
               :entity/owner {:id 101}}
              (:json-body res))
@@ -54,31 +54,22 @@
           "The entities/put fn is not called"))))
 
 (deftest an-authenticated-user-can-get-a-list-of-his-entities
-  (let [calls (atom [])]
-    (with-redefs [ents/select (fn [& args]
-                                (swap! calls conj args)
-                                [{:id 101
-                                  :name "Personal"}
-                                 {:id 102
-                                  :name "Business"}])
-                  usrs/find (fn [id]
-                              (when (= 201 id)
-                                {:id id}))]
-      (let [res (request :get (path :api :entities)
-                         :user {:id 201})
-            [c :as cs] @calls]
-        (is (http-success? res))
-        (is (comparable? {"Content-Type" "application/json; charset=utf-8"}
-                         (:headers res))
-            "The response has the correct content type")
-        (is (seq-of-maps-like? [{:id 101 :name "Personal"}
-                                {:id 102 :name "Business"}]
-                               (:json-body res))
-            "The entity data is returned")
-        (is (= 1 (count cs))
-            "The ents/select fn is called once")
-        (is (= [{:entity/owner-id 201}] c)
-            "The ents/select fn is called with the correct arguments")))))
+  (with-mocks [calls]
+    (let [res (request :get (path :api :entities)
+                       :user {:id 101})
+          {[c :as cs] :select} @calls]
+      (is (http-success? res))
+      (is (comparable? {"Content-Type" "application/json; charset=utf-8"}
+                       (:headers res))
+          "The response has the correct content type")
+      (is (seq-of-maps-like? [{:id 201 :entity/name "Personal"}
+                              {:id 202 :entity/name "Business"}]
+                             (:json-body res))
+          "The entity data is returned")
+      (is (= 1 (count cs))
+          "The ents/select fn is called once")
+      (is (= [{:entity/owner-id 101}] c)
+          "The ents/select fn is called with the correct arguments"))))
 
 (deftest an-authenticated-user-can-update-his-entity
   (testing "update an existing entity"
