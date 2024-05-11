@@ -1,6 +1,7 @@
-(ns multi-money.api.entities)
+(ns multi-money.api.entities
+  (:refer-clojure :exclude [select])
+  (:require [dgknght.app-lib.api-3 :as api]))
 
 (defn select
-  [& {:keys [on-success callback]}]
-  (on-success [])
-  (callback))
+  [& opts]
+  (api/get (api/path :entities) opts))
