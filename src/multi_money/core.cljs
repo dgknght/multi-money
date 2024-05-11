@@ -40,16 +40,17 @@
              :callback -busy)))
 
 (defn- fetch-entities []
-  (ents/select :on-success #(reset! current-entities %)
-               :callback -busy))
+  (if @state/auth-token
+    (do (+busy)
+        (ents/select :on-success #(reset! current-entities %)
+                     :callback -busy))
+    (reset! current-entities [])))
 
 (defn- watch-current-user []
   (add-watch current-user
              ::current-user
-             (fn [_ _ _ user]
-               (if user
-                 (fetch-entities)
-                 (reset! current-entities [])))))
+             (fn [& _]
+               (fetch-entities))))
 
 (defn- init! []
   (act/configure-navigation!
@@ -58,7 +59,8 @@
   (act/dispatch-current!)
   (mount-app-element)
   (watch-current-user)
-  (fetch-user))
+  (fetch-user)
+  (fetch-entities))
 
 (init!)
 
