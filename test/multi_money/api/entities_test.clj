@@ -3,27 +3,10 @@
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.test-assertions]
             [dgknght.app-lib.web :refer [path]]
-            [multi-money.helpers :refer [request]]
+            [multi-money.helpers :refer [request
+                                         criteria->pred]]
             [multi-money.models.entities :as ents]
             [multi-money.models.users :as usrs]))
-
-(defn- model-ref?
-  [x]
-  (and (map? x)
-       (= #{:id} (set (keys x)))))
-
-(defn- criterion-pred
-  [[k v]]
-  (fn [m]
-    (let [actual (get m k)]
-      (= v
-         (cond-> actual
-           (model-ref? actual) :id)))))
-
-(defn- criteria->pred
-  [criteria]
-  (apply every-pred (map criterion-pred
-                         criteria)))
 
 (defmacro with-mocks
   [bindings & body]
