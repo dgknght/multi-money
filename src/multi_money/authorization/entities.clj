@@ -3,4 +3,4 @@
 
 (defmethod auth/scope :entity
   [_model-type authenticated]
-  {:entity/owner-id (:id authenticated)})
+  {:entity/owner (:id authenticated)})
