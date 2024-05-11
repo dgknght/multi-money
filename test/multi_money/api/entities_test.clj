@@ -27,7 +27,7 @@
                    ents/delete (fn [& args#]
                                  (swap! calls# update-in [:delete] conj args#))
                    usrs/find (fn [id#]
-                               (when (= "101" id#)
+                               (when (#{"101" "102"} id#)
                                  {:id id#}))]
        (f# calls#))))
 
@@ -51,11 +51,10 @@
 
 (deftest an-unauthenticated-user-cannot-create-an-entity
   (with-mocks [calls]
-    (let [res (request :post (path :api :entities)
-                       :json-body {:name "Personal"})]
-      (is (http-unauthorized? res))
-      (is (empty? (:put @calls))
-          "The entities/put fn is not called"))))
+    (is (http-unauthorized? (request :post (path :api :entities)
+                                     :json-body {:name "Personal"})))
+    (is (empty? (:put @calls))
+        "The entities/put fn is not called")))
 
 (deftest an-authenticated-user-can-get-a-list-of-his-entities
   (with-mocks [calls]
@@ -98,14 +97,23 @@
       (is (http-not-found? (request :patch (path :api :entities "999")
                                     :user {:id "101"}
                                     :json-body {:name "The new name"})))
-      (is (zero? (count (:put @calls)))
+      (is (empty? (:put @calls))
           "The entities put fn is not called"))))
 
 (deftest an-authenticate-user-cannot-update-anothers-entity
-  (is false "Need to write the test"))
+  (with-mocks [calls]
+    (is (http-not-found? (request :patch (path :api :entities "201")
+                                  :user {:id "102"}
+                                  :json-body {:name "The new name"})))
+    (is (empty? (:put @calls))
+        "The entities put fn is called once")))
 
 (deftest an-unauthenticated-user-cannot-update-an-entity
-  (is false "Need to write the test"))
+  (with-mocks [calls]
+    (is (http-unauthorized? (request :patch (path :api :entities "201")
+                                  :json-body {:name "The new name"})))
+    (is (empty? (:put @calls))
+        "The entities put fn is called once")))
 
 (deftest delete-an-entity
   (testing "delete an existing entity"
@@ -125,11 +133,18 @@
     (with-mocks [calls]
       (is (http-not-found? (request :delete (path :api :entities "999")
                                     :user {:id "101"})))
-      (is (zero? (count (:delete @calls)))
+      (is (empty? (:delete @calls))
           "The delete fn is not called"))))
 
 (deftest an-authenticated-user-cannot-delete-anothers-entity
-  (is false "Need to write the test"))
+  (with-mocks [calls]
+    (is (http-not-found? (request :delete (path :api :entities "201")
+                                  :user {:id "102"})))
+    (is (empty? (:delete @calls))
+        "The delete fn is not called")))
 
 (deftest an-unauthenticated-user-cannot-delete-an-entity
-  (is false "Need to write the test"))
+  (with-mocks [calls]
+    (is (http-unauthorized? (request :delete (path :api :entities "201"))))
+    (is (empty? (:delete @calls))
+        "The delete fn is not called")))

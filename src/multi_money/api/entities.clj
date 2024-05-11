@@ -1,7 +1,7 @@
 (ns multi-money.api.entities
   (:refer-clojure :exclude [update])
   (:require [clojure.pprint :refer [pprint]]
-            [dgknght.app-lib.authorization :refer [+scope]]
+            [dgknght.app-lib.authorization :as auth]
             [dgknght.app-lib.api :as api]
             [multi-money.db :as db]
             [multi-money.util :refer [qualify-keys]]
@@ -31,18 +31,19 @@
   (-> req
       extract-criteria
       (db/model-type :entity)
-      (+scope authenticated)
+      (auth/+scope authenticated)
       ents/select
       api/response))
 
 (defn- find-and-authorize
-  [{:keys [path-params]}]
-  ; TODO: Add authorization
-  (ents/find (:id path-params)))
+  [{:keys [path-params authenticated]} action]
+  (some-> (:id path-params)
+          ents/find
+          (auth/authorize action authenticated)))
 
 (defn- update
   [req]
-  (if-let [entity (find-and-authorize req)]
+  (if-let [entity (find-and-authorize req ::auth/update)]
     (-> entity
         (merge (extract-entity req))
         ents/put
@@ -51,7 +52,7 @@
 
 (defn- delete
   [req]
-  (if-let [entity (find-and-authorize req)]
+  (if-let [entity (find-and-authorize req ::auth/destroy)]
     (do (ents/delete entity)
         api/no-content)
     api/not-found))

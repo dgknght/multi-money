@@ -15,7 +15,8 @@
             [reitit.core :as r]
             [reitit.ring :as ring]
             [lambdaisland.uri :refer [uri]]
-            [dgknght.app-lib.api :refer [wrap-authentication]]
+            [dgknght.app-lib.api :refer [wrap-authentication
+                                         wrap-api-exception]]
             [multi-money.db.web :refer [wrap-db
                                         wrap-auth-config]]
             [multi-money.models.users.web :refer [validate-token-and-lookup-user
@@ -111,6 +112,7 @@
        ["/api" {:middleware [[wrap-defaults (assoc-in api-defaults [:security :anti-forgery] false)]
                              [wrap-json-body {:keywords? true :bigdecimals? true}]
                              wrap-json-response
+                             wrap-api-exception
                              wrap-auth-config
                              wrap-db
                              [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
