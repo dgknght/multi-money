@@ -8,6 +8,8 @@
 (defn handle-error
   [error]
   (.error js/console "Unexpected error during API call.")
+  (when-let [d (ex-data error)]
+    (pprint {::ex-data d}))
   (.dir js/console error))
 
 (defn- on-failure
