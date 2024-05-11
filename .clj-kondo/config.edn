@@ -31,7 +31,8 @@
                                                       multi-money.util/valid-id?
                                                       multi-money.util/truncate-html
                                                       multi-money.handler/print-routes}}
-           :unresolved-var {:exclude [figwheel.main.testing/run-tests-async]}
+           :unresolved-var {:exclude [figwheel.main.testing/run-tests-async
+                                      dgknght.app-lib.test-assertions/comparable?]}
            :unused-referred-var {:exclude {clojure.pprint [pprint]
                                            cljs.pprint [pprint]}}
            :unused-namespace {:exclude [clojure.pprint

@@ -67,3 +67,21 @@
                                        (ffirst @calls))
                                     "The entities update API endpoint is called")
                                 (done)))))))
+
+(deftest delete-an-entity
+  (async
+    done
+    (let [calls (atom [])
+          entity {:id "201"
+                  :entity/name "New Name"}]
+      (with-redefs [api/delete (fn [& [_url {:keys [on-success]} :as args]]
+                                 (swap! calls conj args)
+                                 (on-success entity))]
+        (ents/delete entity
+                     :on-success (fn []
+                                   (is (= 1 (count @calls))
+                                       "One API call is made")
+                                   (is (= "/api/entities/201"
+                                          (ffirst @calls))
+                                       "The entities delete API endpoint is called")
+                                   (done)))))))

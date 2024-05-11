@@ -1,5 +1,5 @@
 (ns multi-money.api.entities
-  (:refer-clojure :exclude [select update])
+  (:refer-clojure :exclude [update])
   (:require [dgknght.app-lib.api-3 :as api]))
 
 (defn select
@@ -11,7 +11,7 @@
   (api/post (api/path :entities) entity opts))
 
 (defn update
-  [{:keys [id ] :as entity} opts]
+  [{:keys [id] :as entity} opts]
   (api/patch (api/path :entities id) entity opts))
 
 (defn put
@@ -19,3 +19,7 @@
   (if (:id entity)
     (update entity opts)
     (create entity opts)))
+
+(defn delete
+  [{:keys [id]} & opts]
+  (api/delete (api/path :entities id) opts))
