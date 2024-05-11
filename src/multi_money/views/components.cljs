@@ -6,6 +6,7 @@
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [nav-items
+                                       current-user
                                        current-entity
                                        current-entities
                                        db-strategy]]))
@@ -123,11 +124,17 @@
                   (into []))})
 
 (defn- build-nav-items []
-  [(db-strategy-nav-item)
-   (entities-nav-item)])
+  (filter identity
+          [(db-strategy-nav-item)
+           (when @current-user
+             (entities-nav-item))]))
 
 (defn title-bar []
   (add-watch db-strategy
+             ::title-bar
+             (fn [& _]
+               (reset! nav-items (build-nav-items))))
+  (add-watch current-user
              ::title-bar
              (fn [& _]
                (reset! nav-items (build-nav-items))))

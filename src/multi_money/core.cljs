@@ -4,6 +4,8 @@
             [accountant.core :as act]
             [secretary.core :as sct]
             [reagent.dom :as rdom]
+            [dgknght.app-lib.forms :as forms]
+            [dgknght.app-lib.bootstrap-5 :as bs]
             [multi-money.state :as state :refer [current-page
                                                  current-user
                                                  current-entities
@@ -15,6 +17,8 @@
             [multi-money.views.entities]
             [multi-money.api.users :as usrs]
             [multi-money.api.entities :as ents]))
+
+(swap! forms/defaults assoc-in [::forms/decoration ::forms/framework] ::bs/bootstrap-5)
 
 (defn get-app-element []
   (gdom/getElement "app"))
@@ -44,7 +48,9 @@
   (if @state/auth-token
     (do (+busy)
         (ents/select :on-success (fn [res]
-                                   (reset! current-entities res)
+                                   (swap! state/app-state assoc
+                                          :current-entities res
+                                          :current-entity (first res))
                                    (when (empty? res)
                                      (sct/dispatch! "/entities")))
                      :callback -busy))
