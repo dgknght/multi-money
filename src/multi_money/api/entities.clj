@@ -1,7 +1,6 @@
 (ns multi-money.api.entities
   (:refer-clojure :exclude [update])
-  (:require [clojure.pprint :refer [pprint]]
-            [dgknght.app-lib.authorization :as auth]
+  (:require [dgknght.app-lib.authorization :as auth]
             [dgknght.app-lib.api :as api]
             [multi-money.db :as db]
             [multi-money.util :refer [qualify-keys]]
