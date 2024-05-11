@@ -42,7 +42,10 @@
 (defn- fetch-entities []
   (if @state/auth-token
     (do (+busy)
-        (ents/select :on-success #(reset! current-entities %)
+        (ents/select :on-success (fn [res]
+                                   (reset! current-entities res)
+                                   (when (empty? res)
+                                     (sct/dispatch! "/entities")))
                      :callback -busy))
     (reset! current-entities [])))
 
