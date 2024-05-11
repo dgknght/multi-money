@@ -20,8 +20,29 @@
                                          entities)
                                        "The entities are returned")
                                    (is (= 1 (count @calls))
-                                       "The entities index API endpoint is called once")
+                                       "One API call is made")
                                    (is (= "/api/entities"
                                           (ffirst @calls))
                                        "The entities index API endpoint is called")
                                    (done)))))))
+
+(deftest update-an-entity
+  (async
+    done
+    (let [calls (atom [])
+          entity {:id "201"
+                  :entity/name "New Name"}]
+      (with-redefs [api/patch (fn [& [_url entity {:keys [on-success]} :as args]]
+                                (swap! calls conj args)
+                                (on-success entity))]
+        (ents/put entity
+                  :on-success (fn [res]
+                                (is (= entity
+                                       res)
+                                    "The updated entity is returned")
+                                (is (= 1 (count @calls))
+                                    "One API call is made")
+                                (is (= "/api/entities/201"
+                                       (ffirst @calls))
+                                    "The entities update API endpoint is called")
+                                (done)))))))
