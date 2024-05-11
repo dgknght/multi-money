@@ -12,6 +12,7 @@
             [multi-money.views.components :refer [title-bar
                                                   footer]]
             [multi-money.views.pages]
+            [multi-money.views.entities]
             [multi-money.api.users :as usrs]
             [multi-money.api.entities :as ents]))
 

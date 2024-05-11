@@ -1,20 +1,28 @@
 (ns multi-money.views.components
-  (:require [clojure.pprint :refer [pprint]]
+  (:require [cljs.pprint :refer [pprint]]
             [camel-snake-kebab.core :refer [->kebab-case-string]]
             [goog.string :refer [format]]
             [dgknght.app-lib.inflection :refer [humanize]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [nav-items
+                                       current-entity
+                                       current-entities
                                        db-strategy]]))
 
 (derive js/String ::string)
 (derive cljs.core/PersistentArrayMap ::map)
 (derive cljs.core/Keyword ::keyword)
+(derive cljs.core/PersistentVector ::vector)
 
 (defmulti ^:private expand-nav-item type)
 
-(defmethod expand-nav-item ::keyword [k] k)
+(defmethod expand-nav-item :default
+  [x]
+  (.error js/console "Unhandled nav item type")
+  (pprint x))
+
+(defmethod expand-nav-item ::vector [k] k)
 
 (defmethod expand-nav-item ::string
   [path]
@@ -31,10 +39,12 @@
 
 (defmulti ^:private dropdown-item type)
 
-(defmethod dropdown-item ::keyword
-  [k]
-  (case k
-    :divider [:li [:hr.dropdown-divider]]))
+(defmethod dropdown-item ::vector
+  [[item-type id]]
+  (case item-type
+    :divider (with-meta
+               [:li [:hr.dropdown-divider]]
+               {:key (format "dropdown-divider-%s" id)})))
 
 (defmethod dropdown-item ::map
   [{:keys [caption path on-click id active?]}]
@@ -55,7 +65,7 @@
         doall)])
 
 (defn- nav-item
-  [{:keys [path on-click caption children id active?]}]
+  [{:keys [path on-click caption children id active?] :as item}]
   ^{:key (str "nav-item-" id)}
   [:li.nav-item {:class (when (seq children) "dropdown")}
    [:a.nav-link.d-flex.align-items-center
@@ -87,8 +97,8 @@
 
 (defn- db-strategy-nav-item []
   (let [current @db-strategy]
-    {:caption (icon-with-text :database (db-strategies current))
-     :active? true
+    {:id :db-strategy-menu
+     :caption (icon-with-text :database (db-strategies current))
      :children (mapv (fn [[id caption]]
                        {:id (format "%s-db-strategy" id)
                         :active? (= id current)
@@ -96,8 +106,25 @@
                         :on-click #(reset! db-strategy id)})
                      db-strategies)}))
 
+(defn- entity-nav-item
+  [{:keys [id] :entity/keys [name] :as entity}]
+  {:id (format "entity-menu-option-%s" id)
+   :caption name
+   :on-click #(reset! current-entity entity)})
+
+(defn- entities-nav-item []
+  {:id :entities-menu
+   :caption (or (:name @current-entity) "Entities")
+   :children (->> [(when (seq @current-entities) [:divider 1])
+                   {:path "/entities"
+                    :caption "Manage Entities"}]
+                  (remove nil?)
+                  (concat (map entity-nav-item @current-entities))
+                  (into []))})
+
 (defn- build-nav-items []
-  [(db-strategy-nav-item)])
+  [(db-strategy-nav-item)
+   (entities-nav-item)])
 
 (defn title-bar []
   (add-watch db-strategy
