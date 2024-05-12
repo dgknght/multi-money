@@ -109,7 +109,10 @@
 
 (defn detokenize
   [{:keys [user-id] :as token}]
-  {:pre [(:user-id token)]}
+  {:pre [(or (nil? token)
+             (and (:user-id token)
+                  (:expires-at token)))]}
+
   (when token
     (when-not (expired? token)
       (find user-id))))

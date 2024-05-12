@@ -159,6 +159,7 @@
               scalar?))
 
  (defn ->id
+   "Given either an id or a model with an id, returns the id."
    [id-or-model]
    {:pre [(or (scalar? id-or-model)
               (map? id-or-model))]}

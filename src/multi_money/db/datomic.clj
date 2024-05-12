@@ -77,7 +77,7 @@
 (defmulti after-read db/model-type)
 (defmulti prepare-criteria db/model-type)
 
-(defmethod deconstruct :default [m] m)
+(defmethod deconstruct :default [m] [m])
 (defmethod before-save :default [m] m)
 (defmethod after-read :default [m] m)
 (defmethod prepare-criteria :default [c] c)
@@ -113,6 +113,8 @@
 
 (defn- put*
   [models {:keys [api]}]
+  {:pre [(sequential? models)]}
+
   (let [prepped (->> models
                      (map #(+id % (comp str random-uuid)))
                      (mapcat deconstruct)
@@ -145,7 +147,9 @@
 
 (defn- select*
   [criteria options {:keys [api]}]
-  (let [qry (criteria->query criteria options)
+  (let [qry (-> criteria
+                prepare-criteria
+                (criteria->query options))
         raw-result (query api qry)]
     (->> raw-result
          (map first)
@@ -157,6 +161,8 @@
 
 (defn- delete*
   [models {:keys [api]}]
+  {:pre [(and (sequential? models)
+              (not-any? nil? models))]}
   (transact api
             (mapv #(vector :db/add (:id %) :model/deleted? true)
                   models)
