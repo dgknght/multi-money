@@ -13,6 +13,8 @@
                                                  -busy]]
             [multi-money.views.components :refer [title-bar
                                                   footer]]
+            [multi-money.notifications :refer [toasts
+                                               alerts]]
             [multi-money.views.pages]
             [multi-money.views.entities]
             [multi-money.api.users :as usrs]
@@ -28,6 +30,8 @@
     [:<>
      [:div.container
       [title-bar]
+      [alerts]
+      [toasts]
       [@current-page]]
      [footer]]))
 
