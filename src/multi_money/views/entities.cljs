@@ -2,6 +2,7 @@
   (:require [cljs.pprint :refer [pprint]]
             [secretary.core :as sct]
             [reagent.core :as r]
+            [goog.string :refer [format]]
             [dgknght.app-lib.dom :as dom]
             [dgknght.app-lib.html :as html]
             [dgknght.app-lib.forms :as forms]
@@ -16,6 +17,27 @@
                                        current-entity]]
             [multi-money.api.entities :as ents]))
 
+(defn- confirm?
+  [msg-fmt & args]
+  (js/confirm (apply format msg-fmt args)))
+
+(defn- load-entities
+  [& [entity]]
+  (+busy)
+  (ents/select :callback -busy
+               :on-success (fn [entities]
+                             (swap! app-state
+                                    #(cond-> (assoc % :current-entities entities)
+                                       (= (:id entity)
+                                          (:id (:current-entity %)))
+                                       (assoc :current-entity entity))))))
+
+(defn- delete-entity
+  [entity]
+  (when (confirm? "Are you sure you want to delete the entity %s?"
+                  (:entity/name entity))
+    (ents/delete entity :on-success #(load-entities))))
+
 (defn- entity-row
   [entity page-state]
   (let [selected? (= @current-entity entity)]
@@ -23,11 +45,6 @@
     [:tr
      [:td (:entity/name entity)]
      [:td.text-end [:div.btn-group
-                    [:button.btn.btn-sm.btn-secondary
-                     {:on-click (fn [_]
-                                  (swap! page-state assoc :selected entity)
-                                  (dom/set-focus "name"))}
-                     (icon :pencil :size :small)]
                     [:button.btn.btn-sm
                      {:class (if selected?
                                "btn-success"
@@ -37,7 +54,15 @@
                      (icon (if selected?
                              :check-circle
                              :circle)
-                           :size :small)]]]]))
+                           :size :small)]
+                    [:button.btn.btn-sm.btn-secondary
+                     {:on-click (fn [_]
+                                  (swap! page-state assoc :selected entity)
+                                  (dom/set-focus "name"))}
+                     (icon :pencil :size :small)]
+                    [:button.btn.btn-sm.btn-danger
+                     {:on-click #(delete-entity entity)}
+                     (icon :trash :size :small)]]]]))
 
 (defn- entities-table
   [page-state]
@@ -59,17 +84,6 @@
                       (swap! page-state assoc :selected {})
                       (dom/set-focus "name"))}
          (icon-with-text :plus "Add")]]]]]))
-
-(defn- load-entities
-  [entity]
-  (+busy)
-  (ents/select :callback -busy
-               :on-success (fn [entities]
-                             (swap! app-state
-                                    #(cond-> (assoc % :current-entities entities)
-                                       (= (:id entity)
-                                          (:id (:current-entity %)))
-                                       (assoc :current-entity entity))))))
 
 (defn- save-entity
   [page-state]
