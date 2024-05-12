@@ -115,7 +115,7 @@
 
 (defn- entities-nav-item []
   {:id :entities-menu
-   :caption (or (:name @current-entity) "Entities")
+   :caption (or (:entity/name @current-entity) "Entities")
    :children (->> [(when (seq @current-entities) [:divider 1])
                    {:path "/entities"
                     :caption "Manage Entities"}]
@@ -130,14 +130,11 @@
              (entities-nav-item))]))
 
 (defn title-bar []
-  (add-watch db-strategy
-             ::title-bar
-             (fn [& _]
-               (reset! nav-items (build-nav-items))))
-  (add-watch current-user
-             ::title-bar
-             (fn [& _]
-               (reset! nav-items (build-nav-items))))
+  (doseq [x [db-strategy current-user current-entities current-entity]]
+    (add-watch x
+               ::title-bar
+               (fn [& _]
+                 (reset! nav-items (build-nav-items)))))
   (when-not @nav-items
     (reset! nav-items (build-nav-items)))
   (fn []
