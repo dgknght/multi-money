@@ -18,16 +18,26 @@
 
 (defn- entity-row
   [entity page-state]
-  (let [css (when (= @current-entity entity) "bg-success-subtle text-success-emphasis")]
+  (let [selected? (= @current-entity entity)]
     ^{:key (str "entity-row-" (:id entity))}
     [:tr
-     [:td {:class css} (:entity/name entity)]
-     [:td.text-end {:class css} [:div.btn-group
+     [:td (:entity/name entity)]
+     [:td.text-end [:div.btn-group
                     [:button.btn.btn-sm.btn-secondary
                      {:on-click (fn [_]
                                   (swap! page-state assoc :selected entity)
                                   (dom/set-focus "name"))}
-                     (icon :pencil :size :small)]]]]))
+                     (icon :pencil :size :small)]
+                    [:button.btn.btn-sm
+                     {:class (if selected?
+                               "btn-success"
+                               "btn-outline-success")
+                      :on-click (fn [_]
+                                  (reset! current-entity entity))}
+                     (icon (if selected?
+                             :check-circle
+                             :circle)
+                           :size :small)]]]]))
 
 (defn- entities-table
   [page-state]
