@@ -10,6 +10,7 @@
                                        icon-with-text]]
             [multi-money.state :refer [+busy
                                        -busy
+                                       app-state
                                        current-page
                                        current-entities
                                        current-entity]]
@@ -49,11 +50,16 @@
                       (dom/set-focus "name"))}
          (icon-with-text :plus "Add")]]]]]))
 
-(defn- unselect-entity
-  [page-state]
-  (map (fn [x]
-         (swap! page-state dissoc :selected)
-         x)))
+(defn- load-entities
+  [entity]
+  (+busy)
+  (ents/select :callback -busy
+               :on-success (fn [entities]
+                             (swap! app-state
+                                    #(cond-> (assoc % :current-entities entities)
+                                       (= (:id entity)
+                                          (:id (:current-entity %)))
+                                       (assoc :current-entity entity))))))
 
 (defn- save-entity
   [page-state]
@@ -61,8 +67,8 @@
   (ents/put (get-in @page-state [:selected])
             :callback -busy
             :on-success (fn [e]
-                          (.info js/console (str "saved entity: " (pr-str e)))
-                          (unselect-entity page-state)
+                          (load-entities e)
+                          (swap! page-state dissoc :selected)
                           (toast "The entity was saved successfully"
                                  :header "Save Completed"))))
 
@@ -74,7 +80,7 @@
               :on-submit (fn [e]
                            (.preventDefault e)
                            (save-entity page-state))}
-       [forms/text-field selected [:name]]
+       [forms/text-field selected [:entity/name]]
        [:div
         [:button.btn.btn-primary {:type :submit}
          "Save"]
