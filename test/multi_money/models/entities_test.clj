@@ -19,17 +19,29 @@
                   :given-name "John"
                   :surname "Doe"}]})
 
+(defn- attributes
+  [& [user]]
+  #:entity{:name "Personal"
+           :owner (or user
+                      (find-user "john@doe.com"))})
+
 (dbtest create-an-entity
   (with-context context
     (let [user (find-user "john@doe.com")
-          result (ents/put #:entity{:name "Personal"
-                                    :owner user})]
+          result (ents/put (attributes user))]
       (is (comparable? #:entity{:name "Personal"
                                 :owner (:id user)}
                        result)
           "The result contains the correct attributes")
       (is (:id result)
           "The result contains an :id value"))))
+
+(dbtest entity-name-is-required
+  (with-context context
+    (is (thrown-with-ex-data?
+          {:errors {:entity/name ["Name is required"]}}
+          (ents/put (dissoc (attributes)
+                            :entity/name))))))
 
 (def ^:private update-context
   (assoc context
@@ -39,6 +51,28 @@
                             :symbol "USD"
                             :type :currency
                             :entity-id "Personal"}]))
+
+(dbtest entity-name-is-unique-for-an-owner
+  (with-context update-context
+    (is (thrown-with-ex-data?
+          {:errors {:entity/name ["Name is already in use"]}}
+          (ents/put (attributes))))))
+
+(def ^:private unique-context
+  (update-in update-context
+             [:users]
+             conj
+             #:user{:email "jane@doe.com"
+                    :given-name "Jane"
+                    :surname "Doe"}))
+
+(dbtest entity-name-is-not-unique-across-owners
+  (with-context unique-context
+    (let [user (find-user "jane@doe.com")
+          result (ents/put (attributes user))]
+      (is (valid? result) "The result does not indicate any validation errors")
+      (is (:id result)
+          "An :id is assigned"))))
 
 (dbtest update-an-entity
   (with-context update-context
