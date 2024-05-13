@@ -7,6 +7,7 @@
                                                            http-unauthorized?
                                                            http-redirect-to?
                                                            http-response-with-cookie?
+                                                           http-unprocessable?
                                                            seq-of-maps-like?
                                                            throw-witn-ex-data?])
                                          (cljs.test/is [seq-of-maps-like?])

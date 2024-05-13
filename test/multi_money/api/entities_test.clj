@@ -5,6 +5,7 @@
             [dgknght.app-lib.web :refer [path]]
             [multi-money.helpers :refer [request
                                          criteria->pred]]
+            [multi-money.db :as db]
             [multi-money.models.entities :as ents]
             [multi-money.models.users :as usrs]))
 
@@ -48,6 +49,21 @@
               :entity/owner {:id "101"}}
              (:json-body res))
           "The created entity is returned"))))
+
+(deftest an-create-request-is-returned-with-errors
+  (let [calls (atom [])]
+    (with-redefs [db/put (fn [& args] (swap! calls conj args))
+                  ents/select (fn [& _] [])
+                  usrs/find (fn [id] {:id id})]
+      (let [res (request :post (path :api :entities)
+                         :user {:id "101"}
+                         :json-body {:size "large"})]
+        (is (http-unprocessable? res))
+        (is (= {:errors {:entity/name ["Name is required"]}}
+               (:json-body res))
+            "The response body contains the validation errors")
+        (is (empty? @calls)
+            "Nothing is passed to the database")))))
 
 (deftest an-unauthenticated-user-cannot-create-an-entity
   (with-mocks [calls]
