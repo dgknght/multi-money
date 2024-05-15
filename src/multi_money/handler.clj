@@ -61,11 +61,13 @@
     (log/infof "Request received %s \"%s\""
                (:request-method req)
                (:uri req))
+    (log/tracef "Request: %s" (with-out-str (pprint (dissoc req ::r/match ::r/router))))
     (let [res (handler req)]
       (log/infof "Responded to %s \"%s\": %s"
                  (:request-method req)
                  (:uri req)
                  (:status res))
+      (log/tracef "Response: %s" (with-out-str (pprint res)))
       res)))
 
 (defn- landing-uri []
@@ -109,7 +111,8 @@
         ["" {:get index}]
         ["oauth/*" {:get (constantly {:status 404
                                       :body "not found"})}]]
-       ["/api" {:middleware [[wrap-defaults (assoc-in api-defaults [:security :anti-forgery] false)]
+       ["/api" {:middleware [wrap-request-logging
+                             [wrap-defaults (assoc-in api-defaults [:security :anti-forgery] false)]
                              [wrap-json-body {:keywords? true :bigdecimals? true}]
                              wrap-json-response
                              wrap-api-exception
