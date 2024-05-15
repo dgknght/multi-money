@@ -90,21 +90,26 @@
   (+busy)
   (ents/put (get-in @page-state [:selected])
             :callback -busy
+            :on-failure (fn [e]
+                          ; TODO: How to know if this is really a validation error?
+                          (pprint {:on-failure e})
+                          (swap! page-state assoc :validation-errors (-> e :data :errors)))
             :on-success (fn [e]
                           (load-entities e)
-                          (swap! page-state dissoc :selected)
+                          (swap! page-state dissoc :selected :validation-errors)
                           (toast "The entity was saved successfully"
                                  :header "Save Completed"))))
 
 (defn- entity-form
   [page-state]
-  (let [selected (r/cursor page-state [:selected])]
+  (let [selected (r/cursor page-state [:selected])
+        name-errors (r/cursor page-state [:validation-errors :entity/name])]
     (fn []
       [:form {:no-validate true
               :on-submit (fn [e]
                            (.preventDefault e)
                            (save-entity page-state))}
-       [forms/text-field selected [:entity/name]]
+       [forms/text-field selected [:entity/name] {:errors name-errors}]
        [:div
         [:button.btn.btn-primary {:type :submit}
          "Save"]
