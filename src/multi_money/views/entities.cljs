@@ -112,10 +112,12 @@
        [forms/text-field selected [:entity/name] {:errors name-errors}]
        [:div
         [:button.btn.btn-primary {:type :submit}
-         "Save"]
+         (icon-with-text :floppy2 "Save" :size :small)]
         [:button.btn.btn-secondary.ms-2 {:type :button
-                                         :on-click #(swap! page-state dissoc :selected)}
-         "Cancel"]]])))
+                                         :on-click #(swap! page-state
+                                                           dissoc :selected
+                                                           :validation-errors)}
+         (icon-with-text :x-octagon-fill "Cancel" :size :small)]]])))
 
 (defn- index []
   (let [page-state (r/atom {})
