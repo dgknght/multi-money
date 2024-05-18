@@ -3,7 +3,8 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.validation :as v]
-            [multi-money.util :refer [->id]]
+            [multi-money.util :refer [->id
+                                      exclude-self]]
             [multi-money.db :as db]))
 
 (declare find-by)
@@ -11,8 +12,9 @@
 (defn- name-is-unique?
   [e]
   (-> e
-      (select-keys [:id :entity/name :entity/owner])
+      (select-keys [:entity/name :entity/owner])
       (update-in [:entity/owner] ->id)
+      (exclude-self e)
       find-by
       nil?))
 (v/reg-spec name-is-unique? {:message "%s is already in use"

@@ -3,6 +3,7 @@
             [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.test-assertions]
+            [dgknght.app-lib.validation :as v]
             [java-time.api :as t]
             [java-time.mock :refer [mock-clock]]
             [java-time.clock :refer [with-clock]]
@@ -31,36 +32,35 @@
     (is (:id result)
         "The result contains an id value")))
 
-#_(dbtest email-is-required
-  (let [result (usrs/put (dissoc attr :email))]
-    (is (invalid? result [:email] "Email is required"))
-    (is (not (:id result))
-        "The result does not contain an :id value")))
-#_(dbtest email-is-unique)
-
-#_(dbtest given-name-is-required
-  (let [result (usrs/put (dissoc attr :given-name))]
-    (is (invalid? result [:given-name] "Given name is required"))
-    (is (not (:id result))
-        "The result does not contain an :id value")))
-
-#_(dbtest surname-is-required
-  (let [result (usrs/put (dissoc attr :surname))]
-    (is (invalid? result [:surname] "Surname is required"))
-    (is (not (:id result))
-        "The result does not contain an :id value")))
-
 (def ^:private update-context
   {:users [#:user{:email "john@doe.com"
                   :given-name "John"
                   :surname "Doe"}]})
 
-#_(dbtest email-is-unique
+(dbtest email-is-required
+  (is (thrown-with-ex-data?
+        "Validation failed"
+        {::v/errors {:user/email ["Email is required"]}}
+        (usrs/put (dissoc attr :user/email)))))
+
+(dbtest email-is-unique
   (with-context update-context
-    (let [result (usrs/put attr)]
-      (is (invalid? result [:email] "Email is already in use"))
-      (is (not (:id result))
-          "The result does not contain an :id value"))))
+    (is (thrown-with-ex-data?
+          "Validation failed"
+          {::v/errors {:user/email ["Email is already in use"]}}
+          (usrs/put attr)))))
+
+(dbtest given-name-is-required
+  (is (thrown-with-ex-data?
+        "Validation failed"
+        {::v/errors {:user/given-name ["Given name is required"]}}
+        (usrs/put (dissoc attr :user/given-name)))))
+
+(dbtest surname-is-required
+  (is (thrown-with-ex-data?
+        "Validation failed"
+        {::v/errors {:user/surname ["Surname is required"]}}
+        (usrs/put (dissoc attr :user/surname)))))
 
 (dbtest update-a-user
   (with-context update-context

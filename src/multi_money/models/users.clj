@@ -6,18 +6,31 @@
             [clojure.set :refer [rename-keys]]
             [java-time.api :as t]
             [dgknght.app-lib.validation :as v]
-            [multi-money.util :as utl :refer [->id]]
+            [multi-money.util :as utl :refer [->id
+                                              exclude-self]]
             [multi-money.db :as db]))
 
+(declare find-by)
+
+(defn- email-is-unique?
+  [u]
+  (-> u
+      (select-keys [:user/email])
+      (exclude-self u)
+      find-by
+      nil?))
+(v/reg-spec email-is-unique? {:message "%s is already in use"
+                             :path [:user/email]})
 (s/def :user/email v/email?)
 (s/def :user/given-name string?)
 (s/def :user/surname string?)
 (s/def :user/identities (s/map-of keyword? string?))
-(s/def ::user (s/keys :req [:user/email
-                            :user/given-name
-                            :user/surname]
-                      :opt-un [::db/id]
-                      :opt [:user/identities]))
+(s/def ::user (s/and (s/keys :req [:user/email
+                                   :user/given-name
+                                   :user/surname]
+                             :opt-un [::db/id]
+                             :opt [:user/identities])
+                     email-is-unique?))
 
 (defn- select-identities
   [{:keys [id] :as user}]
@@ -81,10 +94,10 @@
 
 (defn put
   [user]
-  {:pre [user (s/valid? ::user user)]}
-  (let [records-or-ids (db/put (db/storage)
-                               [user])]
-    (resolve-put-result records-or-ids))) ; TODO: return all of the saved models instead of the first?
+  (v/with-ex-validation user ::user
+    (let [records-or-ids (db/put (db/storage)
+                                 [user])]
+      (resolve-put-result records-or-ids)))) ; TODO: return all of the saved models instead of the first?
 
 (defn delete
   [user]

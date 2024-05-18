@@ -1,6 +1,8 @@
 (ns multi-money.models.entities-test
   (:require [clojure.test :refer [is use-fixtures]]
+            [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.test-assertions]
+            [dgknght.app-lib.validation :as v]
             [multi-money.helpers :refer [reset-db
                                         dbtest]]
             [multi-money.test-context :refer [with-context
@@ -39,7 +41,8 @@
 (dbtest entity-name-is-required
   (with-context context
     (is (thrown-with-ex-data?
-          {:errors {:entity/name ["Name is required"]}}
+          "Validation failed"
+          {::v/errors #:entity{:name ["Name is required"]}}
           (ents/put (dissoc (attributes)
                             :entity/name))))))
 
@@ -55,7 +58,8 @@
 (dbtest entity-name-is-unique-for-an-owner
   (with-context update-context
     (is (thrown-with-ex-data?
-          {:errors {:entity/name ["Name is already in use"]}}
+          "Validation failed"
+          {::v/errors #:entity{:name ["Name is already in use"]}}
           (ents/put (attributes))))))
 
 (def ^:private unique-context
@@ -84,6 +88,22 @@
       (is (= "My Money"
              (:entity/name (ents/find entity)))
           "A retrieved model has the updated attributes"))))
+
+(def ^:private unique-update-context
+  (assoc context
+         :entities [#:entity{:name "Personal"
+                             :owner "john@doe.com"}
+                    #:entity{:name "Business"
+                             :owner "john@doe.com"}]))
+
+(dbtest cannot-update-to-an-existing-entity-name-with-same-owner
+  (with-context unique-update-context
+    (is (thrown-with-ex-data?
+          "Validation failed"
+          {::v/errors {:entity/name ["Name is already in use"]}}
+          (-> (find-entity "Business")
+              (assoc :entity/name "Personal")
+              ents/put)))))
 
 (dbtest fetch-all-entities-for-an-owner
   (with-context update-context
