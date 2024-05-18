@@ -55,7 +55,7 @@
                                 org.eclipse.jetty/jetty-util
                                 org.clojure/tools.reader
                                 com.cognitect/transit-clj]]
-                  [com.github.dgknght/app-lib "0.3.11-SNAPSHOT"
+                  [com.github.dgknght/app-lib "0.3.11"
                    :exclusions [ring/ring-core
                                 org.clojure/clojure
                                 commons-io
