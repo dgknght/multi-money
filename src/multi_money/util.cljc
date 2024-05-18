@@ -171,6 +171,14 @@
                            first)]
            (id-or-model k)))))
 
+(defn exclude-self
+  "Update a query to exclude the specified model, if the model
+  has an :id attribute"
+  [criteria {:keys [id]}]
+  (if id
+    (assoc criteria :id [:!= id])
+    criteria))
+
 (defn truncate
   ([s] (truncate s {}))
   ([s {:keys [length]
