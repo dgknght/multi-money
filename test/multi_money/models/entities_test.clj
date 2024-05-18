@@ -19,7 +19,8 @@
 (def ^:private context
   {:users [#:user{:email "john@doe.com"
                   :given-name "John"
-                  :surname "Doe"}]})
+                  :surname "Doe"
+                  :identities {:google "abc123"}}]})
 
 (defn- attributes
   [& [user]]
@@ -68,7 +69,8 @@
              conj
              #:user{:email "jane@doe.com"
                     :given-name "Jane"
-                    :surname "Doe"}))
+                    :surname "Doe"
+                    :identities {:google "def456"}}))
 
 (dbtest entity-name-is-not-unique-across-owners
   (with-context unique-context
