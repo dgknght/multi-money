@@ -12,6 +12,25 @@
          (dtl/apply-criteria query
                              #:entity{:name "Personal"}))))
 
+(deftest apply-a-simple-id-criterion
+  (is (= '{:find [(pull ?x [*])]
+           :where [[?x :entity/name ?name]]
+           :in [?x]
+           :args ["101"]}
+         (dtl/apply-criteria '{:find [(pull ?x [*])]
+                               :where [[?x :entity/name ?name]]}
+                             {:id "101"}))))
+
+(deftest apply-id-criterion-with-predicate
+  (is (= '{:find [(pull ?x [*])]
+           :where [[?x :entity/name ?name]
+                   [(!= ?x ?x-in)]]
+           :in [?x-in]
+           :args ["101"]}
+         (dtl/apply-criteria '{:find [(pull ?x [*])]
+                               :where [[?x :entity/name ?name]]}
+                             {:id [:!= "101"]}))))
+
 (deftest specify-the-args-key
   (is (= '{:find [?x]
            :where [[?x :entity/name ?name-in]]
@@ -47,6 +66,15 @@
            :args [500M]}
          (dtl/apply-criteria query
                              #:account{:balance [:>= 500M]}))))
+
+(deftest apply-a-not-equal-criterion
+  (is (= '{:find [?x]
+           :where [[?x :user/name ?name]
+                   [(!= ?name ?name-in)]]
+           :in [?name-in]
+           :args ["John"]}
+         (dtl/apply-criteria query
+                             #:user{:name [:!= "John"]}))))
 
 (deftest apply-an-intersection-criterion
   (is (= '{:find [?x]

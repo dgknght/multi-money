@@ -1,6 +1,8 @@
 (ns multi-money.test-context
   (:require [clojure.pprint :refer [pprint]]
-            [multi-money.models.users :as usrs]))
+            [multi-money.db :as db]
+            [multi-money.models.users :as usrs]
+            [multi-money.models.entities :as ents]))
 
 (defonce ^:dynamic *context* nil)
 
@@ -21,6 +23,11 @@
    (or (find-model users :user/username identifier)
        (find-model users :user/email identifier))))
 
+(defn find-entity
+  ([name] (find-entity name *context*))
+  ([name {:keys [entities]}]
+   (find-model entities :entity/name name)))
+
 (defn- put-with
   [m f]
   (or (f m)
@@ -32,21 +39,29 @@
     (or m
         (throw (RuntimeException. (format "Unable to create the %s" model-type))))))
 
-(defn- realize-user
-  [user _ctx]
-  (put-with user usrs/put))
+(defmulti ^:private prepare-for-put
+  (fn [m _ctx] (db/model-type m)))
 
-(defn- realize-users
-  [ctx]
-  (update-in ctx [:users] (fn [users]
-                            (mapv (comp (throw-on-failure "user")
-                                        #(realize-user % ctx))
-                                  users))))
+(defmethod prepare-for-put :default [m _] m)
 
+(defmethod prepare-for-put :entity
+  [entity ctx]
+  (update-in entity [:entity/owner] #(find-user % ctx)))
+
+(defn- realize-collection
+  [ctx coll-key desc put-fn]
+  (update-in ctx
+             [coll-key]
+             (fn [coll]
+               (mapv (comp (throw-on-failure desc)
+                           #(put-with % put-fn)
+                           #(prepare-for-put % ctx))
+                     coll))))
 (defn realize
   [ctx]
   (-> ctx
-      realize-users))
+      (realize-collection :users "user" usrs/put)
+      (realize-collection :entities "entity" ents/put)))
 
 (defmacro with-context
   [& [a1 :as args]]

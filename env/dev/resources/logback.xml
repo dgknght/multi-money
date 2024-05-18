@@ -14,7 +14,7 @@
   <logger name="org.eclipse" level="WARN" />
   <logger name="com.mongodb" level="WARN" />
 
-  <root level="DEBUG">
+  <root level="TRACE">
     <appender-ref ref="FILE" />
   </root>
 </configuration>

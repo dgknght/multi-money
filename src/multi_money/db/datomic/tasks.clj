@@ -13,7 +13,7 @@
                 #(format "datomic/schema/%s.edn" %))
           ["model"
            "user"
-           #_"entity"
+           "entity"
            #_"commodity"
            #_"price"
            #_"account"

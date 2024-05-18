@@ -2,6 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [rename-keys]]
+            [clojure.walk :refer [postwalk]]
             [somnium.congomongo :as m]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [camel-snake-kebab.core :refer [->snake_case
@@ -18,13 +19,13 @@
 (derive com.mongodb.WriteResult ::write-result)
 
 (defmulti before-save db/model-type)
-#_(defmethod before-save :default [m] m)
+(defmethod before-save :default [m] m)
 
 (defmulti after-read db/model-type)
-#_(defmethod after-read :default [m] m)
+(defmethod after-read :default [m] m)
 
 (defmulti prepare-criteria db/model-type)
-#_(defmethod prepare-criteria :default [c] c)
+(defmethod prepare-criteria :default [c] c)
 
 (def ^:private ->mongo-keys (partial transform-keys ->snake_case))
 (def ^:private ->clj-keys (partial transform-keys ->kebab-case))
@@ -98,10 +99,20 @@
                (prepare-for-return %))
           models)))
 
+(defn- coerce-criteria-id
+  [criteria]
+  (postwalk (fn [x]
+              (if (and (instance? clojure.lang.MapEntry x)
+                       (= :id (first x)))
+                (update-in x [1] coerce-id)
+                x))
+            criteria))
+
 (defn- select*
   [conn criteria options]
   (m/with-mongo conn
     (let [query (-> criteria
+                    coerce-criteria-id
                     prepare-criteria
                     (criteria->query options))
           f (partial m/fetch (infer-collection-name criteria))]
@@ -118,7 +129,7 @@
 (defn- reset*
   [conn]
   (m/with-mongo conn
-    (doseq [c [:users]]
+    (doseq [c [:users :entities]]
       (m/destroy! c {}))))
 
 (defn connect

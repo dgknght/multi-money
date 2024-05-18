@@ -24,6 +24,13 @@ erDiagram
     string oauth-id
     string oauth-provider
   }
+  entity ||--|{ user : "belongs to"
+  entity {
+    string name
+    user owner
+    date first-trx-date
+    date last-trx-date
+  }
 ```
 ## Setup
 

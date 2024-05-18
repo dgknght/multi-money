@@ -5,24 +5,17 @@
             [dgknght.app-lib.api-3 :as api]
             [multi-money.state :as state]))
 
-(defn handle-error
-  [error]
-  (.error js/console "Unexpected error during API call.")
-  (.dir js/console error))
-
 (defn- on-failure
-  [res]
+  [e]
   (.error js/console "The API call was not successful")
-  (.dir js/console res))
+  (.error js/console (:error e))
+  (.dir js/console (clj->js (:data e))))
 
 (defn- apply-defaults
-  [{:as opts
-    :keys [on-error]
-    :or {on-error handle-error}}]
+  [opts]
   (let [{:keys [db-strategy auth-token]} @state/app-state]
-    (cond-> (assoc opts
-                   :on-error on-error
-                   :on-failure on-failure)
+    (cond-> (-> opts
+                (update-in [:on-failure] (fnil identity on-failure)))
       db-strategy (assoc-in [:headers "db-strategy"] (name db-strategy))
       auth-token  (assoc-in [:headers "Authorization"] (format "Bearer %s" auth-token)))))
 

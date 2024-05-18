@@ -10,6 +10,10 @@
            [java.time LocalDate ZoneId ZoneOffset]
            com.fasterxml.jackson.core.JsonGenerator))
 
+(derive ObjectId ::object-id)
+(derive java.lang.String ::string)
+(derive clojure.lang.PersistentVector ::vector)
+
 (add-encoder ObjectId
              (fn [^ObjectId id ^JsonGenerator g]
                (.writeString g (str id))))
@@ -40,7 +44,17 @@
   (mongo->clojure [^Decimal128 d _kwd] (.bigDecimalValue d)))
 
 (defmulti coerce-id type)
-(defmethod coerce-id :default [id] id)
-(defmethod coerce-id String
+
+(defmethod coerce-id ::object-id [id] id)
+
+(defmethod coerce-id ::string
   [id]
   (ObjectId. id))
+
+(defmethod coerce-id ::vector
+  [v]
+  (mapv (fn [x]
+          (if (string? x)
+            (coerce-id x)
+            x))
+        v))
