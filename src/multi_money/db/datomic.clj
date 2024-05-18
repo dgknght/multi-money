@@ -1,6 +1,7 @@
 (ns multi-money.db.datomic
   (:require [clojure.set :refer [rename-keys]]
             [clojure.pprint :refer [pprint]]
+            [clojure.walk :refer [postwalk]]
             [datomic.api :as d-peer]
             [datomic.client.api :as d-client]
             [multi-money.db.datomic.types :refer [coerce-id
@@ -26,14 +27,6 @@
 
 (defn- conj* [& args]
   (apply (fnil conj []) args))
-
-(defn apply-id
-  [query {:keys [id]}]
-  (if id
-    (-> query
-        (update-in [:args] conj* (coerce-id id))
-        (update-in [:query :in] conj* '?x))
-    query))
 
 (defmulti bounding-where-clause
   (fn [crit-or-model-type]
@@ -63,8 +56,7 @@
     (-> '{:query {:find [(pull ?x [*])]
                   :in [$]}
           :args []}
-        (apply-id criteria)
-        (dtl/apply-criteria (dissoc criteria :id)
+        (dtl/apply-criteria criteria
                             :model-type m-type
                             :query-prefix [:query]
                             :coerce ->storable)
@@ -145,9 +137,19 @@
                             v))))
        (into {})))
 
+(defn- coerce-criteria-id
+  [criteria]
+  (postwalk (fn [x]
+              (if (and (instance? clojure.lang.MapEntry x)
+                       (= :id (first x)))
+                (update-in x [1] coerce-id)
+                x))
+            criteria))
+
 (defn- select*
   [criteria options {:keys [api]}]
   (let [qry (-> criteria
+                coerce-criteria-id
                 prepare-criteria
                 (criteria->query options))
         raw-result (query api qry)]
