@@ -185,6 +185,7 @@
              (cons (-> uri d-peer/connect d-peer/db)
                    args)))
     (reset [_]
+      (d-peer/delete-database uri)
       (tsks/apply-schema config {:suppress-output? true}))))
 
 (defmethod init-api :datomic/client
