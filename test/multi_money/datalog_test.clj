@@ -12,6 +12,25 @@
          (dtl/apply-criteria query
                              #:entity{:name "Personal"}))))
 
+(deftest apply-a-simple-id-criterion
+  (is (= '{:find [(pull ?x [*])]
+           :where [[?x :entity/name ?name]]
+           :in [?x]
+           :args ["101"]}
+         (dtl/apply-criteria '{:find [(pull ?x [*])]
+                               :where [[?x :entity/name ?name]]}
+                             {:id "101"}))))
+
+(deftest apply-id-criterion-with-predicate
+  (is (= '{:find [(pull ?x [*])]
+           :where [[?x :entity/name ?name]
+                   [(!= ?x ?x-in)]]
+           :in [?x-in]
+           :args ["101"]}
+         (dtl/apply-criteria '{:find [(pull ?x [*])]
+                               :where [[?x :entity/name ?name]]}
+                             {:id [:!= "101"]}))))
+
 (deftest specify-the-args-key
   (is (= '{:find [?x]
            :where [[?x :entity/name ?name-in]]
