@@ -32,10 +32,10 @@
   (fn [_query [_k v]]
     (when (vector? v)
       (case (first v)
-        :=              :direct
-        (:< :<= :> :>=) :comparison
-        :and            :intersection
-        :or             :union))))
+        :=                  :direct
+        (:< :<= :> :>= :!=) :comparison
+        :and                :intersection
+        :or                 :union))))
 
 (defn- arg-ident
   ([k] (arg-ident k nil))

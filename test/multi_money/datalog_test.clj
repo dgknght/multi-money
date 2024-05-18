@@ -48,6 +48,15 @@
          (dtl/apply-criteria query
                              #:account{:balance [:>= 500M]}))))
 
+(deftest apply-a-not-equal-criterion
+  (is (= '{:find [?x]
+           :where [[?x :user/name ?name]
+                   [(!= ?name ?name-in)]]
+           :in [?name-in]
+           :args ["John"]}
+         (dtl/apply-criteria query
+                             #:user{:name [:!= "John"]}))))
+
 (deftest apply-an-intersection-criterion
   (is (= '{:find [?x]
            :where [[?x :transaction/transaction-date ?transaction-date]
