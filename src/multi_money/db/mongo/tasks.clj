@@ -47,4 +47,7 @@
                                                 :unique true)})
       (pprint {::users-identities (m/add-index! :users
                                                 [:identities.id :identities.provider]
-                                                :unique true)}))))
+                                                :unique true)})
+      (pprint {::entities-owner (m/add-index! :entities
+                                              [:owner_id :name]
+                                              :unique true)}))))

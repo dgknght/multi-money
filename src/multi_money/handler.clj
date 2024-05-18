@@ -15,15 +15,17 @@
             [reitit.core :as r]
             [reitit.ring :as ring]
             [lambdaisland.uri :refer [uri]]
-            [dgknght.app-lib.api :refer [wrap-authentication]]
-            [multi-money.db.web :refer [wrap-db]]
+            [dgknght.app-lib.api :refer [wrap-authentication
+                                         wrap-api-exception]]
+            [multi-money.db.web :refer [wrap-db
+                                        wrap-auth-config]]
             [multi-money.models.users.web :refer [validate-token-and-lookup-user
                                                   wrap-fetch-oauth-profile
                                                   wrap-issue-auth-token
                                                   wrap-user-lookup]]
-            [multi-money.util :refer [mask-values]]
             [multi-money.mount-point :refer [js-path]]
-            [multi-money.api.users :as u]
+            [multi-money.api.users :as usrs]
+            [multi-money.api.entities :as ents]
             [multi-money.db.datomic.ref]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]))
@@ -59,11 +61,13 @@
     (log/infof "Request received %s \"%s\""
                (:request-method req)
                (:uri req))
+    (log/tracef "Request: %s" (with-out-str (pprint (dissoc req ::r/match ::r/router))))
     (let [res (handler req)]
       (log/infof "Responded to %s \"%s\": %s"
                  (:request-method req)
                  (:uri req)
                  (:status res))
+      (log/tracef "Response: %s" (with-out-str (pprint res)))
       res)))
 
 (defn- landing-uri []
@@ -94,27 +98,29 @@
                                :cookie-attrs {:same-site :lax
                                               :http-only true}})]))
 
-
-
 (def app
   (ring/ring-handler
     (ring/router
-      ["/" {:middleware [(wrap-site)
-                         wrap-oauth
-                         wrap-db
-                         wrap-fetch-oauth-profile
-                         wrap-user-lookup
-                         wrap-issue-auth-token
-                         wrap-request-logging]}
-       ["" {:get index}]
-       ["oauth/*" {:get (constantly {:status 404
-                                     :body "not found"})}]
-       ["api" {:middleware [[wrap-defaults api-defaults]
-                            [wrap-json-body {:keywords? true :bigdecimals? true}]
-                            wrap-json-response
-                            wrap-db
-                            [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
-        u/routes]])
+      [["/" {:middleware [(wrap-site)
+                          wrap-oauth
+                          wrap-db
+                          wrap-fetch-oauth-profile
+                          wrap-user-lookup
+                          wrap-issue-auth-token
+                          wrap-request-logging]}
+        ["" {:get index}]
+        ["oauth/*" {:get (constantly {:status 404
+                                      :body "not found"})}]]
+       ["/api" {:middleware [wrap-request-logging
+                             [wrap-defaults (assoc-in api-defaults [:security :anti-forgery] false)]
+                             [wrap-json-body {:keywords? true :bigdecimals? true}]
+                             wrap-json-response
+                             wrap-api-exception
+                             wrap-auth-config
+                             wrap-db
+                             [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
+        usrs/routes
+        ents/routes]])
     (ring/routes
       (ring/create-resource-handler {:path "/"})
       (ring/create-default-handler))))

@@ -53,6 +53,6 @@
                      :caption "Explicit caption"}
                     {:caption "List header"
                      :children ["child-item-1"
-                                :divider
+                                [:divider 1]
                                 {:on-click :fn
                                  :caption "Child item 2"}]}]))))

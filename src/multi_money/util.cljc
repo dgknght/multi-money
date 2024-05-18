@@ -159,6 +159,7 @@
               scalar?))
 
  (defn ->id
+   "Given either an id or a model with an id, returns the id."
    [id-or-model]
    {:pre [(or (scalar? id-or-model)
               (map? id-or-model))]}
@@ -169,6 +170,14 @@
                            (filter #(= "id" (name %)))
                            first)]
            (id-or-model k)))))
+
+(defn exclude-self
+  "Update a query to exclude the specified model, if the model
+  has an :id attribute"
+  [criteria {:keys [id]}]
+  (if id
+    (assoc criteria :id [:!= id])
+    criteria))
 
 (defn truncate
   ([s] (truncate s {}))

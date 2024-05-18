@@ -5,6 +5,7 @@
             [next.jdbc :as j]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as repl]
+            [ragtime.strategy :refer [apply-new]]
             [multi-money.util :refer [mask-values]]
             [multi-money.db :as db]))
 
@@ -13,7 +14,8 @@
                   (assoc :user (env :sql-ddl-user)
                          :password (env :sql-ddl-password))
                   jdbc/sql-database)
-   :migrations (jdbc/load-resources "migrations")})
+   :migrations (jdbc/load-resources "migrations")
+   :strategy apply-new})
 
 (defn migrate []
   (println "migrating the database...")

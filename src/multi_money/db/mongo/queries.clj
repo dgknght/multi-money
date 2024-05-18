@@ -29,7 +29,8 @@
   {:> :$gt
    :>= :$gte
    :< :$lt
-   :<= :$lte})
+   :<= :$lte
+   :!= :$ne})
 
 (defmulti ^:private adjust-complex-criterion
   (fn [[_k v]]

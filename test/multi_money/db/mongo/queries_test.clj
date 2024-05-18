@@ -10,7 +10,7 @@
          (q/criteria->query {:first-name "John"}))
       "A kebab-case key is converted to snake case"))
 
-(deftest convert-criterion-with-comparison
+(deftest convert-criterion-with-predicate
   (is (= {:where {:avg_size {:$gt 5}}}
          (q/criteria->query {:avg-size [:> 5]}))
       ":> translates to :$gt")
@@ -22,7 +22,10 @@
       ":< translates to :$lt")
   (is (= {:where {:avg_size {:$lte 5}}}
          (q/criteria->query {:avg-size [:<= 5]}))
-      ":<= translates to :$lte"))
+      ":<= translates to :$lte")
+  (is (= {:where {:avg_size {:$ne 5}}}
+         (q/criteria->query {:avg-size [:!= 5]}))
+      ":!= translates to :$ne"))
 
 (deftest convert-compound-criterion
   (is (= {:where {:$or [{:first_name "John"}
