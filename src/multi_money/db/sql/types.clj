@@ -1,7 +1,19 @@
 (ns multi-money.db.sql.types)
 
-(defn coerce-id
+(defmulti coerce-id type)
+
+(defmethod coerce-id String
+  [s]
+  (Long/parseLong s))
+
+(defmethod coerce-id java.lang.Integer
   [id]
-  (if (string? id)
-    (Long/parseLong id)
-    id))
+  id)
+
+(defmethod coerce-id clojure.lang.PersistentVector
+  [v]
+  (mapv (fn [x]
+          (if (string? x)
+            (coerce-id x)
+            x))
+        v))
