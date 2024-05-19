@@ -1,45 +1,60 @@
 (ns multi-money.models.commodities
   (:refer-clojure :exclude [find])
-  (:require [clojure.spec.alpha :as s]
+  (:require [clojure.pprint :refer [pprint]]
+            [clojure.spec.alpha :as s]
+            [dgknght.app-lib.validation :as v]
             [multi-money.util :refer [->id
+                                      exclude-self
                                      non-nil?]]
-            [multi-money.core :as mny]))
+            [multi-money.db :as db]))
 
-(s/def ::entity-id non-nil?)
-(s/def ::name string?)
-(s/def ::symbol string?)
-(s/def ::type #{:currency :stock :fund})
-(s/def ::commodity (s/keys :req-un [::entity-id
-                                    ::name
-                                    ::symbol
-                                    ::type]))
+(declare find-by)
 
-(defn- after-read
-  [commodity]
-  (mny/set-meta commodity :commodity))
+(defn- symbol-is-unique?
+  [e]
+  (-> e
+      (select-keys [:commodity/symbol :commodity/entity])
+      (update-in [:commodity/entity] ->id)
+      (exclude-self e)
+      find-by
+      nil?))
+(v/reg-spec symbol-is-unique? {:message "%s is already in use"
+                               :path [:commodity/symbol]})
+
+(s/def :commodity/entity non-nil?)
+(s/def :commodity/name string?)
+(s/def :commodity/symbol string?)
+(s/def :commodity/type #{:currency :stock :mutual-fund})
+(s/def ::commodity (s/and (s/keys :req [:commodity/entity
+                                        :commodity/name
+                                        :commodity/symbol
+                                        :commodity/type])
+                          symbol-is-unique?))
 
 (defn select
-  ([criteria]         (select criteria {}))
-  ([criteria options]
-   {:pre [(s/valid? ::mny/options options)
-          ((some-fn :id :entity-id) criteria)]}
-   (map after-read
-        (mny/select (mny/storage)
-                    (mny/model-type criteria :commodity)
-                    options))))
+  [criteria & {:as options}]
+  {:pre [(or (nil? options)
+             (s/valid? ::db/options options))]}
+  
+  (map db/set-meta
+       (db/select (db/storage)
+                  (db/model-type criteria :commodity)
+                  options)))
+
+(defn find-by
+  [criteria & {:as options}]
+  (first (apply select criteria (mapcat identity (assoc options :limit 1)))))
 
 (defn find
   [id]
-  (first (select {:id (->id id)}
-                 {:limit 1})))
+  (find-by {:id (->id id)}))
 
 (defn- before-save
   [commodity]
-  (mny/model-type commodity :commodity))
+  (db/model-type commodity :commodity))
 
 (defn put
   [commodity]
-  {:pre [(s/valid? ::commodity commodity)]}
-
-  (let [ids (mny/put (mny/storage) [(before-save commodity)])]
-    (find (first ids))))
+  (v/with-ex-validation commodity ::commodity
+    (let [ids (db/put (db/storage) [(before-save commodity)])]
+      (find (first ids)))))

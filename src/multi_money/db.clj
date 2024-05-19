@@ -108,9 +108,8 @@
   #(model-type % m-type))
 
 (defn set-meta
-  [m model-or-type]
+  [m]
   (vary-meta m assoc
-               :model-type (extract-model-type model-or-type)
                :original (with-meta m nil)))
 
 (defn changed?

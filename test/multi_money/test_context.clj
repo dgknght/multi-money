@@ -2,14 +2,24 @@
   (:require [clojure.pprint :refer [pprint]]
             [multi-money.db :as db]
             [multi-money.models.users :as usrs]
-            [multi-money.models.entities :as ents]))
+            [multi-money.models.entities :as ents]
+            [multi-money.models.commodities :as cdts]))
 
 (defonce ^:dynamic *context* nil)
 
 (def basic-context
   {:users [#:user{:email "john@doe.com"
                   :given-name "John"
-                  :surname "Doe"}]})
+                  :surname "Doe"
+                  :identities {:google "abc123"}}]
+   :entities [#:entity{:name "Personal"
+                       :owner "john@doe.com"}
+              #:entity{:name "Business"
+                       :owner "john@doe.com"}]
+   :commodities [#:commodity{:symbol "USD"
+                             :name "United States Dollar"
+                             :type :currency
+                             :entity "Personal"}]})
 
 (defn- find-model
   [coll k v]
@@ -48,6 +58,10 @@
   [entity ctx]
   (update-in entity [:entity/owner] #(find-user % ctx)))
 
+(defmethod prepare-for-put :commodity
+  [commodity ctx]
+  (update-in commodity [:commodity/entity] #(find-entity % ctx)))
+
 (defn- realize-collection
   [ctx coll-key desc put-fn]
   (update-in ctx
@@ -61,7 +75,8 @@
   [ctx]
   (-> ctx
       (realize-collection :users "user" usrs/put)
-      (realize-collection :entities "entity" ents/put)))
+      (realize-collection :entities "entity" ents/put)
+      (realize-collection :commodities "commodity" cdts/put)))
 
 (defmacro with-context
   [& [a1 :as args]]

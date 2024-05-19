@@ -55,7 +55,7 @@
   [user]
   (-> user
       assoc-identities
-      (db/set-meta :user)))
+      db/set-meta))
 
 (defn select
   ([criteria] (select criteria {}))
