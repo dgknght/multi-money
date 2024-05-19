@@ -25,17 +25,17 @@
                        name-is-unique?))
 
 (defn select
-  ([criteria] (select criteria {}))
-  ([criteria options]
-   {:pre [(s/valid? ::db/options options)]}
-   (map #(db/set-meta % :entity)
-        (db/select (db/storage)
-                    (db/model-type criteria :entity)
-                    (update-in options [:order-by] (fnil identity [:name]))))))
+  [criteria & {:as options}]
+  {:pre [(s/valid? ::db/options options)]}
+
+  (map db/set-meta
+       (db/select (db/storage)
+                  (db/model-type criteria :entity)
+                  (update-in options [:order-by] (fnil identity [:name])))))
 
 (defn find-by
-  [criteria]
-  (first (select criteria {:limit 1})))
+  [criteria & {:as options}]
+  (first (apply select criteria (mapcat identity (assoc options :limit 1)))))
 
 (defn find
   [id]
