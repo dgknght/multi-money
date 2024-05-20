@@ -5,7 +5,8 @@
             [multi-money.util :refer [->id]]
             [multi-money.test-context :refer [with-context
                                               basic-context
-                                             find-entity]]
+                                              find-commodity
+                                              find-entity]]
             [multi-money.helpers :refer [reset-db
                                         dbtest]]
             [multi-money.models.commodities :as cdts]
@@ -117,3 +118,21 @@
                 (map #(select-keys % [:commodity/name :commodity/type :commodity/symbol]))
                 (into #{})))
         "The commodities for the specified entity are returned")))
+
+(dbtest update-a-commodity
+  (with-context
+    (let [commodity (find-commodity "USD")
+          updated (cdts/put (assoc commodity :commodity/name "US Bucks"))]
+      (is (= (:id commodity) (:id updated))
+          "The same commodity is returned")
+      (is (= "US Bucks" (:commodity/name updated))
+          "The result contains the new attributes")
+      (is (= "US Bucks" (:commodity/name (cdts/find commodity)))
+          "The retrieved commodity has the updated attributes"))))
+
+(dbtest delete-a-commodity
+  (with-context
+    (let [commodity (find-commodity "USD")]
+          (cdts/delete commodity)
+      (is (nil? (cdts/find commodity))
+          "The commodity cannot be retrieved after delete"))))

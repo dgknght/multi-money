@@ -58,3 +58,8 @@
   (v/with-ex-validation commodity ::commodity
     (let [ids (db/put (db/storage) [(before-save commodity)])]
       (find (first ids)))))
+
+(defn delete
+  [commodity]
+  {:pre [(:id commodity)]}
+  (db/delete (db/storage) [commodity]))
