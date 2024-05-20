@@ -38,6 +38,11 @@
   ([name {:keys [entities]}]
    (find-model entities :entity/name name)))
 
+(defn find-commodity
+  ([symbol] (find-commodity symbol *context*))
+  ([symbol {:keys [commodities]}]
+   (find-model commodities :commodity/symbol symbol)))
+
 (defn- put-with
   [m f]
   (or (f m)
