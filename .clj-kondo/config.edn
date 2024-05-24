@@ -15,7 +15,8 @@
                                          (multi-money.xtdb/query-map)
                                          (multi-money.core/dbfn)
                                          (multi-money.helpers/dbtest)
-                                         (multi-money.api.entities-test/with-mocks)]}
+                                         (multi-money.api.entities-test/with-mocks)
+                                         (multi-money.api.commodities-test/with-mocks)]}
            :clojure-lsp/unused-public-var {:exclude #{multi-money.repl
                                                       multi-money.db.sql.tasks/create
                                                       multi-money.db.sql.tasks/migrate

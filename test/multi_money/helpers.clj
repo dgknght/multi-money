@@ -4,27 +4,36 @@
             [config.core :refer [env]]
             [ring.mock.request :as req]
             [dgknght.app-lib.test :refer [parse-json-body]]
+            [multi-money.util :refer [->id]]
             [multi-money.db :as db]
             [multi-money.tokens :as tkns]
             [multi-money.models.users :as usrs]
             [multi-money.handler :refer [app]]))
 
-(def ^:dynamic *strategy* nil)
+(derive clojure.lang.PersistentVector ::vector)
+(derive clojure.lang.PersistentArrayMap ::map)
+(derive clojure.lang.PersistentHashMap ::map)
 
-(defn- model-ref?
-  [x]
-  (and (map? x)
-       (= #{:id} (set (keys x)))))
+(def ^:dynamic *strategy* nil)
 
 (defn- criterion-pred
   [[k v]]
   (fn [m]
-    (let [actual (get m k)]
-      (= v
-         (cond-> actual
-           (model-ref? actual) :id)))))
+    (let [actual (get-in m (if (vector? k) k [k]))]
+      (= (->id v)
+         (->id actual)))))
 
-(defn criteria->pred
+(defmulti criteria->pred type)
+
+(defmethod criteria->pred ::vector
+  [[cnj & cs]]
+  (let [preds (map criteria->pred cs)
+        pref-fn (if (= :and cnj)
+                  every-pred
+                  some-fn)]
+    (apply pref-fn preds)))
+
+(defmethod criteria->pred ::map
   [criteria]
   (apply every-pred (map criterion-pred
                          criteria)))

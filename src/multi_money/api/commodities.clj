@@ -1,23 +1,26 @@
 (ns multi-money.api.commodities
   (:refer-clojure :exclude [update])
-  (:require [dgknght.app-lib.authorization :as auth]
+  (:require [clojure.pprint :refer [pprint]]
+            [dgknght.app-lib.authorization :as auth]
             [dgknght.app-lib.api :as api]
+            [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.db :as db]
-            [multi-money.util :refer [qualify-keys]]
             [multi-money.models.commodities :as cdts]
             [multi-money.authorization.commodities]))
 
 (defn- extract-commodity
   [{:keys [body]}]
   (-> body
-      (select-keys [:name])
-      (qualify-keys :commodity)))
+      (select-keys [:commodity/symbol
+                    :commodity/name
+                    :commodity/type
+                    :commodity/entity])
+      (update-in-if [:commodity/type] keyword)))
 
 (defn- create
-  [{:as req :keys [authenticated]}]
+  [req]
   (-> req
       extract-commodity
-      (assoc :commodity/entity authenticated)
       cdts/put
       api/creation-response))
 
@@ -36,8 +39,10 @@
 
 (defn- find-and-authorize
   [{:keys [path-params authenticated]} action]
-  (some-> (:id path-params)
-          cdts/find
+  (some-> {:id (:id path-params)}
+          (db/model-type :commodity)
+          (auth/+scope authenticated)
+          cdts/find-by
           (auth/authorize action authenticated)))
 
 (defn- update

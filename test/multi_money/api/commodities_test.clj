@@ -7,6 +7,7 @@
                                          criteria->pred]]
             [multi-money.db :as db]
             [multi-money.models.commodities :as cdts]
+            [multi-money.models.entities :as ents]
             [multi-money.models.users :as usrs]))
 
 (defmacro with-mocks
@@ -15,7 +16,7 @@
          f# (fn* [~(first bindings)] ~@body)]
      (with-redefs [cdts/put (fn [& args#]
                               (swap! calls# update-in [:put] conj args#)
-                              (update-in (first args#) [:id] (fnil identity "200")))
+                              (update-in (first args#) [:id] (fnil identity "301")))
                    cdts/select (fn [& args#]
                                  (swap! calls# update-in [:select] conj args#)
                                  (filter (criteria->pred (first args#))
@@ -31,6 +32,9 @@
                                            :commodity/type :currency}]))
                    cdts/delete (fn [& args#]
                                  (swap! calls# update-in [:delete] conj args#))
+                   ents/select (fn [& [criteria#]]
+                                 (filter (criteria->pred criteria#)
+                                         [{:id "201" :entity/owner {:id "101"}}]))
                    usrs/find (fn [id#]
                                (when (#{"101" "102"} id#)
                                  {:id id#}))]
@@ -53,10 +57,10 @@
                :commodity/type :currency
                :commodity/entity {:id "201"}}] c)
           "The commodities/put fn is called with the correct arguments")
-      (is (= {:id 301
+      (is (= {:id "301"
               :commodity/name "British Pound"
               :commodity/symbol "GBP"
-              :commodity/type :currency
+              :commodity/type "currency"
               :commodity/entity {:id "201"}}
              (:json-body res))
           "The created commodity is returned"))))
@@ -102,11 +106,11 @@
       (is (= [{:commodity/entity "201"}] c)
           "The cdts/select fn is called with the correct argumcdts"))))
 
-(deftest an-authenticated-user-can-update-his-commodity
+(deftest an-authenticated-user-can-update-a-commodity-in-his-entity
   (testing "update an existing commodity"
     (with-mocks [calls]
       (let [res (request :patch (path :api :commodities "301")
-                         :user {:id "201"}
+                         :user {:id "101"}
                          :json-body {:name "United States Dollar"})
             {[c :as cs] :put} @calls]
         (is (http-success? res))

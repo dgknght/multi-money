@@ -41,6 +41,14 @@
   [id]
   (find-by {:id (->id id)}))
 
+(defn realize
+  "Given a model that references an entity, replace the entity
+  reference with the entity model."
+  [model k]
+  (if (:entity/name model)
+    model
+    (update-in model [k] find)))
+
 (defn- resolve-put-result
   [x]
   (if (map? x)
