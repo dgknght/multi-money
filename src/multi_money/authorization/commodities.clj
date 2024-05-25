@@ -10,7 +10,6 @@
 
 (defmethod auth/allowed? [:commodity ::auth/manage]
   [commodity _action authenticated]
-  ; We'll need to ensure the :entity/owner is populated
   (-> commodity
       (ents/realize :commodity/entity)
       (owner? authenticated)))
