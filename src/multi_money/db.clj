@@ -93,8 +93,8 @@
   the model type, or another model from which the type is to be extracted"
   ([m]
    (let [namespaces (->> (keys m)
-                         (remove vector?)
-                         (map namespace)
+                         (map (comp namespace
+                                    #(if (vector? %) (first %) %)))
                          (filter identity)
                          (map keyword)
                          (into #{}))]
