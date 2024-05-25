@@ -50,12 +50,15 @@
   (update-in query [:query :where] conj* '(not [?x :model/deleted? true])))
 
 (defn- criteria->query
-  [criteria opts]
+  [criteria {:as opts :keys [count]}]
   (let [m-type (or (db/model-type criteria)
                    (:model-type opts))]
-    (-> '{:query {:find [(pull ?x [*])]
-                  :in [$]}
-          :args []}
+    (-> {:query {:find (if count
+                         '[(count ?x)]
+                         '[(pull ?x [*])])
+                 :in '[$]}
+
+         :args []}
         (dtl/apply-criteria criteria
                             :model-type m-type
                             :query-prefix [:query]
@@ -147,19 +150,21 @@
             criteria))
 
 (defn- select*
-  [criteria options {:keys [api]}]
+  [criteria {:as options :keys [count]} {:keys [api]}]
   (let [qry (-> criteria
                 coerce-criteria-id
                 prepare-criteria
                 (criteria->query options))
         raw-result (query api qry)]
-    (->> raw-result
-         (map first)
-         (remove naked-id?)
-         (map (comp after-read
-                    #(rename-keys % {:db/id :id})
-                    extract-ref-ids))
-         (apply-sort options))))
+    (if count
+      (ffirst raw-result)
+      (->> raw-result
+           (map first)
+           (remove naked-id?)
+           (map (comp after-read
+                      #(rename-keys % {:db/id :id})
+                      extract-ref-ids))
+           (apply-sort options)))))
 
 (defn- delete*
   [models {:keys [api]}]

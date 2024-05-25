@@ -3,180 +3,137 @@
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.test-assertions]
             [dgknght.app-lib.web :refer [path]]
-            [multi-money.helpers :refer [request
-                                         criteria->pred]]
-            [multi-money.db :as db]
-            [multi-money.models.commodities :as cdts]
-            [multi-money.models.entities :as ents]
-            [multi-money.models.users :as usrs]))
+            [multi-money.test-context :refer [with-context
+                                              basic-context
+                                              find-user
+                                              find-entity
+                                              find-commodity]]
+            [multi-money.helpers :refer [request]]
+            [multi-money.models.commodities :as cdts]))
 
-(defmacro with-mocks
-  [bindings & body]
-  `(let [calls# (atom {:put [] :select []})
-         f# (fn* [~(first bindings)] ~@body)]
-     (with-redefs [cdts/put (fn [& args#]
-                              (swap! calls# update-in [:put] conj args#)
-                              (update-in (first args#) [:id] (fnil identity "301")))
-                   cdts/select (fn [& args#]
-                                 (swap! calls# update-in [:select] conj args#)
-                                 (filter (criteria->pred (first args#))
-                                         [{:id "301"
-                                           :commodity/entity {:id "201"}
-                                           :commodity/symbol "USD"
-                                           :commodity/name "US Dollar"
-                                           :commodity/type :currency}
-                                          {:id "302"
-                                           :commodity/entity {:id "201"}
-                                           :commodity/symbol "CAD"
-                                           :commodity/name "CA Dollar"
-                                           :commodity/type :currency}]))
-                   cdts/delete (fn [& args#]
-                                 (swap! calls# update-in [:delete] conj args#))
-                   ents/select (fn [& [criteria#]]
-                                 (filter (criteria->pred criteria#)
-                                         [{:id "201" :entity/owner {:id "101"}}]))
-                   usrs/find (fn [id#]
-                               (when (#{"101" "102"} id#)
-                                 {:id id#}))]
-       (f# calls#))))
+(defn- attributes
+  [entity]
+  {:commodity/name "British Pound"
+   :commodity/type :currency
+   :commodity/symbol "GBP"
+   :commodity/entity (select-keys entity [:id])})
 
 (deftest an-authenticated-user-can-create-an-commodity
-  (with-mocks [calls]
-    (let [res (request :post (path :api :commodities)
-                       :json-body {:commodity/name "British Pound"
-                                   :commodity/type :currency
-                                   :commodity/symbol "GBP"
-                                   :commodity/entity {:id "201"}}
-                       :user {:id "101"})
-          {[c :as cs] :put} @calls]
+  (with-context
+    (let [user (find-user "john@doe.com")
+          entity (find-entity "Personal")
+          attr (attributes entity)
+          res (request :post (path :api :commodities)
+                       :json-body attr
+                       :user user)]
       (is (http-created? res))
-      (is (= 1 (count cs))
-          "The commodities/put fn is called once")
-      (is (= [{:commodity/name "British Pound"
-               :commodity/symbol "GBP"
-               :commodity/type :currency
-               :commodity/entity {:id "201"}}] c)
-          "The commodities/put fn is called with the correct arguments")
-      (is (= {:id "301"
-              :commodity/name "British Pound"
-              :commodity/symbol "GBP"
-              :commodity/type "currency"
-              :commodity/entity {:id "201"}}
-             (:json-body res))
-          "The created commodity is returned"))))
+      (is (comparable? attr (:json-body res))
+          "The created commodity is returned")
+      (is (:id (:json-body res))
+          "The response contains an id")
+      (is (comparable? attr (cdts/find res))
+          "The commodity can be retrieved"))))
 
 (deftest an-invalid-create-request-is-returned-with-errors
-  (let [calls (atom [])]
-    (with-redefs [db/put (fn [& args] (swap! calls conj args))
-                  cdts/select (fn [& _] [])
-                  usrs/find (fn [id] {:id id})]
-      (let [res (request :post (path :api :commodities)
-                         :user {:id "101"}
-                         :json-body {:size "large"})]
-        (is (http-unprocessable? res))
-        (is (= {:errors {:commodity/name ["Name is required"]
-                         :commodity/symbol ["Symbol is required"]}}
-               (:json-body res))
-            "The response body contains the validation errors")
-        (is (empty? @calls)
-            "Nothing is passed to the database")))))
+  (with-context
+    (let [res (request :post (path :api :commodities)
+                       :user (find-user "john@doe.com")
+                       :json-body {:size "large"})]
+      (is (http-unprocessable? res))
+      (is (= {:errors {:commodity/name ["Name is required"]
+                       :commodity/symbol ["Symbol is required"]}}
+             (:json-body res))
+          "The response body contains the validation errors"))))
 
 (deftest an-unauthenticated-user-cannot-create-an-commodity
-  (with-mocks [calls]
-    (is (http-unauthorized? (request :post (path :api :commodities)
-                                     :json-body {:commodity/name "British Pound"})))
-    (is (empty? (:put @calls))
-        "The commodities/put fn is not called")))
+  (is (http-unauthorized? (request :post (path :api :commodities)
+                                   :json-body {:commodity/name "British Pound"}))))
+
+(def ^:private list-context
+  (update-in basic-context
+             [:commodities] concat [{:commodity/symbol "JPY"
+                                     :commodity/name "Japanese Yen"
+                                     :commodity/type :currency
+                                     :commodity/entity "Personal"}]))
 
 (deftest an-authenticated-user-can-get-a-list-of-commodities-in-his-entity
-  (with-mocks [calls]
+  (with-context list-context
     (let [res (request :get (path :api :commodities)
-                       :user {:id "201"})
-          {[c :as cs] :select} @calls]
+                       :user (find-user "john@doe.com"))]
       (is (http-success? res))
       (is (comparable? {"Content-Type" "application/json; charset=utf-8"}
                        (:headers res))
           "The response has the correct content type")
-      (is (seq-of-maps-like? [{:id "301" :commodity/name "US Dollar"}
-                              {:id "302" :commodity/name "CA Dollar"}]
+      (is (seq-of-maps-like? [{:commodity/name "United States Dollar"}
+                              {:commodity/name "Japanese Yen"}]
                              (:json-body res))
-          "The commodity data is returned")
-      (is (= 1 (count cs))
-          "The cdts/select fn is called once")
-      (is (= [{:commodity/entity "201"}] c)
-          "The cdts/select fn is called with the correct argumcdts"))))
+          "The commodities are returned"))))
 
 (deftest an-authenticated-user-can-update-a-commodity-in-his-entity
   (testing "update an existing commodity"
-    (with-mocks [calls]
-      (let [res (request :patch (path :api :commodities "301")
-                         :user {:id "101"}
-                         :json-body {:name "United States Dollar"})
-            {[c :as cs] :put} @calls]
+    (with-context
+      (let [commodity (find-commodity "USD")
+            res (request :patch (path :api :commodities (:id commodity))
+                         :user (find-user "john@doe.com")
+                         :json-body {:commodity/name "US Clams"})]
         (is (http-success? res))
-        (is (= 1 (count cs))
-            "The commodities put fn is called once")
-        (is (comparable? [{:id "301"
-                           :commodity/name "United States Dollar"}]
-                         c)
-            "The commodities update fn is called with the updated commodity map")
-        (is (comparable? {:id "301"
-                          :commodity/name "United States Dollar"}
+        (is (comparable? {:commodity/name "US Clams"}
                          (:json-body res))
-            "The result of the update fn is returned"))))
+            "The updated commodity is returned")
+        
+        (is (comparable? {:commodity/name "US Clams"}
+                         (cdts/find (:json-body res)))
+            "The updated commodity can be retrieved"))))
   (testing "attempt to update an non-existing commodity"
-    (with-mocks [calls]
+    (with-context
       (is (http-not-found? (request :patch (path :api :commodities "999")
-                                    :user {:id "201"}
-                                    :json-body {:name "United States Dollar"})))
-      (is (empty? (:put @calls))
-          "The commodities put fn is not called"))))
+                                    :user (find-user "john@doe.com")
+                                    :json-body {:name "US Clams"}))))))
 
 (deftest an-authenticate-user-cannot-update-anothers-commodity
-  (with-mocks [calls]
-    (is (http-not-found? (request :patch (path :api :commodities "301")
-                                  :user {:id "102"}
-                                  :json-body {:name "The new name"})))
-    (is (empty? (:put @calls))
-        "The commodities put fn is called once")))
+  (with-context list-context
+    (is (http-not-found? (request :patch (path :api :commodities (:id (find-commodity "USD")))
+                                  :user (find-user "jane@doe.com")
+                                  :json-body {:commodity/name "The new name"})))
+    (is (comparable? {:commodity/name "United States Dollar"}
+                     (cdts/find-by {:commodity/symbol "USD"}))
+        "The commodity is not updated in the database")))
 
 (deftest an-unauthenticated-user-cannot-update-an-commodity
-  (with-mocks [calls]
-    (is (http-unauthorized? (request :patch (path :api :commodities "301")
-                                  :json-body {:name "The new name"})))
-    (is (empty? (:put @calls))
-        "The commodities put fn is called once")))
+  (with-context
+    (is (http-unauthorized? (request :patch (path :api :commodities (:id (find-commodity "USD")))
+                                     :json-body {:name "The new name"})))
+    (is (comparable? {:commodity/name "United States Dollar"}
+                     (cdts/find-by {:commodity/symbol "USD"}))
+        "The commodity is not updated in the database")))
 
 (deftest delete-an-commodity
   (testing "delete an existing commodity"
-    (with-mocks [calls]
-      (let [res (request :delete (path :api :commodities "301")
-                         :user {:id "201"})
-            {[c :as cs] :delete} @calls]
+    (with-context list-context
+      (let [commodity (find-commodity "CAD")
+            res (request :delete (path :api :commodities (:id commodity))
+                         :user (find-user "john@doe.com"))]
         (is (http-no-content? res))
-        (is (= 1 (count cs))
-            "The delete function is called once")
-        (is (= [{:id "301"
-                 :commodity/entity {:id "201"}
-                 :commodity/name "Personal"}]
-               c)
-            "The delete function is called with the commodity to be deleted"))))
+        (is (nil? (cdts/find commodity))
+            "The commodity cannot be retrieved after delete"))))
   (testing "attempt to delete a non-existing commodity"
-    (with-mocks [calls]
+    (with-context
       (is (http-not-found? (request :delete (path :api :commodities "999")
-                                    :user {:id "201"})))
-      (is (empty? (:delete @calls))
-          "The delete fn is not called"))))
+                                    :user (find-user "john@doe.com")))))))
 
 (deftest an-authenticated-user-cannot-delete-anothers-commodity
-  (with-mocks [calls]
-    (is (http-not-found? (request :delete (path :api :commodities "301")
-                                  :user {:id "102"})))
-    (is (empty? (:delete @calls))
-        "The delete fn is not called")))
+  (with-context list-context
+    (let [commodity (find-commodity "USD")]
+      (is (http-not-found? (request :delete (path :api :commodities (:id commodity))
+                                    :user (find-user "jane@doe.com"))))
+      (is (comparable? {:commodity/name "United States Dollar"}
+                       (cdts/find commodity))
+          "The commodity can be retrieved after rejected delete request"))))
 
-(deftest an-unauthenticated-user-cannot-delete-an-commodity
-  (with-mocks [calls]
-    (is (http-unauthorized? (request :delete (path :api :commodities "301"))))
-    (is (empty? (:delete @calls))
-        "The delete fn is not called")))
+(deftest an-unauthenticated-user-cannot-delete-a-commodity
+  (with-context
+    (let [commodity (find-commodity "USD")]
+      (is (http-unauthorized? (request :delete (path :api :commodities (:id commodity)))))
+      (is (comparable? {:commodity/name "United States Dollar"}
+                       cdts/find commodity)
+          "The commodity can be retrieved after rejected delete request"))))

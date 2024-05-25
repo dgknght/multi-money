@@ -11,15 +11,25 @@
   {:users [#:user{:email "john@doe.com"
                   :given-name "John"
                   :surname "Doe"
-                  :identities {:google "abc123"}}]
+                  :identities {:google "abc123"}}
+           #:user{:email "jane@doe.com"
+                  :given-name "Jane"
+                  :surname "Doe"
+                  :identities {:google "def456"}}]
    :entities [#:entity{:name "Personal"
                        :owner "john@doe.com"}
               #:entity{:name "Business"
-                       :owner "john@doe.com"}]
+                       :owner "john@doe.com"}
+              #:entity{:name "Jane's Money"
+                       :owner "jane@doe.com"}]
    :commodities [#:commodity{:symbol "USD"
                              :name "United States Dollar"
                              :type :currency
-                             :entity "Personal"}]})
+                             :entity "Personal"}
+                 #:commodity{:symbol "CAD"
+                             :name "Candadian Dollar"
+                             :type :currency
+                             :entity "Jane's Money"}]})
 
 (defn- find-model
   [coll k v]
