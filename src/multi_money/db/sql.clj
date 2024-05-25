@@ -3,7 +3,8 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [next.jdbc :as jdbc]
-            [next.jdbc.plan :refer [select!]]
+            [next.jdbc.plan :refer [select!
+                                    select-one!]]
             [next.jdbc.sql.builder :refer [for-insert
                                            for-update
                                            for-delete]]
@@ -77,12 +78,17 @@
     (log/debugf "database select %s with options %s -> %s" criteria options query)
 
     (let [q (db/model-type criteria)]
-      (map (comp after-read
-                 #(utl/qualify-keys % q :ignore #{:id}))
-           (select! db
-                    (attributes q)
-                    query
-                    jdbc/snake-kebab-opts)))))
+      (if (:count options)
+        (select-one! db
+                     :record-count
+                     query
+                     jdbc/unqualified-snake-kebab-opts)
+        (map (comp after-read
+                   #(utl/qualify-keys % q :ignore #{:id}))
+             (select! db
+                      (attributes q)
+                      query
+                      jdbc/snake-kebab-opts))))))
 
 (defn delete-one
   [db m]

@@ -118,3 +118,7 @@
       (ents/delete entity)
       (is (nil? (ents/find (:id entity)))
           "The entity cannot be retrieved after delete"))))
+
+(dbtest get-a-count-of-entities
+  (with-context unique-update-context
+    (is (= 2 (ents/count {:entity/owner (find-user "john@doe.com")})))))

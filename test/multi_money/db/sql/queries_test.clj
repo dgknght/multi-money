@@ -21,3 +21,17 @@
   (is (= ["SELECT * FROM users WHERE users.first_name = ? ORDER BY last_name ASC" "John"]
          (qrys/criteria->query {:user/first-name "John"} {:order-by [:last-name]}))
       "A sort order can be applied optionally"))
+
+(deftest convert-a-criteria-map-into-a-sql-query-for-count
+  (is (thrown-with-msg? java.lang.AssertionError #"Must be able to determine the model type"
+                       (qrys/criteria->query {} {:count true}))
+      "An exception is thrown if the model type cannot be determined.")
+  (is (= ["SELECT COUNT(1) FROM users"]
+         (qrys/criteria->query ^{:model-type :user} {} {:count true}))
+      "The table is derived from meta data for an empty map")
+  (is (= ["SELECT COUNT(1) FROM users WHERE users.id = ?" 101]
+         (qrys/criteria->query ^{:model-type :user} {:id 101} {:count true}))
+      "The table is derived from meta data for map with only and :id attributes")
+  (is (= ["SELECT COUNT(1) FROM users WHERE users.first_name = ?" "John"]
+         (qrys/criteria->query {:user/first-name "John"} {:count true}))
+      "The table is derived from keyword namespaces for map with model-specific attributes"))

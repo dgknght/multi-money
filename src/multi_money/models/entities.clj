@@ -1,5 +1,5 @@
 (ns multi-money.models.entities
-  (:refer-clojure :exclude [find])
+  (:refer-clojure :exclude [find count])
   (:require [clojure.spec.alpha :as s]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.validation :as v]
@@ -26,12 +26,19 @@
 
 (defn select
   [criteria & {:as options}]
-  {:pre [(s/valid? ::db/options options)]}
+  {:pre [(or (nil? options)
+             (s/valid? ::db/options options))]}
 
   (map db/set-meta
        (db/select (db/storage)
                   (db/model-type criteria :entity)
                   (update-in options [:order-by] (fnil identity [:name])))))
+
+(defn count
+  [& [criteria]]
+  (db/select (db/storage)
+             (db/model-type criteria :entity)
+             {:count true}))
 
 (defn find-by
   [criteria & {:as options}]

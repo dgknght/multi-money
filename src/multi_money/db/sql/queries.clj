@@ -20,10 +20,12 @@
         qualifier))
 
 (defn- apply-options
-  [s {:keys [limit order-by]}]
-  (cond-> s
-    limit (assoc :limit limit)
-    order-by (assoc :order-by order-by)))
+  [s {:keys [limit order-by count]}]
+  (if count
+    (assoc s :select [[:%count.1 :record-count]])
+    (cond-> s
+      limit (assoc :limit limit)
+      order-by (assoc :order-by order-by))))
 
 (def ^:private query-options
   {:relationships {#{:user :identity} {:primary-table :users

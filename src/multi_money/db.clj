@@ -16,7 +16,8 @@
 (s/def ::offset integer?)
 (s/def ::limit integer?)
 (s/def ::order-by vector?) ; TODO: flesh out this spec
-(s/def ::options (s/keys :opt-un [::offset ::limit ::order-by]))
+(s/def ::count boolean?)
+(s/def ::options (s/keys :opt-un [::offset ::limit ::order-by ::count]))
 
 ; To add a new storage implemenation, add a new namespace and a new
 ; implementation of the multi method reify-storage, which should
