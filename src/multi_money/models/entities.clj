@@ -35,10 +35,11 @@
                   (update-in options [:order-by] (fnil identity [:name])))))
 
 (defn count
-  [& [criteria]]
-  (db/select (db/storage)
-             (db/model-type criteria :entity)
-             {:count true}))
+  ([] (count {}))
+  ([criteria]
+   (db/select (db/storage)
+              (db/model-type criteria :entity)
+              {:count true})))
 
 (defn find-by
   [criteria & {:as options}]
