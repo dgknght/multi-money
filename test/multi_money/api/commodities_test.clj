@@ -51,7 +51,7 @@
              (:json-body res))
           "The response body contains the validation errors"))))
 
-(deftest an-unauthenticated-user-cannot-create-an-commodity
+(deftest an-unauthenticated-user-cannot-create-a-commodity
   (let [count-before (cdts/count)]
     (is (http-unauthorized? (request :post (path :api :commodities)
                                      :json-body {:commodity/name "British Pound"})))
@@ -116,17 +116,16 @@
                      (cdts/find-by {:commodity/symbol "USD"}))
         "The commodity is not updated in the database")))
 
-(deftest delete-an-commodity
-  (testing "delete an existing commodity"
-    (with-context list-context
-      (let [commodity (find-commodity "CAD")
+(deftest delete-a-commodity
+  (with-context list-context
+    (testing "delete an existing commodity"
+      (let [commodity (find-commodity "JPY")
             res (request :delete (path :api :commodities (:id commodity))
                          :user (find-user "john@doe.com"))]
         (is (http-no-content? res))
         (is (nil? (cdts/find commodity))
-            "The commodity cannot be retrieved after delete"))))
-  (testing "attempt to delete a non-existing commodity"
-    (with-context
+            "The commodity cannot be retrieved after delete")))
+    (testing "attempt to delete a non-existing commodity"
       (is (http-not-found? (request :delete (path :api :commodities "999")
                                     :user (find-user "john@doe.com")))))))
 
