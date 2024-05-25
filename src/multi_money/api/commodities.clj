@@ -39,7 +39,8 @@
 
 (defn- find-and-authorize
   [{:keys [path-params authenticated]} action]
-  (some-> {:id (:id path-params)}
+  (some-> path-params
+          (select-keys [:id])
           (db/model-type :commodity)
           (auth/+scope authenticated)
           cdts/find-by
@@ -57,8 +58,9 @@
 (defn- delete
   [req]
   (if-let [commodity (find-and-authorize req ::auth/destroy)]
-    (do (cdts/delete commodity)
-        api/no-content)
+    (do
+      (cdts/delete commodity)
+      api/no-content)
     api/not-found))
 
 (def routes
