@@ -30,18 +30,24 @@
 (def ^:private query-options
   {:relationships {#{:user :identity} {:primary-table :users
                                        :foreign-table :identities
-                                       :foreign-id :user_id}}})
+                                       :foreign-id :user_id}
+                   #{:user :entity}   {:primary-table :users
+                                       :foreign-table :entities
+                                       :foreign-id :owner_id}
+                   #{:entity :commodity} {:primary-table :entities
+                                          :foreign-table :commodities
+                                          :foreign-id :entity_id}}})
 
 (defn criteria->query
   [criteria & [options]]
   {:pre [criteria]}
 
-  (let [model-type (db/model-type criteria)]
-    (assert model-type "Must be able to determine the model type")
+  (if-let [model-type (db/model-type criteria)]
     (-> (select :*)
         (from (keyword (plural model-type)))
         (apply-criteria (update-in-criteria criteria [:id] coerce-id)
                         (merge query-options
                                {:target (keyword model-type)}))
         (apply-options options)
-        format)))
+        format)
+    (throw (IllegalArgumentException. "Unable to determine the model type from the criteria."))))
