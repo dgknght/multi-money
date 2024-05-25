@@ -1,9 +1,10 @@
 (ns multi-money.models.commodities
-  (:refer-clojure :exclude [find])
+  (:refer-clojure :exclude [find count])
   (:require [clojure.pprint :refer [pprint]]
             [clojure.spec.alpha :as s]
             [dgknght.app-lib.validation :as v]
             [multi-money.util :refer [->id
+                                      id->ref
                                       exclude-self
                                      non-nil?]]
             [multi-money.db :as db]))
@@ -35,10 +36,18 @@
   [criteria & {:as options}]
   {:pre [(or (nil? options)
              (s/valid? ::db/options options))]}
-  (map db/set-meta
+  (map (comp db/set-meta
+             #(update-in % [:commodity/entity] id->ref))
        (db/select (db/storage)
                   (db/model-type criteria :commodity)
                   options)))
+
+(defn count
+  ([] (count {}))
+  ([criteria]
+   (db/select (db/storage)
+              (db/model-type criteria :commodity)
+              {:count true})))
 
 (defn find-by
   [criteria & {:as options}]

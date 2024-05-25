@@ -1,5 +1,5 @@
 (ns multi-money.api.commodities-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.test-assertions]
             [dgknght.app-lib.web :refer [path]]
@@ -8,17 +8,20 @@
                                               find-user
                                               find-entity
                                               find-commodity]]
-            [multi-money.helpers :refer [request]]
+            [multi-money.helpers :refer [request
+                                         reset-db]]
             [multi-money.models.commodities :as cdts]))
+
+(use-fixtures :each reset-db)
 
 (defn- attributes
   [entity]
-  {:commodity/name "British Pound"
-   :commodity/type :currency
-   :commodity/symbol "GBP"
-   :commodity/entity (select-keys entity [:id])})
+  #:commodity{:name "British Pound"
+              :type :currency
+              :symbol "GBP"
+              :entity (select-keys entity [:id])})
 
-(deftest an-authenticated-user-can-create-an-commodity
+(deftest an-authenticated-user-can-create-a-commodity
   (with-context
     (let [user (find-user "john@doe.com")
           entity (find-entity "Personal")
@@ -27,11 +30,12 @@
                        :json-body attr
                        :user user)]
       (is (http-created? res))
-      (is (comparable? attr (:json-body res))
-          "The created commodity is returned")
       (is (:id (:json-body res))
           "The response contains an id")
-      (is (comparable? attr (cdts/find res))
+      (is (comparable? (update-in attr [:commodity/type] name) ; JSON doesn't know about keywords
+                       (:json-body res))
+          "The created commodity is returned")
+      (is (comparable? attr (cdts/find (:json-body res)))
           "The commodity can be retrieved"))))
 
 (deftest an-invalid-create-request-is-returned-with-errors
@@ -40,14 +44,19 @@
                        :user (find-user "john@doe.com")
                        :json-body {:size "large"})]
       (is (http-unprocessable? res))
-      (is (= {:errors {:commodity/name ["Name is required"]
-                       :commodity/symbol ["Symbol is required"]}}
+      (is (= {:errors #:commodity{:name ["Name is required"]
+                                  :symbol ["Symbol is required"]
+                                  :type ["Type is required"]
+                                  :entity ["Entity is required"]}}
              (:json-body res))
           "The response body contains the validation errors"))))
 
 (deftest an-unauthenticated-user-cannot-create-an-commodity
-  (is (http-unauthorized? (request :post (path :api :commodities)
-                                   :json-body {:commodity/name "British Pound"}))))
+  (let [count-before (cdts/count)]
+    (is (http-unauthorized? (request :post (path :api :commodities)
+                                     :json-body {:commodity/name "British Pound"})))
+    (is (= count-before (cdts/count))
+        "No commodity is created")))
 
 (def ^:private list-context
   (update-in basic-context

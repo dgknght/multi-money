@@ -171,6 +171,10 @@
                            first)]
            (id-or-model k)))))
 
+(defn id->ref
+  [id]
+  {:id id})
+
 (defn exclude-self
   "Update a query to exclude the specified model, if the model
   has an :id attribute"
