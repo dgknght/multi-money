@@ -26,7 +26,10 @@
     (let [user (find-user "john@doe.com")
           entity (find-entity "Personal")
           attr (attributes entity)
-          res (request :post (path :api :commodities)
+          res (request :post (path :api
+                                   :entities
+                                   (:id entity)
+                                   :commodities)
                        :json-body attr
                        :user user)]
       (is (http-created? res))
@@ -40,20 +43,22 @@
 
 (deftest an-invalid-create-request-is-returned-with-errors
   (with-context
-    (let [res (request :post (path :api :commodities)
+    (let [res (request :post (path :api
+                                   :entities
+                                   (:id (find-entity "Personal"))
+                                   :commodities)
                        :user (find-user "john@doe.com")
                        :json-body {:size "large"})]
       (is (http-unprocessable? res))
       (is (= {:errors #:commodity{:name ["Name is required"]
                                   :symbol ["Symbol is required"]
-                                  :type ["Type is required"]
-                                  :entity ["Entity is required"]}}
+                                  :type ["Type is required"]}}
              (:json-body res))
           "The response body contains the validation errors"))))
 
 (deftest an-unauthenticated-user-cannot-create-a-commodity
   (let [count-before (cdts/count)]
-    (is (http-unauthorized? (request :post (path :api :commodities)
+    (is (http-unauthorized? (request :post (path :api :entities 1 :commodities)
                                      :json-body {:commodity/name "British Pound"})))
     (is (= count-before (cdts/count))
         "No commodity is created")))
@@ -67,7 +72,10 @@
 
 (deftest an-authenticated-user-can-get-a-list-of-commodities-in-his-entity
   (with-context list-context
-    (let [res (request :get (path :api :commodities)
+    (let [res (request :get (path :api
+                                  :entities
+                                  (:id (find-entity "Personal"))
+                                  :commodities)
                        :user (find-user "john@doe.com"))]
       (is (http-success? res))
       (is (comparable? {"Content-Type" "application/json; charset=utf-8"}

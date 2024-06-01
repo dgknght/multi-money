@@ -1,6 +1,7 @@
 (ns multi-money.api.commodities
   (:refer-clojure :exclude [update])
   (:require [clojure.pprint :refer [pprint]]
+            [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.authorization :as auth]
             [dgknght.app-lib.api :as api]
             [dgknght.app-lib.core :refer [update-in-if]]
@@ -9,12 +10,18 @@
             [multi-money.authorization.commodities]))
 
 (defn- extract-commodity
-  [{:keys [body]}]
+  [{:keys [body path-params]}]
   (-> body
       (select-keys [:commodity/symbol
                     :commodity/name
                     :commodity/type
-                    :commodity/entity])
+                    :symbol
+                    :name
+                    :type])
+      (rename-keys {:symbol :commodity/symbol
+                    :name :commodity/name
+                    :type :commodity/type})
+      (assoc :commodity/entity (:entity-id path-params))
       (update-in-if [:commodity/type] keyword)))
 
 (defn- create
@@ -25,8 +32,8 @@
       api/creation-response))
 
 (defn- extract-criteria
-  [_req]
-  {})
+  [{:keys [path-params]}]
+  {:commodity/entity (:entity-id path-params)})
 
 (defn- index
   [{:as req :keys [authenticated]}]
@@ -50,7 +57,7 @@
   [req]
   (if-let [commodity (find-and-authorize req ::auth/update)]
     (-> commodity
-        (merge (extract-commodity req))
+        (merge (dissoc (extract-commodity req) :commodity/entity))
         cdts/put
         api/response)
     api/not-found))
@@ -64,8 +71,9 @@
     api/not-found))
 
 (def routes
-  ["/commodities"
-   ["" {:get {:handler index}
-        :post {:handler create}}]
-   ["/:id" {:patch {:handler update}
-            :delete {:handler delete}}]])
+  [["/entities/:entity-id/commodities"
+    {:get {:handler index}
+     :post {:handler create}} ]
+   ["/commodities/:id"
+    {:patch {:handler update}
+     :delete {:handler delete}}]])
