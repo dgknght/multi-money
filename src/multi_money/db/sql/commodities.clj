@@ -25,7 +25,3 @@
   (-> commodity
       (rename-keys {:commodity/entity-id :commodity/entity})
       (update-in [:commodity/type] keyword)))
-
-(defmethod sql/prepare-criteria :commodity
-  [criteria]
-  (entity->id criteria))
