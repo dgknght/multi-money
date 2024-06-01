@@ -154,6 +154,3 @@
                     (usrs/tokenize user))]
         (is (nil? (usrs/detokenize token))
             "Nil is returned")))))
-
-; TODO: add an identity
-; TODO: remove an identity

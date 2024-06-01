@@ -109,16 +109,18 @@
             criteria))
 
 (defn- select*
-  [conn criteria options]
+  [conn criteria {:as options :keys [count]}]
   (m/with-mongo conn
     (let [query (-> criteria
                     coerce-criteria-id
                     prepare-criteria
                     (criteria->query options))
-          f (partial m/fetch (infer-collection-name criteria))]
+          col-name (infer-collection-name criteria)]
       (log/debugf "fetch %s with options %s -> %s" criteria options query)
-      (map #(prepare-for-return % criteria)
-           (apply f (mapcat identity query))))))
+      (if count
+        (apply m/fetch-count col-name (mapcat identity query))
+        (map #(prepare-for-return % criteria)
+             (apply m/fetch col-name (mapcat identity query)))))))
 
 (defn- delete*
   [conn models]
@@ -129,7 +131,7 @@
 (defn- reset*
   [conn]
   (m/with-mongo conn
-    (doseq [c [:users :entities]]
+    (doseq [c [:users :entities :commodities]]
       (m/destroy! c {}))))
 
 (defn connect

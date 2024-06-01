@@ -3,27 +3,20 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [next.jdbc :as jdbc]
-            [next.jdbc.plan :refer [select!]]
+            [next.jdbc.plan :refer [select!
+                                    select-one!]]
             [next.jdbc.sql.builder :refer [for-insert
                                            for-update
                                            for-delete]]
+            [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :as utl]
-            [multi-money.db.sql.queries :refer [criteria->query
-                                                infer-table-name]]
+            [multi-money.db.sql.queries :refer [criteria->query]]
             [multi-money.db.sql.types :refer [coerce-id]]
             [multi-money.db :as db]))
-
-(defn- dispatch
-  [_db model & _]
-  (db/model-type model))
 
 (defn- id
   [{:keys [id]}]
   (coerce-id id))
-
-(defmulti insert dispatch)
-(defmulti select dispatch)
-(defmulti update dispatch)
 
 (defmulti before-save db/model-type)
 (defmethod before-save :default [m] m)
@@ -31,7 +24,12 @@
 (defmulti deconstruct db/model-type)
 (defmethod deconstruct :default [m] [m])
 
-(defmethod insert :default
+(def ^:private infer-table-name
+  (comp keyword
+        plural
+        utl/qualifier))
+
+(defn- insert
   [db model]
   (let [table (infer-table-name model)
         s (for-insert table
@@ -43,7 +41,7 @@
     (log/debugf "database insert %s -> %s" model s)
     (get-in result [(keyword (name table) "id")])))
 
-(defmethod update :default
+(defn- update
   [db model]
   {:pre [(:id model)]}
   (let [table (infer-table-name model)
@@ -66,23 +64,6 @@
 
 (defmulti prepare-criteria db/model-type)
 (defmethod prepare-criteria :default [m] m)
-
-(defmethod select :default
-  [db criteria options]
-  (let [query (-> criteria
-                  prepare-criteria
-                  (criteria->query options))]
-
-    ; TODO: scrub sensitive data
-    (log/debugf "database select %s with options %s -> %s" criteria options query)
-
-    (let [q (db/model-type criteria)]
-      (map (comp after-read
-                 #(utl/qualify-keys % q :ignore #{:id}))
-           (select! db
-                    (attributes q)
-                    query
-                    jdbc/snake-kebab-opts)))))
 
 (defn delete-one
   [db m]
@@ -151,9 +132,56 @@
                          {:id-map {}
                           :saved []})))))
 
-(defn select*
+(defn- id-key
+  [x]
+  (when-let [target (db/model-type x)]
+    (keyword (name target) "id")))
+
+(defn- massage-ids
+  [x]
+  (let [k (id-key x)]
+    (cond-> (utl/update-in-criteria x [:id] coerce-id)
+      k (utl/rename-criteria-keys {:id k}))))
+
+(def ^:private model-refs->ids
+  {:entity/owner :entity/owner-id
+   :commodity/entity :commodity/entity-id})
+
+(defn- ->ids
+  [criteria]
+  (reduce #(utl/update-in-criteria %1 [%2] utl/->id)
+          criteria
+          (vals model-refs->ids)))
+
+(defn- sqlize-criteria
+  [criteria]
+  (-> criteria
+      (utl/rename-criteria-keys model-refs->ids)
+      ->ids))
+
+(defn- select*
   [db criteria options]
-  (select db criteria options))
+  (let [query (-> criteria
+                  massage-ids
+                  sqlize-criteria
+                  prepare-criteria
+                  (criteria->query (assoc options
+                                          :target (db/model-type criteria))))]
+    ; TODO: scrub sensitive data
+    (log/debugf "database select %s with options %s -> %s" criteria options query)
+
+    (let [q (db/model-type criteria)]
+      (if (:count options)
+        (select-one! db
+                     :record-count
+                     query
+                     jdbc/unqualified-snake-kebab-opts)
+        (map (comp after-read
+                   #(utl/qualify-keys % q :ignore #{:id}))
+             (select! db
+                      (attributes q)
+                      query
+                      jdbc/snake-kebab-opts))))))
 
 (defn- delete*
   [db models]

@@ -50,4 +50,7 @@
                                                 :unique true)})
       (pprint {::entities-owner (m/add-index! :entities
                                               [:owner_id :name]
-                                              :unique true)}))))
+                                              :unique true)})
+      (pprint {::commodities-entity (m/add-index! :commodities
+                                                  [:entity_id :symbol]
+                                                  :unique true)}))))

@@ -1,5 +1,5 @@
 (ns multi-money.models.entities
-  (:refer-clojure :exclude [find])
+  (:refer-clojure :exclude [find count])
   (:require [clojure.spec.alpha :as s]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.validation :as v]
@@ -25,21 +25,37 @@
                        name-is-unique?))
 
 (defn select
-  ([criteria] (select criteria {}))
-  ([criteria options]
-   {:pre [(s/valid? ::db/options options)]}
-   (map #(db/set-meta % :entity)
-        (db/select (db/storage)
-                    (db/model-type criteria :entity)
-                    (update-in options [:order-by] (fnil identity [:name]))))))
+  [criteria & {:as options}]
+  {:pre [(or (nil? options)
+             (s/valid? ::db/options options))]}
+
+  (map db/set-meta
+       (db/select (db/storage)
+                  (db/model-type criteria :entity)
+                  (update-in options [:order-by] (fnil identity [:name])))))
+
+(defn count
+  ([] (count {}))
+  ([criteria]
+   (db/select (db/storage)
+              (db/model-type criteria :entity)
+              {:count true})))
 
 (defn find-by
-  [criteria]
-  (first (select criteria {:limit 1})))
+  [criteria & {:as options}]
+  (first (apply select criteria (mapcat identity (assoc options :limit 1)))))
 
 (defn find
   [id]
   (find-by {:id (->id id)}))
+
+(defn realize
+  "Given a model that references an entity, replace the entity
+  reference with the entity model."
+  [model k]
+  (if (:entity/name model)
+    model
+    (update-in model [k] find)))
 
 (defn- resolve-put-result
   [x]
