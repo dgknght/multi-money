@@ -8,8 +8,8 @@
             [camel-snake-kebab.core :refer [->snake_case
                                             ->kebab-case]]
             [dgknght.app-lib.inflection :refer [plural]]
-            [multi-money.util :refer [qualify-keys
-                                      unqualify-keys]]
+            [multi-money.util :as utl :refer [qualify-keys
+                                              unqualify-keys]]
             [multi-money.db :as db]
             [multi-money.db.mongo.queries :refer [criteria->query]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
@@ -108,11 +108,28 @@
                 x))
             criteria))
 
+(def ^:private model-refs->ids
+  {:entity/owner :entity/owner-id
+   :commodity/entity :commodity/entity-id})
+
+(defn- ->ids
+  [criteria]
+  (reduce #(utl/update-in-criteria %1 [%2] (comp coerce-id utl/->id))
+          criteria
+          (vals model-refs->ids)))
+
+(defn- mongoize-criteria
+  [criteria]
+  (-> criteria
+      (utl/rename-criteria-keys model-refs->ids)
+      ->ids))
+
 (defn- select*
   [conn criteria {:as options :keys [count]}]
   (m/with-mongo conn
     (let [query (-> criteria
                     coerce-criteria-id
+                    mongoize-criteria
                     prepare-criteria
                     (criteria->query options))
           col-name (infer-collection-name criteria)]

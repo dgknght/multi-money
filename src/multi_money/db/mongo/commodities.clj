@@ -3,12 +3,13 @@
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.util :refer [->id]]
-            [multi-money.db.mongo :as m]))
+            [multi-money.db.mongo :as m]
+            [multi-money.db.mongo.types :refer [coerce-id]]))
 
 (defn- entity->id
   [x]
   (-> x
-      (update-in-if [:commodity/entity] ->id)
+      (update-in-if [:commodity/entity] (comp coerce-id ->id))
       (rename-keys {:commodity/entity :commodity/entity-id})))
 
 (defmethod m/before-save :commodity
@@ -20,7 +21,3 @@
   (-> commodity
       (update-in [:commodity/type] keyword)
       (rename-keys {:commodity/entity-id :commodity/entity})))
-
-(defmethod m/prepare-criteria :commodity
-  [criteria]
-  (entity->id criteria))
