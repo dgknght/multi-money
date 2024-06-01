@@ -16,4 +16,4 @@
 
 (defmethod auth/scope :commodity
   [_model-type authenticated]
-  {[:commodity/entity :entity/owner] authenticated})
+  {:entity/owner authenticated})
