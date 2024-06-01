@@ -4,9 +4,12 @@
             [multi-money.util :refer [->id]]))
 
 (defn- owner?
-  [entity authenticated]
+  [commodity authenticated]
   (= (->id authenticated)
-     (->id (:entity/owner entity))))
+     (-> commodity
+         :commodity/entity
+         :entity/owner
+         ->id)))
 
 (defmethod auth/allowed? [:commodity ::auth/manage]
   [commodity _action authenticated]

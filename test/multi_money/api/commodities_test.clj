@@ -79,8 +79,8 @@
           "The commodities are returned"))))
 
 (deftest an-authenticated-user-can-update-a-commodity-in-his-entity
-  (testing "update an existing commodity"
-    (with-context
+  (with-context
+    (testing "update an existing commodity"
       (let [commodity (find-commodity "USD")
             res (request :patch (path :api :commodities (:id commodity))
                          :user (find-user "john@doe.com")
@@ -89,12 +89,11 @@
         (is (comparable? {:commodity/name "US Clams"}
                          (:json-body res))
             "The updated commodity is returned")
-        
+
         (is (comparable? {:commodity/name "US Clams"}
                          (cdts/find (:json-body res)))
-            "The updated commodity can be retrieved"))))
-  (testing "attempt to update an non-existing commodity"
-    (with-context
+            "The updated commodity can be retrieved")))
+    (testing "attempt to update an non-existing commodity"
       (is (http-not-found? (request :patch (path :api :commodities "999")
                                     :user (find-user "john@doe.com")
                                     :json-body {:name "US Clams"}))))))
