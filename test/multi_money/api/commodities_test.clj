@@ -60,10 +60,10 @@
 
 (def ^:private list-context
   (update-in basic-context
-             [:commodities] concat [{:commodity/symbol "JPY"
-                                     :commodity/name "Japanese Yen"
-                                     :commodity/type :currency
-                                     :commodity/entity "Personal"}]))
+             [:commodities] conj {:commodity/symbol "JPY"
+                                  :commodity/name "Japanese Yen"
+                                  :commodity/type :currency
+                                  :commodity/entity "Personal"}))
 
 (deftest an-authenticated-user-can-get-a-list-of-commodities-in-his-entity
   (with-context list-context
