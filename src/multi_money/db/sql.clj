@@ -143,13 +143,21 @@
     (cond-> (utl/update-in-criteria x [:id] coerce-id)
       k (utl/rename-criteria-keys {:id k}))))
 
+(def ^:private model-refs->ids
+  {:entity/owner :entity/owner-id
+   :commodity/entity :commodity/entity-id})
+
+(defn- ->ids
+  [criteria]
+  (reduce #(utl/update-in-criteria %1 [%2] utl/->id)
+          criteria
+          (vals model-refs->ids)))
+
 (defn- sqlize-criteria
   [criteria]
   (-> criteria
-      (utl/rename-criteria-keys {:entity/owner :entity/owner-id
-                                 :commodity/entity :commodity/entity-id})
-      (utl/update-in-criteria [:entity/owner-id] utl/->id)
-      (utl/update-in-criteria [:commodity/entity-id] utl/->id)))
+      (utl/rename-criteria-keys model-refs->ids)
+      ->ids))
 
 (defn- select*
   [db criteria options]
