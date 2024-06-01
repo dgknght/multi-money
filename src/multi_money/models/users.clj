@@ -63,7 +63,7 @@
    {:pre [(s/valid? ::db/options options)]}
    (map after-read
         (db/select (db/storage)
-                    criteria
+                    (db/model-type criteria :user)
                     options))))
 
 (defn find-by
