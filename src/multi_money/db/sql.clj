@@ -143,10 +143,12 @@
     (cond-> (utl/update-in-criteria x [:id] coerce-id)
       k (utl/rename-criteria-keys {:id k}))))
 
-(defn select*
+(defn- select*
   [db criteria options]
   (let [query (-> criteria
                   massage-ids
+                  (utl/rename-criteria-keys {:entity/owner :entity/owner-id})
+                  (utl/update-in-criteria [:entity/owner-id] utl/->id)
                   prepare-criteria
                   (criteria->query (assoc options
                                           :target (db/model-type criteria))))]
