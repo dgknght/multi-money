@@ -113,12 +113,10 @@
         adjust-complex-criteria))
 
 (defmethod translate-criteria ::vector
-  [[oper & crits :as c]]
+  [[oper & crits]]
   (if (= :or oper)
     {:$or (mapv translate-criteria crits)}
-    (throw (ex-info
-             (format "Unsupported conjunction %s" oper)
-             {:criteria c}))))
+    (apply merge crits)))
 
 (defn- apply-options
   [query {:keys [limit order-by sort]}]

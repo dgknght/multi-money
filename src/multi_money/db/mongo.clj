@@ -8,8 +8,8 @@
             [camel-snake-kebab.core :refer [->snake_case
                                             ->kebab-case]]
             [dgknght.app-lib.inflection :refer [plural]]
-            [multi-money.util :refer [qualify-keys
-                                      unqualify-keys]]
+            [multi-money.util :as utl :refer [qualify-keys
+                                              unqualify-keys]]
             [multi-money.db :as db]
             [multi-money.db.mongo.queries :refer [criteria->query]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
@@ -108,17 +108,36 @@
                 x))
             criteria))
 
+(def ^:private model-refs->ids
+  {:entity/owner :entity/owner-id
+   :commodity/entity :commodity/entity-id})
+
+(defn- ->ids
+  [criteria]
+  (reduce #(utl/update-in-criteria %1 [%2] (comp coerce-id utl/->id))
+          criteria
+          (vals model-refs->ids)))
+
+(defn- mongoize-criteria
+  [criteria]
+  (-> criteria
+      (utl/rename-criteria-keys model-refs->ids)
+      ->ids))
+
 (defn- select*
-  [conn criteria options]
+  [conn criteria {:as options :keys [count]}]
   (m/with-mongo conn
     (let [query (-> criteria
                     coerce-criteria-id
+                    mongoize-criteria
                     prepare-criteria
                     (criteria->query options))
-          f (partial m/fetch (infer-collection-name criteria))]
+          col-name (infer-collection-name criteria)]
       (log/debugf "fetch %s with options %s -> %s" criteria options query)
-      (map #(prepare-for-return % criteria)
-           (apply f (mapcat identity query))))))
+      (if count
+        (apply m/fetch-count col-name (mapcat identity query))
+        (map #(prepare-for-return % criteria)
+             (apply m/fetch col-name (mapcat identity query)))))))
 
 (defn- delete*
   [conn models]
@@ -129,7 +148,7 @@
 (defn- reset*
   [conn]
   (m/with-mongo conn
-    (doseq [c [:users :entities]]
+    (doseq [c [:users :entities :commodities]]
       (m/destroy! c {}))))
 
 (defn connect

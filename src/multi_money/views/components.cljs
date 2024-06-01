@@ -123,11 +123,17 @@
                   (concat (map entity-nav-item @current-entities))
                   (into []))})
 
+(defn- authenticated-nav-items []
+  [(entities-nav-item)
+   {:path "/commodities"
+    :caption "Commodities"}])
+
 (defn- build-nav-items []
-  (filter identity
-          [(db-strategy-nav-item)
-           (when @current-user
-             (entities-nav-item))]))
+  (->> (if @current-user
+         (authenticated-nav-items)
+         [])
+       (concat [(db-strategy-nav-item)])
+       (filter identity)))
 
 (defn title-bar []
   (doseq [x [db-strategy current-user current-entities current-entity]]
@@ -159,3 +165,7 @@
      {:style {:position :absolute
               :bottom 0}}
      [:div.container.border-top.mt-3.py-3 @db-strategy]]))
+
+(defn spinner []
+  [:div.spinner-border {:role :status}
+   [:span.visually-hidden "Loading..."]])

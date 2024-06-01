@@ -3,15 +3,12 @@
   (:require [dgknght.app-lib.authorization :as auth]
             [dgknght.app-lib.api :as api]
             [multi-money.db :as db]
-            [multi-money.util :refer [qualify-keys]]
             [multi-money.models.entities :as ents]
             [multi-money.authorization.entities]))
 
 (defn- extract-entity
   [{:keys [body]}]
-  (-> body
-      (select-keys [:name])
-      (qualify-keys :entity)))
+  (select-keys body [:entity/name]))
 
 (defn- create
   [{:as req :keys [authenticated]}]
