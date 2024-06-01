@@ -149,7 +149,7 @@
 
 (defn- ->ids
   [criteria]
-  (reduce #(utl/update-in-criteria %1 [%2] utl/->id)
+  (reduce #(utl/update-in-criteria %1 [%2] (comp coerce-id utl/->id))
           criteria
           (vals model-refs->ids)))
 

@@ -2,7 +2,8 @@
   (:require [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.util :refer [->id]]
-            [multi-money.db.sql :as sql]))
+            [multi-money.db.sql :as sql]
+            [multi-money.db.sql.types :refer [coerce-id]]))
 
 
 (defmethod sql/attributes :commodity [_]
@@ -11,7 +12,7 @@
 (defn- entity->id
   [x]
   (-> x
-      (update-in-if [:commodity/entity] ->id)
+      (update-in-if [:commodity/entity] (comp coerce-id ->id))
       (rename-keys {:commodity/entity :commodity/entity-id})))
 
 (defmethod sql/before-save :commodity
