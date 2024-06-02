@@ -126,6 +126,9 @@
 
 (defn- select*
   [conn criteria {:as options :keys [count]}]
+  ; separate criteria by namespace
+  ; put queries in order by relationship
+  ; execute queries, feeding results into next
   (let [query (-> criteria
                   coerce-criteria-id
                   mongoize-criteria

@@ -43,6 +43,22 @@
   (is (= {:where {:size {:$gte 2 :$lt 5}}}
          (q/criteria->query {:size [:and [:>= 2] [:< 5]]}))))
 
+(deftest split-on-namespace
+  ; 1. get the list of matching entities
+  ; 2. update the commodity query to include entity ids from 1st query
+  (is (= [{:$match {:entity_id 201}} ; 1st match is against the target collection, commodities
+          {:$lookup {:from "entities"
+                     :localField "entity_id"
+                     :foreignField "_id"
+                     :as "entities"}}
+          ; in this direction, should we call the lookup "entity" and unwind it?
+          {:$match {:entities.owner_id 101}}]
+         (q/criteria->pipeline {:commodity/entity-id 201
+                               :entity/owner-id 101}
+                              {:target :commodity
+                               :relationships #{[:user :entity]
+                                                [:entity :commodity]}}))))
+
 (deftest apply-a-sort
   (is (= {:sort {"first_name" 1}}
          (q/criteria->query {} {:sort [[:first-name :asc]]}))

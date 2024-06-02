@@ -5,6 +5,8 @@
             [clojure.string :as str]
             [somnium.congomongo.coerce :refer [coerce-ordered-fields]]
             [camel-snake-kebab.core :refer [->snake_case]]
+            [ubergraph.core :as g]
+            [ubergraph.alg :as ga]
             [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.util :refer [unqualify-keys]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
@@ -131,3 +133,9 @@
    (let [where (translate-criteria criteria)]
      (cond-> (apply-options {} options)
        (seq where) (assoc :where where)))))
+
+(defn criteria->pipeline
+  [criteria {:keys [relationships target]}]
+  (let [graph (g/graph relationships)
+        path (ga/shortest-path graph target)])
+  [])

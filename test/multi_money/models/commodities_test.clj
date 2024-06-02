@@ -7,7 +7,8 @@
             [multi-money.test-context :refer [with-context
                                               basic-context
                                               find-commodity
-                                              find-entity]]
+                                              find-entity
+                                              find-user]]
             [multi-money.helpers :refer [reset-db
                                         dbtest]]
             [multi-money.models.commodities :as cdts]
@@ -119,6 +120,19 @@
                 (map #(select-keys % [:commodity/name :commodity/type :commodity/symbol]))
                 (into #{})))
         "The commodities for the specified entity are returned")))
+
+(dbtest find-by-entity-and-owner
+  (with-context find-ctx
+    (is (= #{#:commodity{:name "United States Dollar"
+                         :symbol "USD"
+                         :type :currency}
+             #:commodity{:name "British Pound"
+                         :symbol "GBP"
+                         :type :currency}}
+           (->> (cdts/select {:commodity/entity (find-entity "Personal")
+                              :entity/owner (find-user "john@doe.com")})
+                (map #(select-keys % [:commodity/name :commodity/type :commodity/symbol]))
+                (into #{}))))))
 
 (dbtest get-a-count-of-commodities
   (with-context
