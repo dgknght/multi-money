@@ -126,14 +126,14 @@
 
 (defn- select*
   [conn criteria {:as options :keys [count]}]
-  (m/with-mongo conn
-    (let [query (-> criteria
-                    coerce-criteria-id
-                    mongoize-criteria
-                    prepare-criteria
-                    (criteria->query options))
-          col-name (infer-collection-name criteria)]
-      (log/debugf "fetch %s with options %s -> %s" criteria options query)
+  (let [query (-> criteria
+                  coerce-criteria-id
+                  mongoize-criteria
+                  prepare-criteria
+                  (criteria->query options))
+        col-name (infer-collection-name criteria)]
+    (log/debugf "fetch %s with options %s -> %s" criteria options query)
+    (m/with-mongo conn
       (if count
         (apply m/fetch-count col-name (mapcat identity query))
         (map #(prepare-for-return % criteria)
