@@ -11,7 +11,7 @@
             [multi-money.util :as utl :refer [qualify-keys
                                               unqualify-keys]]
             [multi-money.db :as db]
-            [multi-money.db.mongo.queries :refer [criteria->query]]
+            [multi-money.db.mongo.queries :refer [criteria->pipeline]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
 
 (derive clojure.lang.PersistentHashMap ::map)
@@ -37,7 +37,9 @@
       unqualify-keys
       ->mongo-keys))
 
-(defmulti ^:private prepare-for-return (fn [x _] (type x)))
+(defmulti ^:private prepare-for-return (fn [x _]
+                                         (pprint {::prepare-for-return x})
+                                         (type x)))
 #_(defmethod prepare-for-return :default [x _] x)
 
 ; A WriteResult means the operation was an update
@@ -129,18 +131,26 @@
   ; separate criteria by namespace
   ; put queries in order by relationship
   ; execute queries, feeding results into next
-  (let [query (-> criteria
-                  coerce-criteria-id
-                  mongoize-criteria
-                  prepare-criteria
-                  (criteria->query options))
-        col-name (infer-collection-name criteria)]
-    (log/debugf "fetch %s with options %s -> %s" criteria options query)
+  (let [col-name (infer-collection-name criteria)
+        pipeline (-> criteria
+                     coerce-criteria-id
+                     mongoize-criteria
+                     (criteria->pipeline (assoc options :collection col-name)))]
+
+    (pprint {::select* criteria
+             ::pipeline pipeline})
+
+    (log/debugf "aggregate %s with options %s -> %s" criteria options pipeline)
     (m/with-mongo conn
       (if count
-        (apply m/fetch-count col-name (mapcat identity query))
-        (map #(prepare-for-return % criteria)
-             (apply m/fetch col-name (mapcat identity query)))))))
+        (throw (ex-info "Not implemented" {}))
+        #_(apply m/fetch-count col-name (mapcat identity query))
+        (let [result (apply m/aggregate
+                            col-name
+                            (concat pipeline [:as :clojure]))]
+          (pprint {::result result})
+          (map #(prepare-for-return % options)
+               (:result result)))))))
 
 (defn- delete*
   [conn models]

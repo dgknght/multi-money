@@ -8,6 +8,7 @@
             [ubergraph.core :as g]
             [ubergraph.alg :as ga]
             [dgknght.app-lib.core :refer [update-in-if]]
+            [stowaway.mongo :refer [criteria->aggregation]]
             [multi-money.util :refer [unqualify-keys]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
 
@@ -134,8 +135,11 @@
      (cond-> (apply-options {} options)
        (seq where) (assoc :where where)))))
 
+(def ^:private relationships
+  #{[:users :entities]
+    [:entities :commodities]})
+
 (defn criteria->pipeline
-  [criteria {:keys [relationships target]}]
-  (let [graph (g/graph relationships)
-        path (ga/shortest-path graph target)])
-  [])
+  [criteria options]
+  (criteria->aggregation criteria (assoc options
+                                         :relationships relationships)))
