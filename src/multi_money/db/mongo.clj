@@ -7,7 +7,8 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [camel-snake-kebab.core :refer [->snake_case
                                             ->kebab-case]]
-            [dgknght.app-lib.inflection :refer [plural]]
+            [dgknght.app-lib.inflection :refer [plural
+                                                singular]]
             [multi-money.util :as utl :refer [qualify-keys
                                               unqualify-keys]]
             [multi-money.db :as db]
@@ -37,9 +38,7 @@
       unqualify-keys
       ->mongo-keys))
 
-(defmulti ^:private prepare-for-return (fn [x _]
-                                         (pprint {::prepare-for-return x})
-                                         (type x)))
+(defmulti ^:private prepare-for-return (fn [x _] (type x)))
 #_(defmethod prepare-for-return :default [x _] x)
 
 ; A WriteResult means the operation was an update
@@ -121,10 +120,13 @@
           (vals model-refs->ids)))
 
 (defn- mongoize-criteria
-  [criteria]
-  (-> criteria
-      (utl/rename-criteria-keys model-refs->ids)
-      ->ids))
+  [criteria col-name]
+  (let [m (assoc model-refs->ids
+                 :id (keyword (singular (name col-name))
+                              "_id"))]
+    (-> criteria
+        (utl/rename-criteria-keys m)
+        ->ids)))
 
 (defn- select*
   [conn criteria {:as options :keys [count]}]
@@ -134,12 +136,8 @@
   (let [col-name (infer-collection-name criteria)
         pipeline (-> criteria
                      coerce-criteria-id
-                     mongoize-criteria
+                     (mongoize-criteria col-name)
                      (criteria->pipeline (assoc options :collection col-name)))]
-
-    (pprint {::select* criteria
-             ::pipeline pipeline})
-
     (log/debugf "aggregate %s with options %s -> %s" criteria options pipeline)
     (m/with-mongo conn
       (if count
@@ -148,7 +146,6 @@
         (let [result (apply m/aggregate
                             col-name
                             (concat pipeline [:as :clojure]))]
-          (pprint {::result result})
           (map #(prepare-for-return % options)
                (:result result)))))))
 
