@@ -109,6 +109,7 @@
                 x))
             criteria))
 
+; TODO: how much of this can be constructed from the relationships?
 (def ^:private model-refs->ids
   {:entity/owner :entity/owner-id
    :commodity/entity :commodity/entity-id})
@@ -146,7 +147,7 @@
         (let [result (apply m/aggregate
                             col-name
                             (concat pipeline [:as :clojure]))]
-          (map #(prepare-for-return % options)
+          (map #(prepare-for-return % criteria)
                (:result result)))))))
 
 (defn- delete*
