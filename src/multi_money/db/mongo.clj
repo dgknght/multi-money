@@ -19,6 +19,10 @@
 (derive clojure.lang.PersistentArrayMap ::map)
 (derive com.mongodb.WriteResult ::write-result)
 
+(def ^:private relationships
+  #{[:users :entities]
+    [:entities :commodities]})
+
 (defmulti before-save db/model-type)
 (defmethod before-save :default [m] m)
 
@@ -114,20 +118,19 @@
   {:entity/owner :entity/owner-id
    :commodity/entity :commodity/entity-id})
 
-(defn- ->ids
+(defn- normalize-model-refs
+  "Given a criteria (map or vector) when a model is used as a value,
+  replace it with a map that only conatins the :id attribute."
   [criteria]
-  (reduce #(utl/update-in-criteria %1 [%2] (comp coerce-id utl/->id))
-          criteria
-          (vals model-refs->ids)))
-
-(defn- mongoize-criteria
-  [criteria col-name]
-  (let [m (assoc model-refs->ids
-                 :id (keyword (singular (name col-name))
-                              "_id"))]
-    (-> criteria
-        (utl/rename-criteria-keys m)
-        ->ids)))
+  (->> #{:user/entity
+         :entity/owner
+         :commodity/entity}
+       (filter criteria)
+       (reduce #(utl/update-in-criteria %1 [%2] (fn [v]
+                                                  (if (map? v)
+                                                    (select-keys v [:id])
+                                                    v)))
+               criteria)))
 
 (defn- select*
   [conn criteria {:as options :keys [count]}]
@@ -137,8 +140,11 @@
   (let [col-name (infer-collection-name criteria)
         pipeline (-> criteria
                      coerce-criteria-id
-                     (mongoize-criteria col-name)
-                     (criteria->pipeline (assoc options :collection col-name)))]
+                     normalize-model-refs
+                     prepare-criteria
+                     (criteria->pipeline (assoc options
+                                                :collection col-name
+                                                :relationships relationships)))]
     (log/debugf "aggregate %s with options %s -> %s" criteria options pipeline)
     (m/with-mongo conn
       (if count
