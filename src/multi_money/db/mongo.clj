@@ -105,18 +105,14 @@
           models)))
 
 (defn- coerce-criteria-id
-  [criteria]
+  [criteria model-type]
   (postwalk (fn [x]
               (if (and (instance? clojure.lang.MapEntry x)
                        (= :id (first x)))
-                (update-in x [1] coerce-id)
+                [(keyword (name model-type) "_id")
+                 (coerce-id (second x))]
                 x))
             criteria))
-
-; TODO: how much of this can be constructed from the relationships?
-(def ^:private model-refs->ids
-  {:entity/owner :entity/owner-id
-   :commodity/entity :commodity/entity-id})
 
 (defn- normalize-model-refs
   "Given a criteria (map or vector) when a model is used as a value,
@@ -139,7 +135,7 @@
   ; execute queries, feeding results into next
   (let [col-name (infer-collection-name criteria)
         pipeline (-> criteria
-                     coerce-criteria-id
+                     (coerce-criteria-id (db/model-type criteria))
                      normalize-model-refs
                      prepare-criteria
                      (criteria->pipeline (assoc options
