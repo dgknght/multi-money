@@ -2,13 +2,11 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [rename-keys]]
-            [clojure.walk :refer [postwalk]]
             [somnium.congomongo :as m]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [camel-snake-kebab.core :refer [->snake_case
                                             ->kebab-case]]
-            [dgknght.app-lib.inflection :refer [plural
-                                                singular]]
+            [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :as utl :refer [qualify-keys
                                               unqualify-keys]]
             [multi-money.db :as db]
@@ -104,16 +102,6 @@
                (prepare-for-return %))
           models)))
 
-(defn- coerce-criteria-id
-  [criteria model-type]
-  (postwalk (fn [x]
-              (if (and (instance? clojure.lang.MapEntry x)
-                       (= :id (first x)))
-                [(keyword (name model-type) "_id")
-                 (coerce-id (second x))]
-                x))
-            criteria))
-
 (defn- normalize-model-refs
   "Given a criteria (map or vector) when a model is used as a value,
   replace it with a map that only conatins the :id attribute."
@@ -121,34 +109,52 @@
   (->> #{:user/entity
          :entity/owner
          :commodity/entity}
-       (filter criteria)
        (reduce #(utl/update-in-criteria %1 [%2] (fn [v]
                                                   (if (map? v)
                                                     (select-keys v [:id])
                                                     v)))
                criteria)))
 
+(defmulti ^:private normalize-ids
+  "Given a criteria that contains :id keys, rename then to
+  a model-qualified :id, like :user/id"
+  (fn [criteria _] (type criteria)))
+
+(defmethod normalize-ids ::map
+  [criteria qualified-key]
+  (rename-keys criteria {:id qualified-key} ))
+
+(defmethod normalize-ids ::vector
+  [[oper & criterias] qualified-key]
+  (apply vector oper (map #(normalize-ids % qualified-key) criterias)))
+
 (defn- aggregate
   [col-name pipeline]
   (apply m/aggregate col-name (concat pipeline [:as :clojure])))
 
+(defn- qualified-id-key
+  [criteria]
+  (keyword (name (db/model-type criteria))
+           "id"))
+
 (defn- select*
   [conn criteria {:as options :keys [count]}]
-  ; separate criteria by namespace
-  ; put queries in order by relationship
-  ; execute queries, feeding results into next
   (let [col-name (infer-collection-name criteria)
         pipeline (-> criteria
-                     (coerce-criteria-id (db/model-type criteria))
                      normalize-model-refs
+                     (normalize-ids (qualified-id-key criteria))
                      prepare-criteria
                      (criteria->pipeline (assoc options
                                                 :collection col-name
+                                                :coerce-id coerce-id
                                                 :relationships relationships)))]
     (log/debugf "aggregate %s with options %s -> %s" criteria options pipeline)
     (m/with-mongo conn
       (if count
-        (aggregate col-name pipeline)
+        (-> (aggregate col-name pipeline)
+            :result
+            first
+            :document_count)
         (let [result (aggregate col-name pipeline)]
           (map #(prepare-for-return % criteria)
                (:result result)))))))
