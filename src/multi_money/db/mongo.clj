@@ -128,6 +128,10 @@
                                                     v)))
                criteria)))
 
+(defn- aggregate
+  [col-name pipeline]
+  (apply m/aggregate col-name (concat pipeline [:as :clojure])))
+
 (defn- select*
   [conn criteria {:as options :keys [count]}]
   ; separate criteria by namespace
@@ -144,11 +148,8 @@
     (log/debugf "aggregate %s with options %s -> %s" criteria options pipeline)
     (m/with-mongo conn
       (if count
-        (throw (ex-info "Not implemented" {}))
-        #_(apply m/fetch-count col-name (mapcat identity query))
-        (let [result (apply m/aggregate
-                            col-name
-                            (concat pipeline [:as :clojure]))]
+        (aggregate col-name pipeline)
+        (let [result (aggregate col-name pipeline)]
           (map #(prepare-for-return % criteria)
                (:result result)))))))
 
