@@ -30,6 +30,8 @@
 
 (defn criteria->pipeline
   [criteria options]
+  {:pre [criteria]}
+
   (pips/criteria->pipeline criteria
                           (assoc options
                                  :coerce-id coerce-id
