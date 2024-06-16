@@ -38,7 +38,9 @@
   (map (comp db/set-meta
              #(update-in % [:commodity/entity] id->ref))
        (db/select (db/storage)
-                  (db/model-type criteria :commodity)
+                  (-> criteria
+                      db/normalize-model-refs
+                      (db/model-type :commodity))
                   options)))
 
 (defn count

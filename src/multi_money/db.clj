@@ -4,7 +4,8 @@
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [union]]
             [config.core :refer [env]]
-            [multi-money.util :refer [valid-id?]]))
+            [multi-money.util :refer [valid-id?
+                                      update-in-criteria]]))
 
 (def comparison-opers #{:< :<= :> :>=})
 (def set-opers #{:and :or})
@@ -132,6 +133,24 @@
 (defn changed?
   [m]
   (not= m (-> m meta :original)))
+
+(defn simple-model-ref?
+  [m]
+  (and (map? m)
+       (= #{:id} (set (keys m)))))
+
+(defn normalize-model-refs
+  "Given a criteria (map or vector) when a model is used as a value,
+  replace it with a map that only conatins the :id attribute."
+  [criteria]
+  (->> #{:user/entity
+         :entity/owner
+         :commodity/entity}
+       (reduce #(update-in-criteria %1 [%2] (fn [v]
+                                              (if (map? v)
+                                                (select-keys v [:id])
+                                                v)))
+               criteria)))
 
 (defmacro with-db
   [bindings & body]

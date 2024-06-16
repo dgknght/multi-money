@@ -31,7 +31,9 @@
 
   (map db/set-meta
        (db/select (db/storage)
-                  (db/model-type criteria :entity)
+                  (-> criteria
+                      db/normalize-model-refs
+                      (db/model-type :entity))
                   (update-in options [:order-by] (fnil identity [:name])))))
 
 (defn count
