@@ -15,7 +15,6 @@
   [e]
   (-> e
       (select-keys [:commodity/symbol :commodity/entity])
-      (update-in [:commodity/entity] ->id)
       (exclude-self e)
       find-by
       nil?))
