@@ -156,13 +156,24 @@
   `(binding [*opts* (merge *opts* ~opts)]
      ~@body))
 
+(defn- apply-join
+  [query _criterion _opts]
+  query)
+
+(defn- join-and-apply-criterion
+  [opts]
+  (fn [qry criterion]
+    (-> qry
+        (apply-join criterion opts)
+        (apply-criterion criterion))))
+
 (defn apply-criteria
   [query criteria & {:as opts}]
   {:pre [(or (nil? opts)
              (s/valid? ::options opts))]}
 
   (with-options opts criteria
-    (reduce apply-criterion
+    (reduce (join-and-apply-criterion opts)
             query
             criteria)))
 
