@@ -143,9 +143,18 @@
 (defn- coerce-criteria-id
   [criteria]
   (postwalk (fn [x]
-              (if (and (instance? clojure.lang.MapEntry x)
+              (if (and (map-entry? x)
                        (= :id (first x)))
                 (update-in x [1] coerce-id)
+                x))
+            criteria))
+
+(defn- extract-model-ref-ids
+  [criteria]
+  (postwalk (fn [x]
+              (if (and (map-entry? x)
+                       (db/simple-model-ref? (second x)))
+                (update-in x [1] :id)
                 x))
             criteria))
 
@@ -153,6 +162,7 @@
   [criteria {:as options :keys [count]} {:keys [api]}]
   (let [qry (-> criteria
                 coerce-criteria-id
+                extract-model-ref-ids
                 prepare-criteria
                 (criteria->query options))
         raw-result (query api qry)]
