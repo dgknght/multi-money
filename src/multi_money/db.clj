@@ -143,7 +143,7 @@
   "Given a criteria (map or vector) when a model is used as a value,
   replace it with a map that only conatins the :id attribute."
   [criteria]
-  (->> #{:user/entity
+  (->> #{:user/identity
          :entity/owner
          :commodity/entity}
        (reduce #(update-in-criteria %1 [%2] (fn [v]
