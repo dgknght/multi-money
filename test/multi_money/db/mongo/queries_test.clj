@@ -55,9 +55,9 @@
           {:$match {:entities.owner_id 101}}]
          (q/criteria->pipeline {:commodity/entity-id 201
                                :entity/owner-id 101}
-                              {:target :commodity
-                               :relationships #{[:user :entity]
-                                                [:entity :commodity]}}))))
+                              {:collection :commodities
+                               :relationships #{[:users :entities]
+                                                [:entities :commodities]}}))))
 
 (deftest apply-a-sort
   (is (= {:sort {"first_name" 1}}
