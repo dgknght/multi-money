@@ -4,6 +4,7 @@
             [clojure.walk :refer [postwalk]]
             [datomic.api :as d-peer]
             [datomic.client.api :as d-client]
+            [stowaway.datalog :refer [apply-options]]
             [multi-money.db.datomic.types :refer [coerce-id
                                                   ->storable]]
             [multi-money.datalog :as dtl]
@@ -60,12 +61,11 @@
 
          :args []}
         (dtl/apply-criteria criteria
-                            :model-type m-type
-                            :query-prefix [:query]
+                            :target m-type
                             :coerce ->storable)
         (ensure-bounded-query criteria)
         (exclude-deleted opts)
-        (dtl/apply-options opts :model-type m-type))))
+        (apply-options opts :model-type m-type))))
 
 (defmulti deconstruct db/model-type)
 (defmulti before-save db/model-type)
