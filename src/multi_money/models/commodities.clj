@@ -31,24 +31,26 @@
                                         :commodity/type])
                           symbol-is-unique?))
 
+(defn- select*
+  [criteria options]
+  (db/select (db/storage)
+             (-> criteria
+                 db/normalize-model-refs
+                 (db/model-type :commodity))
+             options))
+
 (defn select
   [criteria & {:as options}]
   {:pre [(or (nil? options)
              (s/valid? ::db/options options))]}
   (map (comp db/set-meta
              #(update-in % [:commodity/entity] id->ref))
-       (db/select (db/storage)
-                  (-> criteria
-                      db/normalize-model-refs
-                      (db/model-type :commodity))
-                  options)))
+       (select* criteria options)))
 
 (defn count
   ([] (count {}))
   ([criteria]
-   (db/select (db/storage)
-              (db/model-type criteria :commodity)
-              {:count true})))
+   (select* criteria {:count true})))
 
 (defn find-by
   [criteria & {:as options}]
