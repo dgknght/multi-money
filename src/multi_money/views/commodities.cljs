@@ -7,7 +7,8 @@
             [dgknght.app-lib.html :as html]
             [dgknght.app-lib.forms :as forms]
             [multi-money.views.components :refer [spinner]]
-            [multi-money.notifications :refer [toast]]
+            [multi-money.notifications :refer [toast
+                                               alert]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [+busy
@@ -83,9 +84,7 @@
   (+busy)
   (cdts/put (get-in @page-state [:selected])
             :callback -busy
-            :on-failure (fn [e]
-                          (pprint {:on-failure e})
-                          (swap! page-state assoc :validation-errors (-> e :data :errors)))
+            :on-failure #(alert "Unable to save the commodity.")
             :on-success (fn [{:commodity/keys [name]}]
                           (load-commodities page-state)
                           (swap! page-state dissoc :selected :validation-errors)
