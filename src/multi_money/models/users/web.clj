@@ -54,7 +54,8 @@
 
 (defn wrap-user-lookup
   [handler]
-  (fn [{:oauth2/keys [profiles] :as req}]
-    (handler (if-let [user (find-or-create-user profiles)]
+  (fn [{:oauth2/keys [profiles] :keys [cookies] :as req}]
+    (handler (if-let [user (when-not (= "" (get-in cookies ["auth-token" :value]))
+                             (find-or-create-user profiles))]
                (assoc req :authenticated user)
                req))))

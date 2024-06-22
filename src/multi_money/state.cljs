@@ -22,6 +22,16 @@
 (defn -busy []
   (swap! app-state update-in [:process-count] dec))
 
+(defn sign-out []
+  (swap! app-state dissoc
+         :current-entities
+         :current-entity
+         :current-user
+         :auth-token
+         :current-page)
+  (cookies/set! :auth-token "" :max-age 0)
+  (set! (.. js/window -location -href) "/"))
+
 (add-watch db-strategy
            ::state
            (fn [_cursor _id _before strategy]
