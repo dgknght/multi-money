@@ -22,6 +22,9 @@
 (defn -busy []
   (swap! app-state update-in [:process-count] dec))
 
+(defn sign-out []
+  (set! (.. js/document -location -href) "/sign-out"))
+
 (add-watch db-strategy
            ::state
            (fn [_cursor _id _before strategy]

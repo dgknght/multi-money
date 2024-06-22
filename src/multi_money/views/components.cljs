@@ -6,6 +6,7 @@
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [nav-items
+                                       sign-out
                                        current-user
                                        current-entity
                                        current-entities
@@ -66,7 +67,7 @@
         doall)])
 
 (defn- nav-item
-  [{:keys [path on-click caption children id active?] :as item}]
+  [{:keys [path on-click caption children id active?]}]
   ^{:key (str "nav-item-" id)}
   [:li.nav-item {:class (when (seq children) "dropdown")}
    [:a.nav-link.d-flex.align-items-center
@@ -126,7 +127,9 @@
 (defn- authenticated-nav-items []
   [(entities-nav-item)
    {:path "/commodities"
-    :caption "Commodities"}])
+    :caption "Commodities"}
+   {:caption "Sign Out"
+    :on-click sign-out}])
 
 (defn- build-nav-items []
   (->> (if @current-user

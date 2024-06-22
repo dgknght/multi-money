@@ -5,6 +5,7 @@
             [hiccup.page :refer [html5
                                  include-css
                                  include-js]]
+            [ring.util.response :as res]
             [ring.middleware.defaults :refer [wrap-defaults
                                               site-defaults
                                               api-defaults]]
@@ -110,6 +111,10 @@
                           wrap-issue-auth-token
                           wrap-request-logging]}
         ["" {:get index}]
+        ["sign-out" {:get {:handler (fn [_]
+                                      (-> (res/redirect "/")
+                                          (res/set-cookie "ring-session" "" {:max-age 1})
+                                          (res/set-cookie "auth-token"   "" {:max-age 1})))}}]
         ["oauth/*" {:get (constantly {:status 404
                                       :body "not found"})}]]
        ["/api" {:middleware [wrap-request-logging
