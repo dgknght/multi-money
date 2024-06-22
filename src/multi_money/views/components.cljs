@@ -6,7 +6,6 @@
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [nav-items
-                                       sign-out
                                        current-user
                                        current-entity
                                        current-entities
@@ -127,9 +126,7 @@
 (defn- authenticated-nav-items []
   [(entities-nav-item)
    {:path "/commodities"
-    :caption "Commodities"}
-   {:on-click sign-out
-    :caption "Sign Out"}])
+    :caption "Commodities"}])
 
 (defn- build-nav-items []
   (->> (if @current-user
