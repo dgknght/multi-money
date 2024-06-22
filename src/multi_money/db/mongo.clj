@@ -15,6 +15,7 @@
 
 (derive clojure.lang.PersistentHashMap ::map)
 (derive clojure.lang.PersistentArrayMap ::map)
+(derive clojure.lang.PersistentVector ::vector)
 (derive com.mongodb.WriteResult ::write-result)
 
 (def ^:private relationships
