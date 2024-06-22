@@ -105,9 +105,9 @@
                            (save-commodity page-state))}
        [forms/text-field selected [:commodity/symbol] {:errors symbol-errors}]
        [forms/text-field selected [:commodity/name] {:errors name-errors}]
-       [forms/select-field selected [:commodity/type] ["currency"
-                                                       "mutual-fund"
-                                                       "stock"]]
+       [forms/select-field selected [:commodity/type] [["currency" "Currency"]
+                                                       ["mutual-fund" "Mutual Fund"]
+                                                       ["stock" "Stock"]]]
        [:div
         [:button.btn.btn-primary {:type :submit}
          (icon-with-text :floppy2 "Save" :size :small)]
