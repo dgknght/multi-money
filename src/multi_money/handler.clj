@@ -100,6 +100,15 @@
                                :cookie-attrs {:same-site :lax
                                               :http-only true}})]))
 
+; It seems the browser doesn't beleive us until we've done it twice
+(defn- redirect-for-signout
+  [url]
+  (fn [_]
+    (-> (res/redirect url)
+        (res/set-cookie :ring-session "" {:max-age 0})
+        (res/set-cookie :auth-token   "" {:max-age 0})
+        (assoc :session {:ring.middleware.oauth2/access-tokens nil}))))
+
 (def app
   (ring/ring-handler
     (ring/router
@@ -111,10 +120,8 @@
                           wrap-issue-auth-token
                           wrap-request-logging]}
         ["" {:get index}]
-        ["sign-out" {:get {:handler (fn [_]
-                                      (-> (res/redirect "/")
-                                          (res/set-cookie "ring-session" "" {:max-age 1})
-                                          (res/set-cookie "auth-token"   "" {:max-age 1})))}}]
+        ["sign-out" {:get {:handler (redirect-for-signout "/signed-out")}}]
+        ["signed-out" {:get {:handler (redirect-for-signout "/")}}]
         ["oauth/*" {:get (constantly {:status 404
                                       :body "not found"})}]]
        ["/api" {:middleware [wrap-request-logging
