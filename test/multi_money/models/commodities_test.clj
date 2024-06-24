@@ -58,6 +58,26 @@
           {::v/errors {:commodity/symbol ["Symbol is already in use"]}}
           (cdts/put (assoc (attributes) :commodity/symbol "USD")))))) ; exists in the basic context
 
+(dbtest entity-id-is-normalized-and-coerced
+  (with-context
+    (let [entity (find-entity "Personal")
+          expected [{:symbol "USD"
+                     :name "United States Dollar"}]]
+      (is (seq-of-maps-like? expected
+                             (cdts/select {:commodity/entity (str (:id entity))}))
+          "A string is coerced")
+      (is (seq-of-maps-like? expected
+                             (cdts/select {:commodity/entity (-> entity
+                                                                 (update-in [:id] str)
+                                                                 (select-keys [:id]))}))
+          "A simple model ref with an ID string is coerced")
+      (is (seq-of-maps-like? expected
+                             (cdts/select {:commodity/entity (:id entity)}))
+          "An ID as read from the database is uses as-is")
+      (is (seq-of-maps-like? expected
+                             (cdts/select {:commodity/entity entity}))
+          "An ID is extraced from a model map"))))
+
 (dbtest symbol-can-be-duplicated-across-entities
   (with-context
     ; The Personal entity already has USD
