@@ -4,6 +4,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [union]]
             [config.core :refer [env]]
+            [multi-money.core :as mm]
             [multi-money.util :refer [valid-id?
                                       update-in-criteria]]))
 
@@ -134,10 +135,25 @@
   [m]
   (not= m (-> m meta :original)))
 
+(defn model-or-ref?
+  [x]
+  (and (map? x)
+       (contains? x :id)))
+
 (defn simple-model-ref?
   [m]
   (and (map? m)
        (= #{:id} (set (keys m)))))
+
+(defmulti normalize-model-ref type)
+
+(defmethod normalize-model-ref ::mm/map
+  [m]
+  (select-keys m [:id]))
+
+(defmethod normalize-model-ref :default
+  [id]
+  {:id id})
 
 (defn normalize-model-refs
   "Given a criteria (map or vector) when a model is used as a value,
@@ -146,10 +162,7 @@
   (->> #{:user/identity
          :entity/owner
          :commodity/entity}
-       (reduce #(update-in-criteria %1 [%2] (fn [v]
-                                              (if (map? v)
-                                                (select-keys v [:id])
-                                                v)))
+       (reduce #(update-in-criteria %1 [%2] normalize-model-ref)
                criteria)))
 
 (defmacro with-db
