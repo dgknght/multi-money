@@ -3,10 +3,10 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.spec.alpha :as s]
             [dgknght.app-lib.validation :as v]
+            [multi-money.core :as mm]
             [multi-money.util :refer [->id
                                       id->ref
-                                      exclude-self
-                                     non-nil?]]
+                                      exclude-self]]
             [multi-money.db :as db]))
 
 (declare find-by)
@@ -21,7 +21,7 @@
 (v/reg-spec symbol-is-unique? {:message "%s is already in use"
                                :path [:commodity/symbol]})
 
-(s/def :commodity/entity non-nil?)
+(s/def :commodity/entity db/model-or-ref?)
 (s/def :commodity/name string?)
 (s/def :commodity/symbol string?)
 (s/def :commodity/type #{:currency :stock :mutual-fund})
@@ -31,8 +31,22 @@
                                         :commodity/type])
                           symbol-is-unique?))
 
+(defmulti criteria-type type)
+
+(defmethod criteria-type ::mm/map [_]
+  (s/keys :opt [:commodity/entity
+                :commodity/symbol
+                :commodity/type]))
+
+(defmethod criteria-type ::mm/vector [_]
+  (s/cat :operator #{:and :or} :criteria (s/* criteria-type)))
+
+(s/def ::criteria (s/multi-spec criteria-type type))
+
 (defn- select*
   [criteria options]
+  {:pre [(s/valid? ::criteria criteria)]}
+
   (db/select (db/storage)
              (-> criteria
                  db/normalize-model-refs
