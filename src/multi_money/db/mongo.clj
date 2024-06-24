@@ -9,13 +9,11 @@
             [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :as utl :refer [qualify-keys
                                               unqualify-keys]]
+            [multi-money.core :as mm]
             [multi-money.db :as db]
             [multi-money.db.mongo.queries :refer [criteria->pipeline]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
 
-(derive clojure.lang.PersistentHashMap ::map)
-(derive clojure.lang.PersistentArrayMap ::map)
-(derive clojure.lang.PersistentVector ::vector)
 (derive com.mongodb.WriteResult ::write-result)
 
 (def ^:private relationships
@@ -50,7 +48,7 @@
   [_ source]
   (:id source))
 
-(defmethod prepare-for-return ::map
+(defmethod prepare-for-return ::mm/map
   [after source]
   (-> after
       (rename-keys {:_id :id})
@@ -108,11 +106,11 @@
   a model-qualified :id, like :user/id"
   (fn [criteria _] (type criteria)))
 
-(defmethod normalize-ids ::map
+(defmethod normalize-ids ::mm/map
   [criteria qualified-key]
   (rename-keys criteria {:id qualified-key} ))
 
-(defmethod normalize-ids ::vector
+(defmethod normalize-ids ::mm/vector
   [[oper & criterias] qualified-key]
   (apply vector oper (map #(normalize-ids % qualified-key) criterias)))
 
