@@ -3,7 +3,6 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.spec.alpha :as s]
             [dgknght.app-lib.validation :as v]
-            [multi-money.core :as mm]
             [multi-money.util :refer [->id
                                       id->ref
                                       exclude-self]]
@@ -31,22 +30,8 @@
                                         :commodity/type])
                           symbol-is-unique?))
 
-(defmulti criteria-type type)
-
-(defmethod criteria-type ::mm/map [_]
-  (s/keys :opt [:commodity/entity
-                :commodity/symbol
-                :commodity/type]))
-
-(defmethod criteria-type ::mm/vector [_]
-  (s/cat :operator #{:and :or} :criteria (s/* criteria-type)))
-
-(s/def ::criteria (s/multi-spec criteria-type type))
-
 (defn- select*
   [criteria options]
-  {:pre [(s/valid? ::criteria criteria)]}
-
   (db/select (db/storage)
              (-> criteria
                  db/normalize-model-refs
