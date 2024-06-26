@@ -21,7 +21,7 @@
       (rename-keys {:symbol :commodity/symbol
                     :name :commodity/name
                     :type :commodity/type})
-      (assoc :commodity/entity (:entity-id path-params))
+      (assoc :commodity/entity {:id (:entity-id path-params)})
       (update-in-if [:commodity/type] keyword)))
 
 (defn- create
