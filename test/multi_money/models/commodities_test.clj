@@ -1,5 +1,6 @@
 (ns multi-money.models.commodities-test
   (:require [clojure.test :refer [is use-fixtures]]
+            [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.test-assertions]
             [dgknght.app-lib.validation :as v]
             [multi-money.util :refer [->id
@@ -61,8 +62,8 @@
 (dbtest entity-id-is-normalized-and-coerced
   (with-context
     (let [entity (find-entity "Personal")
-          expected [{:symbol "USD"
-                     :name "United States Dollar"}]]
+          expected [#:commodity{:symbol "USD"
+                                :name "United States Dollar"}]]
       (is (seq-of-maps-like? expected
                              (cdts/select {:commodity/entity (str (:id entity))}))
           "A string is coerced")
