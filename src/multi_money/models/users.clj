@@ -77,8 +77,8 @@
 
 (defn find-by-oauth
   [[oauth-provider id-or-profile]]
-  (find-by {:user/identities [:include {:oauth-provider oauth-provider
-                                        :oauth-id (->id id-or-profile)}]}))
+  (find-by {:user/identities [:including {:oauth-provider oauth-provider
+                                          :oauth-id (->id id-or-profile)}]}))
 
 (defn- yield-or-find
   [m-or-id]
