@@ -21,18 +21,6 @@
         (cons (map (partial inflate-identity id)
                    identities)))))
 
-(defmethod sql/prepare-criteria :user
-  [{:as criteria :user/keys [identities]}]
-  ; Identities should look like this:
-  ; [:= [:google "abc123"]]
-  (if (seq identities)
-    (let [[_ [oauth-provider oauth-id]] identities]
-      (-> criteria
-          (dissoc :user/identities)
-          (assoc :identity/oauth-provider (name oauth-provider)
-                 :identity/oauth-id oauth-id)))
-    criteria))
-
 (defmethod sql/resolve-temp-ids :identity
   [ident id-map]
   (update-in ident [:identity/user-id] id-map))
