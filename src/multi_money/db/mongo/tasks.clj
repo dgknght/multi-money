@@ -46,7 +46,8 @@
                                                 [:email]
                                                 :unique true)})
       (pprint {::users-identities (m/add-index! :users
-                                                [:identities.id :identities.provider]
+                                                [:identities.oauth_id
+                                                 :identities.oauth_provider]
                                                 :unique true)})
       (pprint {::entities-owner (m/add-index! :entities
                                               [:owner_id :name]
