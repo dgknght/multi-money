@@ -1,5 +1,6 @@
 (ns multi-money.db.sql.users
   (:require [clojure.pprint :refer [pprint]]
+            [multi-money.util :refer [update-in-criteria]]
             [multi-money.db.sql :as sql])
   (:import java.util.UUID))
 
@@ -24,3 +25,7 @@
 (defmethod sql/resolve-temp-ids :identity
   [ident id-map]
   (update-in ident [:identity/user-id] id-map))
+
+(defmethod sql/prepare-criteria :user
+ [criteria]
+ (update-in-criteria criteria [:identity/oauth-provider] name))

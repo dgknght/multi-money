@@ -11,9 +11,7 @@
 
 (defmethod m/after-read :user
   [user]
-  (update-in user [:user/identities] (fn [i]
-                                       (pprint {::i i})
-                                       (->> i
-                                            (map (juxt (comp keyword :user/oauth-provider)
-                                                       :user/oauth-id))
-                                            (into {})))))
+  (update-in user [:user/identities] #(->> %
+                                           (map (juxt (comp keyword :user/oauth-provider)
+                                                      :user/oauth-id))
+                                           (into {}))))
