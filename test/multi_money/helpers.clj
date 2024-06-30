@@ -11,24 +11,6 @@
 
 (def ^:dynamic *strategy* nil)
 
-(defn- model-ref?
-  [x]
-  (and (map? x)
-       (= #{:id} (set (keys x)))))
-
-(defn- criterion-pred
-  [[k v]]
-  (fn [m]
-    (let [actual (get m k)]
-      (= v
-         (cond-> actual
-           (model-ref? actual) :id)))))
-
-(defn criteria->pred
-  [criteria]
-  (apply every-pred (map criterion-pred
-                         criteria)))
-
 (defn ->set
   [v]
   (if (coll? v)

@@ -55,7 +55,7 @@
   [user]
   (-> user
       assoc-identities
-      (db/set-meta :user)))
+      db/set-meta))
 
 (defn select
   ([criteria] (select criteria {}))
@@ -63,7 +63,7 @@
    {:pre [(s/valid? ::db/options options)]}
    (map after-read
         (db/select (db/storage)
-                    criteria
+                    (db/model-type criteria :user)
                     options))))
 
 (defn find-by
@@ -76,9 +76,9 @@
   (find-by ^{:model-type :user} {:id (->id id)}))
 
 (defn find-by-oauth
-  [[provider id-or-profile]]
-  (find-by {:user/identities [:= [provider (or (:id id-or-profile)
-                                               id-or-profile)]]}))
+  [[oauth-provider id-or-profile]]
+  (find-by {:user/identities [:including #:identity{:oauth-provider oauth-provider
+                                                    :oauth-id (->id id-or-profile)}]}))
 
 (defn- yield-or-find
   [m-or-id]

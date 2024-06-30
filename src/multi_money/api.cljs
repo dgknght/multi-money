@@ -3,13 +3,14 @@
   (:require [cljs.pprint :refer [pprint]]
             [goog.string :refer [format]]
             [dgknght.app-lib.api-3 :as api]
+            [multi-money.notifications :as n]
             [multi-money.state :as state]))
 
 (defn- on-failure
   [e]
   (.error js/console "The API call was not successful")
-  (.error js/console (:error e))
-  (.dir js/console (clj->js (:data e))))
+  (.error js/console e)
+  (n/alert "Unable to complete the API call."))
 
 (defn- apply-defaults
   [opts]

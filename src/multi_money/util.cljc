@@ -1,7 +1,7 @@
 (ns multi-money.util
-  (:require [clojure.walk :refer [prewalk]]
+  (:require [clojure.walk :refer [prewalk
+                                  postwalk]]
             [clojure.string :as string]
-            [clojure.walk :refer [postwalk]]
             [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.core :refer [update-in-if]]
             #?(:clj [clojure.pprint :refer [pprint]]
@@ -170,6 +170,10 @@
                            (filter #(= "id" (name %)))
                            first)]
            (id-or-model k)))))
+
+(defn id->ref
+  [id]
+  {:id id})
 
 (defn exclude-self
   "Update a query to exclude the specified model, if the model

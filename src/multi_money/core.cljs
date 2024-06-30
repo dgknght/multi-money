@@ -17,6 +17,7 @@
                                                alerts]]
             [multi-money.views.pages]
             [multi-money.views.entities]
+            [multi-money.views.commodities]
             [multi-money.api.users :as usrs]
             [multi-money.api.entities :as ents]))
 

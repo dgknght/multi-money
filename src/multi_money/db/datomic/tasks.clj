@@ -14,7 +14,7 @@
           ["model"
            "user"
            "entity"
-           #_"commodity"
+           "commodity"
            #_"price"
            #_"account"
            #_"transaction"]))

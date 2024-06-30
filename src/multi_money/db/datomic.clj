@@ -4,18 +4,16 @@
             [clojure.walk :refer [postwalk]]
             [datomic.api :as d-peer]
             [datomic.client.api :as d-client]
+            [stowaway.datalog :refer [apply-options]]
             [multi-money.db.datomic.types :refer [coerce-id
                                                   ->storable]]
             [multi-money.datalog :as dtl]
             [multi-money.util :refer [+id
                                       apply-sort
                                       split-nils]]
+            [multi-money.core :as mm]
             [multi-money.db :as db]
             [multi-money.db.datomic.tasks :as tsks]))
-
-(derive clojure.lang.PersistentVector ::vector)
-(derive clojure.lang.PersistentArrayMap ::map)
-(derive clojure.lang.PersistentHashMap ::map)
 
 (derive :datomic/peer :datomic/service)
 (derive :datomic/client :datomic/service)
@@ -50,19 +48,21 @@
   (update-in query [:query :where] conj* '(not [?x :model/deleted? true])))
 
 (defn- criteria->query
-  [criteria opts]
+  [criteria {:as opts :keys [count]}]
   (let [m-type (or (db/model-type criteria)
                    (:model-type opts))]
-    (-> '{:query {:find [(pull ?x [*])]
-                  :in [$]}
-          :args []}
+    (-> {:query {:find (if count
+                         '[(count ?x)]
+                         '[(pull ?x [*])])
+                 :in '[$]}
+
+         :args []}
         (dtl/apply-criteria criteria
-                            :model-type m-type
-                            :query-prefix [:query]
+                            :target m-type
                             :coerce ->storable)
         (ensure-bounded-query criteria)
         (exclude-deleted opts)
-        (dtl/apply-options opts :model-type m-type))))
+        (apply-options opts :model-type m-type))))
 
 (defmulti deconstruct db/model-type)
 (defmulti before-save db/model-type)
@@ -76,7 +76,7 @@
 
 (defmulti ^:private prep-for-put type)
 
-(defmethod prep-for-put ::map
+(defmethod prep-for-put ::mm/map
   [m]
   (let [[m* nils] (split-nils m)]
     (cons (-> m*
@@ -98,7 +98,7 @@
 ; [::db/delete {:id 1 :user/given-name "John"}]
 ; in which case we want to turn it into
 ; [:db/retractEntity 1]
-(defmethod prep-for-put ::vector
+(defmethod prep-for-put ::mm/vector
   [[_action :as args]]
   ; For now, let's assume a deconstruct fn has prepared a legal datomic transaction
   [args])
@@ -140,26 +140,38 @@
 (defn- coerce-criteria-id
   [criteria]
   (postwalk (fn [x]
-              (if (and (instance? clojure.lang.MapEntry x)
+              (if (and (map-entry? x)
                        (= :id (first x)))
                 (update-in x [1] coerce-id)
                 x))
             criteria))
 
+(defn- extract-model-ref-ids
+  [criteria]
+  (postwalk (fn [x]
+              (if (and (map-entry? x)
+                       (db/simple-model-ref? (second x)))
+                (update-in x [1] :id)
+                x))
+            criteria))
+
 (defn- select*
-  [criteria options {:keys [api]}]
+  [criteria {:as options :keys [count]} {:keys [api]}]
   (let [qry (-> criteria
                 coerce-criteria-id
+                extract-model-ref-ids
                 prepare-criteria
                 (criteria->query options))
         raw-result (query api qry)]
-    (->> raw-result
-         (map first)
-         (remove naked-id?)
-         (map (comp after-read
-                    #(rename-keys % {:db/id :id})
-                    extract-ref-ids))
-         (apply-sort options))))
+    (if count
+      (ffirst raw-result)
+      (->> raw-result
+           (map first)
+           (remove naked-id?)
+           (map (comp after-read
+                      #(rename-keys % {:db/id :id})
+                      extract-ref-ids))
+           (apply-sort options)))))
 
 (defn- delete*
   [models {:keys [api]}]

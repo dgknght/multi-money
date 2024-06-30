@@ -28,7 +28,7 @@
   (clojure->mongo [^LocalDate d]
     (t/java-date
       (.toInstant (.atStartOfDay d)
-                  (ZoneOffset/UTC))))
+                  ZoneOffset/UTC)))
   BigDecimal
   (clojure->mongo [^BigDecimal d]
     (Decimal128. d)))

@@ -13,6 +13,7 @@
   <logger name="org.apache" level="WARN" />
   <logger name="org.eclipse" level="WARN" />
   <logger name="com.mongodb" level="WARN" />
+  <logger name="org.mongodb" level="WARN" />
 
   <root level="TRACE">
     <appender-ref ref="FILE" />
