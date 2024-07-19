@@ -7,15 +7,15 @@
 (deftest apply-a-criteria
   (let [calls (atom [])
         orig s/apply-criteria
-        query {:query {:find ['?x]}}
+        query {:find ['?x]}
         criteria #:entity{:name "Personal"}]
     (with-redefs [s/apply-criteria (fn [& args]
                                      (swap! calls conj args)
                                      (apply orig args))]
-      (is (= {:query '{:find [?x]
-                       :where [[?x :entity/name ?name-in]]
-                       :in [?name-in]}
-              :args ["Personal"]}
+      (is (= '{:find [?x]
+               :where [[?x :entity/name ?a]]
+               :in [?a]
+               :args ["Personal"]}
              (dtl/apply-criteria query criteria)))
       (let [[c :as cs] @calls]
         (is (= 1 (count cs))
