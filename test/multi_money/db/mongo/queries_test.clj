@@ -34,8 +34,8 @@
                              {:first-name "John"}
                              {:last-name "Doe"}]))
       "A top-level :or is convered correctly")
-  (is (= {:where {:first-name "John"
-                  :last-name "Doe"}}
+  (is (= {:where {:first_name "John"
+                  :last_name "Doe"}}
         (q/criteria->query [:and
                             {:first-name "John"}
                             {:last-name "Doe"}]))
