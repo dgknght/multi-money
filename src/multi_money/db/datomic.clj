@@ -64,7 +64,7 @@
                             :target m-type
                             :coerce ->storable)
         (ensure-bounded-query criteria)
-        (apply-options (dissoc opts :order-by :sort) :model-type m-type)
+        (apply-options (dissoc opts :order-by :sort))
         rearrange-query)))
 
 (defmulti deconstruct db/model-type)
