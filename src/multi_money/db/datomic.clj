@@ -23,46 +23,49 @@
   (query [this arg-map])
   (reset [this]))
 
-(defn- conj* [& args]
-  (apply (fnil conj []) args))
-
 (defmulti bounding-where-clause
   (fn [crit-or-model-type]
     (if (keyword? crit-or-model-type)
       crit-or-model-type
       (db/model-type crit-or-model-type))))
 
+(def ^:private not-deleted '(not [?x :model/deleted? true]))
+
 (defn- unbounded-query?
-  [{{:keys [in where]} :query}]
-  (and (empty? where)
+  [{:keys [in where]}]
+  (and (empty? (remove #(= not-deleted %) where))
        (not-any? #(= '?x %) in)))
 
 (defn- ensure-bounded-query
   [query criteria]
   (if (unbounded-query? query)
-    (assoc-in query [:query :where] [(bounding-where-clause criteria)])
+    (assoc-in query [:where] [(bounding-where-clause criteria)])
     query))
 
-(defn- exclude-deleted
-  [query _opts]
-  (update-in query [:query :where] conj* '(not [?x :model/deleted? true])))
+(defn- rearrange-query
+  "Takes a simple datalog query and adjust the attributes
+  to match the format expected by datomic."
+  [query]
+  (-> query
+      (select-keys [:args])
+      (assoc :query (dissoc query :args))))
 
 (defn- criteria->query
   [criteria {:as opts :keys [count]}]
   (let [m-type (or (db/model-type criteria)
                    (:model-type opts))]
-    (-> {:query {:find (if count
-                         '[(count ?x)]
-                         '[(pull ?x [*])])
-                 :in '[$]}
-
+    (-> {:find (if count
+                 '[(count ?x)]
+                 '[(pull ?x [*])])
+         :in '[$]
+         :where [not-deleted]
          :args []}
         (dtl/apply-criteria criteria
                             :target m-type
                             :coerce ->storable)
         (ensure-bounded-query criteria)
-        (exclude-deleted opts)
-        (apply-options opts :model-type m-type))))
+        (apply-options (dissoc opts :order-by :sort) :model-type m-type)
+        rearrange-query)))
 
 (defmulti deconstruct db/model-type)
 (defmulti before-save db/model-type)
@@ -146,6 +149,7 @@
                 x))
             criteria))
 
+; TODO: Remove this, it's part of stowaway now
 (defn- extract-model-ref-ids
   [criteria]
   (postwalk (fn [x]
@@ -196,8 +200,7 @@
       ; TODO: take in the as-of date-time
       (apply d-peer/q
              query
-             (cons (-> uri d-peer/connect d-peer/db)
-                   args)))
+             (cons (-> uri d-peer/connect d-peer/db) args)))
     (reset [_]
       (d-peer/delete-database uri)
       (tsks/apply-schema config {:suppress-output? true}))))
