@@ -5,6 +5,7 @@
             [hiccup.page :refer [html5
                                  include-css
                                  include-js]]
+            [ring.util.response :as res]
             [ring.middleware.defaults :refer [wrap-defaults
                                               site-defaults
                                               api-defaults]]
@@ -26,6 +27,7 @@
             [multi-money.mount-point :refer [js-path]]
             [multi-money.api.users :as usrs]
             [multi-money.api.entities :as ents]
+            [multi-money.api.commodities :as cdts]
             [multi-money.db.datomic.ref]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]))
@@ -98,6 +100,15 @@
                                :cookie-attrs {:same-site :lax
                                               :http-only true}})]))
 
+; It seems the browser doesn't beleive us until we've done it twice
+(defn- redirect-for-signout
+  [url]
+  (fn [_]
+    (-> (res/redirect url)
+        (res/set-cookie :ring-session "" {:max-age 0})
+        (res/set-cookie :auth-token   "" {:max-age 0})
+        (assoc :session {:ring.middleware.oauth2/access-tokens nil}))))
+
 (def app
   (ring/ring-handler
     (ring/router
@@ -109,6 +120,8 @@
                           wrap-issue-auth-token
                           wrap-request-logging]}
         ["" {:get index}]
+        ["sign-out" {:get {:handler (redirect-for-signout "/signed-out")}}]
+        ["signed-out" {:get {:handler (redirect-for-signout "/")}}]
         ["oauth/*" {:get (constantly {:status 404
                                       :body "not found"})}]]
        ["/api" {:middleware [wrap-request-logging
@@ -120,7 +133,8 @@
                              wrap-db
                              [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
         usrs/routes
-        ents/routes]])
+        ents/routes
+        cdts/routes]])
     (ring/routes
       (ring/create-resource-handler {:path "/"})
       (ring/create-default-handler))))
