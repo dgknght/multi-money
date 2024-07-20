@@ -1,14 +1,16 @@
 (ns multi-money.api.entities
   (:refer-clojure :exclude [update])
-  (:require [dgknght.app-lib.authorization :as auth]
+  (:require [clojure.pprint :refer [pprint]]
+            [dgknght.app-lib.authorization :as auth]
             [dgknght.app-lib.api :as api]
+            [multi-money.util :as utl]
             [multi-money.db :as db]
             [multi-money.models.entities :as ents]
             [multi-money.authorization.entities]))
 
 (defn- extract-entity
   [{:keys [body]}]
-  (select-keys body [:entity/name]))
+  (utl/select-namespaced-keys body [:entity/name]))
 
 (defn- create
   [{:as req :keys [authenticated]}]

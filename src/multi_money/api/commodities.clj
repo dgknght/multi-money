@@ -5,6 +5,7 @@
             [dgknght.app-lib.authorization :as auth]
             [dgknght.app-lib.api :as api]
             [dgknght.app-lib.core :refer [update-in-if]]
+            [multi-money.util :as utl]
             [multi-money.db :as db]
             [multi-money.models.commodities :as cdts]
             [multi-money.authorization.commodities]))
@@ -12,15 +13,10 @@
 (defn- extract-commodity
   [{:keys [body path-params]}]
   (-> body
-      (select-keys [:commodity/symbol
-                    :commodity/name
-                    :commodity/type
-                    :symbol
-                    :name
-                    :type])
-      (rename-keys {:symbol :commodity/symbol
-                    :name :commodity/name
-                    :type :commodity/type})
+      (utl/select-namespaced-keys
+        [:commodity/symbol
+         :commodity/name
+         :commodity/type])
       (assoc :commodity/entity {:id (:entity-id path-params)})
       (update-in-if [:commodity/type] keyword)))
 
