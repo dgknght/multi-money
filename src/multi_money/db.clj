@@ -4,6 +4,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [union]]
             [config.core :refer [env]]
+            [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.core :as mm]
             [multi-money.util :refer [valid-id?
                                       update-in-criteria]]))
@@ -144,6 +145,14 @@
   [m]
   (and (map? m)
        (= #{:id} (set (keys m)))))
+
+(defn ->simple-model-ref
+  [x coerce]
+  (if (map? x)
+    (-> x
+        (select-keys [:id])
+        (update-in-if [:id] coerce))
+    {:id (coerce x)}))
 
 (defmulti normalize-model-ref type)
 

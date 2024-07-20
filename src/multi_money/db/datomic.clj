@@ -8,9 +8,9 @@
             [multi-money.db.datomic.types :refer [coerce-id
                                                   ->storable]]
             [multi-money.datalog :as dtl]
-            [multi-money.util :refer [+id
-                                      apply-sort
-                                      split-nils]]
+            [multi-money.util :as utl :refer [+id
+                                              apply-sort
+                                              split-nils]]
             [multi-money.core :as mm]
             [multi-money.db :as db]
             [multi-money.db.datomic.tasks :as tsks]))
@@ -30,6 +30,12 @@
       (db/model-type crit-or-model-type))))
 
 (def ^:private not-deleted '(not [?x :model/deleted? true]))
+
+(def ->id (comp coerce-id utl/->id))
+
+(defn ->simple-model-ref
+  [x]
+  (db/->simple-model-ref x coerce-id))
 
 (defn- unbounded-query?
   [{:keys [in where]}]
