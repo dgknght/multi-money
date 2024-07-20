@@ -2,10 +2,12 @@
   (:require [cljs.pprint :refer [pprint]]
             [secretary.core :as sct]
             [reagent.core :as r]
+            [reagent.ratom :refer [make-reaction]]
             [goog.string :refer [format]]
             [dgknght.app-lib.dom :as dom]
             [dgknght.app-lib.html :as html]
             [dgknght.app-lib.forms :as forms]
+            [dgknght.app-lib.forms-validation :as v]
             [multi-money.notifications :refer [toast]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
@@ -15,7 +17,17 @@
                                        current-page
                                        current-entities
                                        current-entity]]
+            [multi-money.api.commodities :as cdts]
             [multi-money.api.entities :as ents]))
+
+(defn- load-commodities
+  [page-state]
+  (+busy)
+  (cdts/select :callback -busy
+               :on-success #(swap! page-state
+                                   assoc
+                                   :commodities
+                                   (sort-by :commodity/symbol %))))
 
 (defn- confirm?
   [msg-fmt & args]
@@ -103,14 +115,27 @@
 
 (defn- entity-form
   [page-state]
-  (let [selected (r/cursor page-state [:selected])
-        name-errors (r/cursor page-state [:validation-errors :entity/name])]
+  (let [entity (r/cursor page-state [:selected])
+        commodities (r/cursor page-state [:commodities])
+        local-validation-errors (r/cursor entity [::v/validation ::v/messages [:entity/name]])
+        server-validation-errors (r/cursor page-state [:validation-errors :entity/name])
+        name-errors (make-reaction #(concat (vals @local-validation-errors)
+                                            @server-validation-errors))]
     (fn []
       [:form {:no-validate true
               :on-submit (fn [e]
                            (.preventDefault e)
-                           (save-entity page-state))}
-       [forms/text-field selected [:entity/name] {:errors name-errors}]
+                           (v/validate entity)
+                           (when (v/valid? entity)
+                             (save-entity page-state)))}
+       [forms/text-field entity [:entity/name] {:errors name-errors
+                                                :validations #{::v/required}}]
+       [forms/select-field
+        entity
+        [:entity/default-commodity]
+        (cons ["" ""]
+              (map (juxt :id :commodity/symbol)
+                   @commodities))]
        [:div
         [:button.btn.btn-primary {:type :submit}
          (icon-with-text :floppy2 "Save" :size :small)]
@@ -123,6 +148,7 @@
 (defn- index []
   (let [page-state (r/atom {})
         selected (r/cursor page-state [:selected])]
+    (load-commodities page-state)
     (fn []
       [:div.container
        [:h1.mt-3 "Entities"]

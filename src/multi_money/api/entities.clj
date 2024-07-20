@@ -10,7 +10,8 @@
 
 (defn- extract-entity
   [{:keys [body]}]
-  (utl/select-namespaced-keys body [:entity/name]))
+  (utl/select-namespaced-keys body [:entity/name
+                                    :entity/default-commodity]))
 
 (defn- create
   [{:as req :keys [authenticated]}]
