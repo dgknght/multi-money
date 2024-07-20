@@ -28,8 +28,9 @@
                :on-success (fn [entities]
                              (swap! app-state
                                     #(cond-> (assoc % :current-entities entities)
-                                       (= (:id entity)
-                                          (:id (:current-entity %)))
+                                       (or (= 1 (count entities))
+                                           (= (:id entity)
+                                              (:id (:current-entity %))))
                                        (assoc :current-entity entity))))))
 
 (defn- delete-entity
@@ -78,7 +79,7 @@
            doall)]
      [:tfoot
       [:tr
-       [:td {:col-span 2}
+       [:td.border-bottom-0.pt-3 {:col-span 2}
         [:button.btn.btn-primary
          {:on-click (fn [_]
                       (swap! page-state assoc :selected {})

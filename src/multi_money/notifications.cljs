@@ -1,5 +1,7 @@
 (ns multi-money.notifications
   (:require [cljs.core.async :as a]
+            [cljs.pprint :refer [pprint]]
+            [clojure.set :refer [difference]]
             [reagent.core :as r]
             [dgknght.app-lib.dom :refer [debounce]]
             [multi-money.state :refer [app-state]]))
@@ -19,8 +21,8 @@
       (update-in [:severity] (fnil identity :alert-danger))))
 
 (defn- alert-elem
-  [{:keys [severity message id]}]
-  ^{:key (str "alert-" id)}
+  [{:keys [severity message] :as alert}]
+  ^{:key (str "alert-" (hash alert))}
   [:div.alert.alert-dismissible
    {:role :alert
     :class severity}
@@ -32,15 +34,14 @@
      :on-click #(swap! app-state
                        update-in
                        [:alerts]
-                       (filter (fn [a]
-                                 (= id (:id a)))
-                               %))}]])
+                       difference
+                       #{alert})}]])
 
 (defn alerts []
   (let [alerts (r/cursor app-state [:alerts])]
     (fn []
       (when-let [alrts (seq @alerts)]
-        [:div.container
+        [:div.container.mt-3
          (->> alrts
               (map (comp alert-elem
                          expand-alert))
@@ -48,10 +49,9 @@
 
 (defn alert
   [msg & {:keys [severity]
-          :or [severity :alert-danger]}]
-  (swap! app-state update-in [:alerts] (fnil conj []) {:id (random-uuid)
-                                                       :message msg
-                                                       :severity severity}))
+          :or {severity :alert-danger}}]
+  (swap! app-state update-in [:alerts] (fnil conj #{}) {:message msg
+                                                        :severity severity}))
 
 (defn- toast-elem
   [{:keys [id message header]}]

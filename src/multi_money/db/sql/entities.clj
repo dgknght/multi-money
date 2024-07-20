@@ -21,7 +21,3 @@
 (defmethod sql/after-read :entity
   [entity]
   (rename-keys entity {:entity/owner-id :entity/owner}))
-
-(defmethod sql/prepare-criteria :entity
-  [criteria]
-  (owner->id criteria))

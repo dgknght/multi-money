@@ -2,21 +2,23 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [rename-keys]]
-            [clojure.walk :refer [postwalk]]
             [somnium.congomongo :as m]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [camel-snake-kebab.core :refer [->snake_case
                                             ->kebab-case]]
             [dgknght.app-lib.inflection :refer [plural]]
-            [multi-money.util :refer [qualify-keys
-                                      unqualify-keys]]
+            [multi-money.util :as utl :refer [qualify-keys
+                                              unqualify-keys]]
+            [multi-money.core :as mm]
             [multi-money.db :as db]
-            [multi-money.db.mongo.queries :refer [criteria->query]]
+            [multi-money.db.mongo.queries :refer [criteria->pipeline]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
 
-(derive clojure.lang.PersistentHashMap ::map)
-(derive clojure.lang.PersistentArrayMap ::map)
 (derive com.mongodb.WriteResult ::write-result)
+
+(def ^:private relationships
+  #{[:users :entities]
+    [:entities :commodities]})
 
 (defmulti before-save db/model-type)
 (defmethod before-save :default [m] m)
@@ -46,7 +48,7 @@
   [_ source]
   (:id source))
 
-(defmethod prepare-for-return ::map
+(defmethod prepare-for-return ::mm/map
   [after source]
   (-> after
       (rename-keys {:_id :id})
@@ -99,26 +101,48 @@
                (prepare-for-return %))
           models)))
 
-(defn- coerce-criteria-id
+(defmulti ^:private normalize-ids
+  "Given a criteria that contains :id keys, rename then to
+  a model-qualified :id, like :user/id"
+  (fn [criteria _] (type criteria)))
+
+(defmethod normalize-ids ::mm/map
+  [criteria qualified-key]
+  (rename-keys criteria {:id qualified-key} ))
+
+(defmethod normalize-ids ::mm/vector
+  [[oper & criterias] qualified-key]
+  (apply vector oper (map #(normalize-ids % qualified-key) criterias)))
+
+(defn- aggregate
+  [col-name pipeline]
+  (apply m/aggregate col-name (concat pipeline [:as :clojure])))
+
+(defn- qualified-id-key
   [criteria]
-  (postwalk (fn [x]
-              (if (and (instance? clojure.lang.MapEntry x)
-                       (= :id (first x)))
-                (update-in x [1] coerce-id)
-                x))
-            criteria))
+  (keyword (name (db/model-type criteria))
+           "id"))
 
 (defn- select*
-  [conn criteria options]
-  (m/with-mongo conn
-    (let [query (-> criteria
-                    coerce-criteria-id
-                    prepare-criteria
-                    (criteria->query options))
-          f (partial m/fetch (infer-collection-name criteria))]
-      (log/debugf "fetch %s with options %s -> %s" criteria options query)
-      (map #(prepare-for-return % criteria)
-           (apply f (mapcat identity query))))))
+  [conn criteria {:as options :keys [count]}]
+  (let [col-name (infer-collection-name criteria)
+        pipeline (-> criteria
+                     (normalize-ids (qualified-id-key criteria))
+                     prepare-criteria
+                     (criteria->pipeline (assoc options
+                                                :collection col-name
+                                                :coerce-id coerce-id
+                                                :relationships relationships)))]
+    (log/debugf "aggregate %s with options %s -> %s" criteria options pipeline)
+    (m/with-mongo conn
+      (if count
+        (-> (aggregate col-name pipeline)
+            :result
+            first
+            :document_count)
+        (let [result (aggregate col-name pipeline)]
+          (map #(prepare-for-return % criteria)
+               (:result result)))))))
 
 (defn- delete*
   [conn models]
@@ -129,7 +153,7 @@
 (defn- reset*
   [conn]
   (m/with-mongo conn
-    (doseq [c [:users :entities]]
+    (doseq [c [:users :entities :commodities]]
       (m/destroy! c {}))))
 
 (defn connect

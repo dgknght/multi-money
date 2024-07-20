@@ -4,7 +4,10 @@
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [union]]
             [config.core :refer [env]]
-            [multi-money.util :refer [valid-id?]]))
+            [dgknght.app-lib.core :refer [update-in-if]]
+            [multi-money.core :as mm]
+            [multi-money.util :refer [valid-id?
+                                      update-in-criteria]]))
 
 (def comparison-opers #{:< :<= :> :>=})
 (def set-opers #{:and :or})
@@ -16,7 +19,8 @@
 (s/def ::offset integer?)
 (s/def ::limit integer?)
 (s/def ::order-by vector?) ; TODO: flesh out this spec
-(s/def ::options (s/keys :opt-un [::offset ::limit ::order-by]))
+(s/def ::count boolean?)
+(s/def ::options (s/keys :opt-un [::offset ::limit ::order-by ::count]))
 
 ; To add a new storage implemenation, add a new namespace and a new
 ; implementation of the multi method reify-storage, which should
@@ -86,20 +90,36 @@
    m-or-t
     (model-type m-or-t)))
 
+(defn- namespaces
+  "Given a criteria (map or vector containing an operator an maps) return
+   all of the namespaces from the map keys in a set."
+  [x]
+ (cond
+   (map? x) (->> (keys x)
+                 (map namespace)
+                 (filter identity)
+                 (map keyword)
+                 set)
+   (sequential? x) (->> x
+                        (map namespaces)
+                        (reduce union))) )
+
+(defn- single-ns
+  "Give a criteria (map or vector), return the single namespace if
+  only one namespace is present. Otherwise, return nil."
+  [x]
+  (let [namespaces (namespaces x)]
+    (when (= 1 (count namespaces))
+      (first namespaces))))
+
 (defn model-type
   "The 1 arity retrieves the type for the given model. The 2 arity sets
-  the type for the given model. The 2nd argument is either a key identyfying
-  the model type, or another model from which the type is to be extracted"
+  the type for the given model in the meta data. The 2nd argument is either a
+  key identyfying the model type, or another model from which the type is to be
+  extracted"
   ([m]
-   (let [namespaces (->> (keys m)
-                         (remove vector?)
-                         (map namespace)
-                         (filter identity)
-                         (map keyword)
-                         (into #{}))]
-     (if (= 1 (count namespaces))
-       (first namespaces)
-       (-> m meta :model-type))))
+   (or (-> m meta :model-type)
+       (single-ns m)))
   ([m model-or-type]
    (vary-meta m assoc :model-type (extract-model-type model-or-type))))
 
@@ -108,14 +128,51 @@
   #(model-type % m-type))
 
 (defn set-meta
-  [m model-or-type]
+  [m]
   (vary-meta m assoc
-               :model-type (extract-model-type model-or-type)
                :original (with-meta m nil)))
 
 (defn changed?
   [m]
   (not= m (-> m meta :original)))
+
+(defn model-or-ref?
+  [x]
+  (and (map? x)
+       (contains? x :id)))
+
+(defn simple-model-ref?
+  [m]
+  (and (map? m)
+       (= #{:id} (set (keys m)))))
+
+(defn ->simple-model-ref
+  [x coerce]
+  (if (map? x)
+    (-> x
+        (select-keys [:id])
+        (update-in-if [:id] coerce))
+    {:id (coerce x)}))
+
+(defmulti normalize-model-ref type)
+
+(defmethod normalize-model-ref ::mm/map
+  [m]
+  (select-keys m [:id]))
+
+(defmethod normalize-model-ref :default
+  [id]
+  {:id id})
+
+(defn normalize-model-refs
+  "Given a criteria (map or vector) when a model is used as a value,
+  replace it with a map that only conatins the :id attribute."
+  [criteria]
+  (->> #{:user/identity
+         :entity/owner
+         :commodity/entity}
+       (reduce #(update-in-criteria %1 [%2] normalize-model-ref)
+               criteria)))
 
 (defmacro with-db
   [bindings & body]
