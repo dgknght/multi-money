@@ -243,6 +243,15 @@
                 x))
             data))
 
+; When we update to the lastest version of clojurescript, I believe we can remove this
+#?(:cljs (defn update-keys
+           [m f]
+           (postwalk (fn [x]
+                       (if (map-entry? x)
+                         (update-in x [0] f)
+                         x))
+                     m)))
+
 (defn select-namespaced-keys
   [m ks]
   (let [n (namespace (first ks))]
