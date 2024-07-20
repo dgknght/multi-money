@@ -13,6 +13,7 @@
                                        icon-with-text]]
             [multi-money.state :refer [+busy
                                        -busy
+                                       current-entity
                                        current-page]]
             [multi-money.api.commodities :as cdts]))
 
@@ -120,6 +121,10 @@
   (let [page-state (r/atom {})
         selected (r/cursor page-state [:selected])]
     (load-commodities page-state)
+    (add-watch current-entity
+               ::index
+               (fn [& _]
+                 (load-commodities page-state)))
     (fn []
       [:div.container
        [:h1.mt-3 "Commodities"]
