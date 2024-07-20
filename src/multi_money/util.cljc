@@ -1,7 +1,7 @@
 (ns multi-money.util
-  (:require [clojure.walk :refer [prewalk]]
+  (:require [clojure.walk :refer [prewalk
+                                  postwalk]]
             [clojure.string :as string]
-            [clojure.walk :refer [postwalk]]
             [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.core :refer [update-in-if]]
             #?(:clj [clojure.pprint :refer [pprint]]
@@ -171,6 +171,10 @@
                            first)]
            (id-or-model k)))))
 
+(defn id->ref
+  [id]
+  {:id id})
+
 (defn exclude-self
   "Update a query to exclude the specified model, if the model
   has an :id attribute"
@@ -238,3 +242,20 @@
                         ks)
                 x))
             data))
+
+; When we update to the lastest version of clojurescript, I believe we can remove this
+#?(:cljs (defn update-keys
+           [m f]
+           (postwalk (fn [x]
+                       (if (map-entry? x)
+                         (update-in x [0] f)
+                         x))
+                     m)))
+
+(defn select-namespaced-keys
+  [m ks]
+  (let [n (namespace (first ks))]
+    (merge (-> m
+               (select-keys (map (comp keyword name) ks))
+               (update-keys #(keyword n (name %))))
+           (select-keys m ks))))

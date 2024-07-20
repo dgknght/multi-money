@@ -1,5 +1,7 @@
 (ns multi-money.db.datomic.users
   (:require [clojure.pprint :refer [pprint]]
+            [dgknght.app-lib.core :refer [update-in-if]]
+            [multi-money.core :as mm]
             [multi-money.db.datomic :as d]))
 
 ; reshape the identities from
@@ -29,3 +31,24 @@
   (update-in user
              [:user/identities]
              #(into {} %)))
+
+(defmulti ^:private prep type)
+
+(defmethod prep ::mm/map
+  [criteria]
+  (update-in-if criteria
+                [:user/identities]
+                (fn [v]
+                  (if (and (vector? v)
+                           (= :including (first v)))
+                    (update-in v [1] (juxt :identity/oauth-provider
+                                           :identity/oauth-id))
+                    v))))
+
+(defmethod prep ::mm/vector
+  [[conj & cs]]
+  (vec (cons conj (map prep cs))))
+
+(defmethod d/prepare-criteria :user
+  [criteria]
+  (prep criteria))
