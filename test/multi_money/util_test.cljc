@@ -193,3 +193,20 @@
          (utl/mask-values {:password "password"
                            :safe-value "this should not be masked"}
                           :password))))
+
+(deftest select-keys-with-ambiguous-namespaces
+  (is (= {:user/name "John"}
+         (utl/select-namespaced-keys {:user/name "John"
+                                      :ignore "this"}
+                                     [:user/name]))
+      "Exact matches are included")
+  (is (= {:user/name "John"}
+         (utl/select-namespaced-keys {:name "John"
+                                      :ignore "this"}
+                                     [:user/name]))
+      "Naked keys that match the name are included and given the namespace")
+  (is (= {:user/name "John"}
+         (utl/select-namespaced-keys {:user/name "John"
+                                      :name "Jane"}
+                                     [:user/name]))
+      "Explicit namespaced keys are preferred"))

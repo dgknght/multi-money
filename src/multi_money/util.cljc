@@ -242,3 +242,11 @@
                         ks)
                 x))
             data))
+
+(defn select-namespaced-keys
+  [m ks]
+  (let [n (namespace (first ks))]
+    (merge (-> m
+               (select-keys (map (comp keyword name) ks))
+               (update-keys #(keyword n (name %))))
+           (select-keys m ks))))
