@@ -1,7 +1,6 @@
 (ns multi-money.api.commodities
   (:refer-clojure :exclude [update])
   (:require [clojure.pprint :refer [pprint]]
-            [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.authorization :as auth]
             [dgknght.app-lib.api :as api]
             [dgknght.app-lib.core :refer [update-in-if]]
