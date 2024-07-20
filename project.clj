@@ -46,7 +46,7 @@
                                 commons-io
                                 org.slf4j/slf4j-api
                                 org.checkerframework/checker-qual]]
-                  [stowaway "0.1.18-SNAPSHOT" :exclusions [potemkin
+                  [stowaway "0.1.18" :exclusions [potemkin
                                                   org.clojure/data.priority-map]]
                   [com.datomic/client-impl-shared "1.0.102"
                    :exclusions [com.cognitect/transit-java
