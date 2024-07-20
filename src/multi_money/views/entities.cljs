@@ -28,8 +28,9 @@
                :on-success (fn [entities]
                              (swap! app-state
                                     #(cond-> (assoc % :current-entities entities)
-                                       (= (:id entity)
-                                          (:id (:current-entity %)))
+                                       (or (= 1 (count entities))
+                                           (= (:id entity)
+                                              (:id (:current-entity %))))
                                        (assoc :current-entity entity))))))
 
 (defn- delete-entity
