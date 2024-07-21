@@ -259,3 +259,11 @@
                (select-keys (map (comp keyword name) ks))
                (update-keys #(keyword n (name %))))
            (select-keys m ks))))
+
+(defn deep-rename-keys
+  [m key-map]
+  (postwalk (fn [x]
+              (if (map? x)
+                (rename-keys x key-map)
+                x))
+            m))

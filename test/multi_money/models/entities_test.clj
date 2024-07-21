@@ -33,7 +33,7 @@
     (let [user (find-user "john@doe.com")
           result (ents/put (attributes user))]
       (is (comparable? #:entity{:name "Personal"
-                                :owner (:id user)}
+                                :owner {:id (:id user)}}
                        result)
           "The result contains the correct attributes")
       (is (:id result)
@@ -88,11 +88,11 @@
                                    :entity/name "My Money"
                                    :entity/default-commodity commodity))]
       (is (comparable? #:entity{:name "My Money"
-                                :default-commodity (:id commodity)}
+                                :default-commodity (select-keys commodity [:id])}
                        updated)
           "The result contains the updated attributes")
       (is (comparable? #:entity{:name "My Money"
-                                :default-commodity (:id commodity)}
+                                :default-commodity (select-keys commodity [:id])}
                        (ents/find entity))
           "A retrieved model has the updated attributes"))))
 

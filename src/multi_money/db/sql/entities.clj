@@ -25,5 +25,8 @@
 
 (defmethod sql/after-read :entity
   [entity]
-  (rename-keys entity {:entity/owner-id :entity/owner
-                       :entity/default-commodity-id :entity/default-commodity}))
+  (-> entity
+      (rename-keys {:entity/owner-id :entity/owner
+                    :entity/default-commodity-id :entity/default-commodity})
+      (update-in [:entity/owner] #(hash-map :id %))
+      (update-in-if [:entity/default-commodity] #(hash-map :id %))))

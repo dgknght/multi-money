@@ -10,7 +10,8 @@
             [multi-money.datalog :as dtl]
             [multi-money.util :as utl :refer [+id
                                               apply-sort
-                                              split-nils]]
+                                              split-nils
+                                              deep-rename-keys]]
             [multi-money.core :as mm]
             [multi-money.db :as db]
             [multi-money.db.datomic.tasks :as tsks]))
@@ -135,19 +136,6 @@
               #(= 1 (count %))
               #(= :db/id (first (keys %)))))
 
-(defn- extract-ref-ids
-  "When datomic returns a reference to another entity, it looks like
-  {:db/id <id-value>}. We want to extract the <id-value> part."
-  [m]
-  (->> m
-       (map #(update-in %
-                        [1]
-                        (fn [v]
-                          (if (naked-id? v)
-                            (:db/id v)
-                            v))))
-       (into {})))
-
 (defn- coerce-criteria-id
   [criteria]
   (postwalk (fn [x]
@@ -181,8 +169,7 @@
            (map first)
            (remove naked-id?)
            (map (comp after-read
-                      #(rename-keys % {:db/id :id})
-                      extract-ref-ids))
+                      #(deep-rename-keys % {:db/id :id})))
            (apply-sort options)))))
 
 (defn- delete*

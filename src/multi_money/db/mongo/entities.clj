@@ -14,8 +14,8 @@
   (-> entity
       (rename-keys {:entity/owner-id :entity/owner
                     :entity/default-commodity-id :entity/default-commodity})
-      #_(update-in [:entity/owner] #(hash-map :id %))
-      #_(update-in-if [:entity/default-commodity] #(hash-map :id %))))
+      (update-in [:entity/owner] #(hash-map :id %))
+      (update-in-if [:entity/default-commodity] #(hash-map :id %))))
 
 (defmethod m/before-save :entity
   [entity]
