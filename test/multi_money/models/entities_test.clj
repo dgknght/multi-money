@@ -8,7 +8,7 @@
             [multi-money.test-context :refer [with-context
                                               find-user
                                               find-entity
-                                              #_find-commodity]]
+                                              find-commodity]]
             [multi-money.models.entities :as ents]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]
@@ -51,10 +51,10 @@
   (assoc context
          :entities [#:entity{:name "Personal"
                              :owner "john@doe.com"}]
-         #_:commodities #_[{:name "United States Dollar"
-                            :symbol "USD"
-                            :type :currency
-                            :entity-id "Personal"}]))
+         :commodities [#:commodity{:name "United States Dollar"
+                                   :symbol "USD"
+                                   :type :currency
+                                   :entity "Personal"}]))
 
 (dbtest entity-name-is-unique-for-an-owner
   (with-context update-context
@@ -83,12 +83,17 @@
 (dbtest update-an-entity
   (with-context update-context
     (let [entity (find-entity "Personal")
-          updated (ents/put (assoc entity :entity/name "My Money"))]
-      (is (= "My Money"
-             (:entity/name updated))
+          commodity (find-commodity "USD" entity)
+          updated (ents/put (assoc entity
+                                   :entity/name "My Money"
+                                   :entity/default-commodity commodity))]
+      (is (comparable? #:entity{:name "My Money"
+                                :default-commodity (:id commodity)}
+                       updated)
           "The result contains the updated attributes")
-      (is (= "My Money"
-             (:entity/name (ents/find entity)))
+      (is (comparable? #:entity{:name "My Money"
+                                :default-commodity (:id commodity)}
+                       (ents/find entity))
           "A retrieved model has the updated attributes"))))
 
 (def ^:private unique-update-context

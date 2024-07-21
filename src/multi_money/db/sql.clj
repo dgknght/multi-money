@@ -18,6 +18,9 @@
   [{:keys [id]}]
   (coerce-id id))
 
+(def ->id
+  (comp coerce-id utl/->id))
+
 (defmulti before-save db/model-type)
 (defmethod before-save :default [m] m)
 

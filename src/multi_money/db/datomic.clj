@@ -18,6 +18,8 @@
 (derive :datomic/peer :datomic/service)
 (derive :datomic/client :datomic/service)
 
+(def ->id (comp coerce-id utl/->id))
+
 (defprotocol DatomicAPI
   (transact [this tx-data options])
   (query [this arg-map])

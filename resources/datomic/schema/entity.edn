@@ -5,4 +5,8 @@
  {:db/ident :entity/owner
   :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/one
-  :db/doc "The user that has full control over the entity"}]
+  :db/doc "The user that has full control over the entity"}
+ {:db/ident :entity/default-commodity
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "The commodity recoreded by accounts in the entity by default"}]

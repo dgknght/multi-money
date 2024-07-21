@@ -161,7 +161,7 @@
 
 (dbtest update-a-commodity
   (with-context
-    (let [commodity (find-commodity "USD")
+    (let [commodity (find-commodity "USD" "Personal")
           updated (cdts/put (assoc commodity :commodity/name "US Bucks"))]
       (is (= (:id commodity) (:id updated))
           "The same commodity is returned")
@@ -172,7 +172,7 @@
 
 (dbtest delete-a-commodity
   (with-context
-    (let [commodity (find-commodity "USD")]
+    (let [commodity (find-commodity "USD" "Personal")]
           (cdts/delete commodity)
       (is (nil? (cdts/find commodity))
           "The commodity cannot be retrieved after delete"))))

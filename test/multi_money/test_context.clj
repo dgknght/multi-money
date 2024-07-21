@@ -31,17 +31,36 @@
                              :type :currency
                              :entity "Jane's Money"}]})
 
-(defn- find-model
-  [coll k v]
-  (->> coll
-       (filter #(= v (get-in % [k])))
-       first))
+(defn- key-value-pred
+  [kvs]
+  #(every? (fn [[k v]]
+             (= v (get-in % [k])))
+          (partition 2 kvs)))
 
+(defn- detect-model
+  ([coll pred]
+   (->> coll
+        (filter pred)
+        first))
+  ([coll k v & kvs]
+   {:pre [(= 0
+             (mod (count kvs)
+                  2))]}
+   (detect-model coll (key-value-pred (concat [k v] kvs)))))
+
+(defn- find-model
+  [coll k v & kvs]
+  (or (apply detect-model coll k v kvs)
+       (throw (ex-info "Unable to find model" (->> kvs
+                                                   (concat [k v])
+                                                   (partition 2)
+                                                   (map vec)
+                                                   (into {}))))))
 (defn find-user
   ([identifier] (find-user identifier *context*))
   ([identifier {:keys [users]}]
-   (or (find-model users :user/username identifier)
-       (find-model users :user/email identifier))))
+   (or (detect-model users :user/username identifier)
+       (detect-model users :user/email identifier))))
 
 (defn find-entity
   ([name] (find-entity name *context*))
@@ -49,9 +68,15 @@
    (find-model entities :entity/name name)))
 
 (defn find-commodity
-  ([symbol] (find-commodity symbol *context*))
-  ([symbol {:keys [commodities]}]
-   (find-model commodities :commodity/symbol symbol)))
+  ([symbol entity-ref] (find-commodity symbol entity-ref *context*))
+  ([symbol entity-ref {:keys [commodities] :as ctx}]
+   (let [entity (select-keys (if (string? entity-ref)
+                               (find-entity entity-ref ctx)
+                               entity-ref)
+                             [:id])]
+     (find-model commodities
+                 :commodity/symbol symbol
+                 :commodity/entity entity))))
 
 (defn- put-with
   [m f]

@@ -6,6 +6,7 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [camel-snake-kebab.core :refer [->snake_case
                                             ->kebab-case]]
+            [dgknght.app-lib.core :refer [update-in-if]]
             [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :as utl :refer [qualify-keys
                                               unqualify-keys]]
@@ -19,6 +20,16 @@
 (def ^:private relationships
   #{[:users :entities]
     [:entities :commodities]})
+
+(def ->id (comp coerce-id utl/->id))
+
+(defn mongoify-model-refs
+  [model attr-map]
+  (rename-keys (reduce (fn [m k]
+                         (update-in-if m [k] ->id))
+                       model
+                       (keys attr-map))
+               attr-map))
 
 (defmulti before-save db/model-type)
 (defmethod before-save :default [m] m)
@@ -177,4 +188,3 @@
       (reset [_]            (reset* conn))
       db/StorageMeta
       (strategy-id [_] :mongo))))
-

@@ -89,7 +89,7 @@
 (deftest an-authenticated-user-can-update-a-commodity-in-his-entity
   (with-context
     (testing "update an existing commodity"
-      (let [commodity (find-commodity "USD")
+      (let [commodity (find-commodity "USD" "Personal")
             res (request :patch (path :api :commodities (:id commodity))
                          :user (find-user "john@doe.com")
                          :json-body {:commodity/name "US Clams"})]
@@ -108,7 +108,7 @@
 
 (deftest an-authenticate-user-cannot-update-anothers-commodity
   (with-context list-context
-    (is (http-not-found? (request :patch (path :api :commodities (:id (find-commodity "USD")))
+    (is (http-not-found? (request :patch (path :api :commodities (:id (find-commodity "USD" "Personal")))
                                   :user (find-user "jane@doe.com")
                                   :json-body {:commodity/name "The new name"})))
     (is (comparable? {:commodity/name "United States Dollar"}
@@ -117,7 +117,7 @@
 
 (deftest an-unauthenticated-user-cannot-update-an-commodity
   (with-context
-    (is (http-unauthorized? (request :patch (path :api :commodities (:id (find-commodity "USD")))
+    (is (http-unauthorized? (request :patch (path :api :commodities (:id (find-commodity "USD" "Personal")))
                                      :json-body {:name "The new name"})))
     (is (comparable? {:commodity/name "United States Dollar"}
                      (cdts/find-by {:commodity/symbol "USD"}))
@@ -126,7 +126,7 @@
 (deftest delete-a-commodity
   (with-context list-context
     (testing "delete an existing commodity"
-      (let [commodity (find-commodity "JPY")
+      (let [commodity (find-commodity "JPY" "Personal")
             res (request :delete (path :api :commodities (:id commodity))
                          :user (find-user "john@doe.com"))]
         (is (http-no-content? res))
@@ -138,7 +138,7 @@
 
 (deftest an-authenticated-user-cannot-delete-anothers-commodity
   (with-context list-context
-    (let [commodity (find-commodity "USD")]
+    (let [commodity (find-commodity "USD" "Personal")]
       (is (http-not-found? (request :delete (path :api :commodities (:id commodity))
                                     :user (find-user "jane@doe.com"))))
       (is (comparable? {:commodity/name "United States Dollar"}
@@ -147,7 +147,7 @@
 
 (deftest an-unauthenticated-user-cannot-delete-a-commodity
   (with-context
-    (let [commodity (find-commodity "USD")]
+    (let [commodity (find-commodity "USD" "Personal")]
       (is (http-unauthorized? (request :delete (path :api :commodities (:id commodity)))))
       (is (comparable? {:commodity/name "United States Dollar"}
                        cdts/find commodity)

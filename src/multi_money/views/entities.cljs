@@ -8,7 +8,8 @@
             [dgknght.app-lib.html :as html]
             [dgknght.app-lib.forms :as forms]
             [dgknght.app-lib.forms-validation :as v]
-            [multi-money.notifications :refer [toast]]
+            [multi-money.notifications :refer [toast
+                                               alert]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [+busy
@@ -104,6 +105,7 @@
   (ents/put (get-in @page-state [:selected])
             :callback -busy
             :on-failure (fn [e]
+                          (alert "Unable to save the entity.")
                           ; TODO: How to know if this is really a validation error?
                           (pprint {:on-failure e})
                           (swap! page-state assoc :validation-errors (-> e :data :errors)))

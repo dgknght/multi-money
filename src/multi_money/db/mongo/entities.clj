@@ -1,23 +1,30 @@
 (ns multi-money.db.mongo.entities
   (:require [clojure.set :refer [rename-keys]]
+            [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.core :refer [update-in-if]]
-            [multi-money.util :refer [->id]]
             [multi-money.db.mongo :as m]))
 
-(defn- owner->id
-  [x]
-  (-> x
-      (update-in-if [:entity/owner] ->id)
-      (rename-keys {:entity/owner :entity/owner-id})))
+(defn- mongoify-model-refs
+  [m]
+  (m/mongoify-model-refs m {:entity/owner :entity/owner-id
+                            :entity/default-commodity :entity/default-commodity-id}))
+
+(defn- generalize-model-refs
+  [entity]
+  (-> entity
+      (rename-keys {:entity/owner-id :entity/owner
+                    :entity/default-commodity-id :entity/default-commodity})
+      #_(update-in [:entity/owner] #(hash-map :id %))
+      #_(update-in-if [:entity/default-commodity] #(hash-map :id %))))
 
 (defmethod m/before-save :entity
   [entity]
-  (owner->id entity))
+  (mongoify-model-refs entity))
 
 (defmethod m/after-read :entity
   [entity]
-  (rename-keys entity {:entity/owner-id :entity/owner}))
+  (generalize-model-refs entity))
 
 (defmethod m/prepare-criteria :entity
   [criteria]
-  (owner->id criteria))
+  (mongoify-model-refs criteria))
