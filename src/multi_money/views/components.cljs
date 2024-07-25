@@ -3,6 +3,7 @@
             [camel-snake-kebab.core :refer [->kebab-case-string]]
             [goog.string :refer [format]]
             [dgknght.app-lib.inflection :refer [humanize]]
+            [multi-money.config :refer [env]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [nav-items
@@ -108,25 +109,8 @@
                         :on-click #(reset! db-strategy id)})
                      db-strategies)}))
 
-(defn- entity-nav-item
-  [{:keys [id] :entity/keys [name] :as entity}]
-  {:id (format "entity-menu-option-%s" id)
-   :caption name
-   :on-click #(reset! current-entity entity)})
-
-(defn- entities-nav-item []
-  {:id :entities-menu
-   :caption (or (:entity/name @current-entity) "Entities")
-   :children (->> [(when (seq @current-entities) [:divider 1])
-                   {:path "/entities"
-                    :caption "Manage Entities"}]
-                  (remove nil?)
-                  (concat (map entity-nav-item @current-entities))
-                  (into []))})
-
 (defn- authenticated-nav-items []
-  [(entities-nav-item)
-   {:path "/commodities"
+  [{:path "/commodities"
     :caption "Commodities"}
    {:caption "Sign Out"
     :on-click sign-out}])
@@ -139,6 +123,9 @@
        (filter identity)))
 
 (defn title-bar []
+
+  (pprint {::env env})
+
   (doseq [x [db-strategy current-user current-entities current-entity]]
     (add-watch x
                ::title-bar
@@ -151,7 +138,9 @@
      {:aria-label "Primary Navigation Menu"}
      [:div.container-fluid
       [:a.navbar-brand {:href "/"}
-       (icon :cash-stack :size :large)]
+       (icon :cash-stack :size :large)
+       [:span.ms-2 (or (:app-name env)
+                       "Multi-Money")]]
       [:button.navbar-toggler {:type :button
                                :data-bs-toggle :collapse
                                :data-bs-target "#primary-nav"

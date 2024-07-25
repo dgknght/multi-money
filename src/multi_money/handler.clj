@@ -24,6 +24,7 @@
                                                   wrap-fetch-oauth-profile
                                                   wrap-issue-auth-token
                                                   wrap-user-lookup]]
+            [multi-money.config :as config]
             [multi-money.mount-point :refer [js-path]]
             [multi-money.api.users :as usrs]
             [multi-money.api.entities :as ents]
@@ -48,6 +49,7 @@
      (include-js "js/bootstrap.min.js")]
     [:body
      [:div#app]
+     (config/script)
      (log/debugf "Using javascript resource at %s" js-path)
      (include-js js-path)]))
 
