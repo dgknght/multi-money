@@ -1,7 +1,7 @@
 (ns multi-money.util
-  (:require [clojure.walk :refer [prewalk]]
+  (:require [clojure.walk :refer [prewalk
+                                  postwalk]]
             [clojure.string :as string]
-            [clojure.walk :refer [postwalk]]
             [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.core :refer [update-in-if]]
             #?(:clj [clojure.pprint :refer [pprint]]
@@ -15,6 +15,29 @@
             IComparable
             (-compare [d1 d2]
                (Date/compare d1 d2))))
+
+(derive #?(:clj java.lang.String
+           :cljs js/String)
+        ::string)
+(derive #?(:clj java.lang.String
+           :cljs js/String)
+        ::string)
+(derive #?(:clj clojure.lang.PersistentVector
+           :cljs cljs.core/PersistentVector)
+        ::vector)
+(derive #?(:clj clojure.lang.PersistentArrayMap
+           :cljs cljs.core/PersistentArrayMap)
+        ::map)
+(derive #?(:clj clojure.lang.PersistentHashMap
+           :cljs cljs.core/PersistentHashMap)
+        ::map)
+(derive #?(:clj clojure.lang.MapEntry
+           :cljs cljs.core/MapEntry)
+        ::map-entry)
+
+(defn type-dispatch
+  [x & _]
+  (type x))
 
 (defn ->storable-date
   [d]
@@ -30,22 +53,13 @@
 ;   #?(:clj (partial instance? LocalDate)
 ;      :cljs #(throw (js/Error "Not implemented"))))
 
-(defn- key-value-tuple?
-  [x]
-  (and (vector? x)
-       (= 2 (count x))
-       (keyword? (first x))))
-
-(defmulti qualify-key
-  (fn [x & _]
-    (when (key-value-tuple? x)
-      :tuple)))
+(defmulti qualify-key type-dispatch)
 
 (defmethod qualify-key :default
   [x & _]
   x)
 
-(defmethod qualify-key :tuple
+(defmethod qualify-key ::map-entry
   [[k :as x] nspace {:keys [ignore?]}]
   (if (ignore? k)
     x
@@ -69,7 +83,7 @@
   "Replaces qualified keys with the simple values"
   [m]
   (prewalk (fn [x]
-             (if (key-value-tuple? x)
+             (if (map-entry? x)
                (update-in x [0] (comp keyword name))
                x))
            m))
@@ -171,6 +185,12 @@
                            first)]
            (id-or-model k)))))
 
+(defn ->model-ref
+  [id]
+  (if (map? id)
+    (select-keys id [:id])
+    {:id id}))
+
 (defn exclude-self
   "Update a query to exclude the specified model, if the model
   has an :id attribute"
@@ -238,3 +258,28 @@
                         ks)
                 x))
             data))
+
+; When we update to the lastest version of clojurescript, I believe we can remove this
+#?(:cljs (defn update-keys
+           [m f]
+           (postwalk (fn [x]
+                       (if (map-entry? x)
+                         (update-in x [0] f)
+                         x))
+                     m)))
+
+(defn select-namespaced-keys
+  [m ks]
+  (let [n (namespace (first ks))]
+    (merge (-> m
+               (select-keys (map (comp keyword name) ks))
+               (update-keys #(keyword n (name %))))
+           (select-keys m ks))))
+
+(defn deep-rename-keys
+  [m key-map]
+  (postwalk (fn [x]
+              (if (map? x)
+                (rename-keys x key-map)
+                x))
+            m))

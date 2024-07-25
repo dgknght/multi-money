@@ -8,7 +8,7 @@
             [multi-money.test-context :refer [with-context
                                               find-user
                                               find-entity
-                                              #_find-commodity]]
+                                              find-commodity]]
             [multi-money.models.entities :as ents]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]
@@ -33,7 +33,7 @@
     (let [user (find-user "john@doe.com")
           result (ents/put (attributes user))]
       (is (comparable? #:entity{:name "Personal"
-                                :owner (:id user)}
+                                :owner {:id (:id user)}}
                        result)
           "The result contains the correct attributes")
       (is (:id result)
@@ -51,10 +51,10 @@
   (assoc context
          :entities [#:entity{:name "Personal"
                              :owner "john@doe.com"}]
-         #_:commodities #_[{:name "United States Dollar"
-                            :symbol "USD"
-                            :type :currency
-                            :entity-id "Personal"}]))
+         :commodities [#:commodity{:name "United States Dollar"
+                                   :symbol "USD"
+                                   :type :currency
+                                   :entity "Personal"}]))
 
 (dbtest entity-name-is-unique-for-an-owner
   (with-context update-context
@@ -83,12 +83,17 @@
 (dbtest update-an-entity
   (with-context update-context
     (let [entity (find-entity "Personal")
-          updated (ents/put (assoc entity :entity/name "My Money"))]
-      (is (= "My Money"
-             (:entity/name updated))
+          commodity (find-commodity "USD" entity)
+          updated (ents/put (assoc entity
+                                   :entity/name "My Money"
+                                   :entity/default-commodity commodity))]
+      (is (comparable? #:entity{:name "My Money"
+                                :default-commodity (select-keys commodity [:id])}
+                       updated)
           "The result contains the updated attributes")
-      (is (= "My Money"
-             (:entity/name (ents/find entity)))
+      (is (comparable? #:entity{:name "My Money"
+                                :default-commodity (select-keys commodity [:id])}
+                       (ents/find entity))
           "A retrieved model has the updated attributes"))))
 
 (def ^:private unique-update-context
@@ -116,5 +121,9 @@
   (with-context update-context
     (let [entity (find-entity "Personal")]
       (ents/delete entity)
-      (is (nil? (ents/find (:id entity)))
+      (is (nil? (ents/find entity))
           "The entity cannot be retrieved after delete"))))
+
+(dbtest get-a-count-of-entities
+  (with-context unique-update-context
+    (is (= 2 (ents/count {:entity/owner (find-user "john@doe.com")})))))

@@ -3,9 +3,11 @@
             [camel-snake-kebab.core :refer [->kebab-case-string]]
             [goog.string :refer [format]]
             [dgknght.app-lib.inflection :refer [humanize]]
+            [multi-money.config :refer [env]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [nav-items
+                                       sign-out
                                        current-user
                                        current-entity
                                        current-entities
@@ -66,7 +68,7 @@
         doall)])
 
 (defn- nav-item
-  [{:keys [path on-click caption children id active?] :as item}]
+  [{:keys [path on-click caption children id active?]}]
   ^{:key (str "nav-item-" id)}
   [:li.nav-item {:class (when (seq children) "dropdown")}
    [:a.nav-link.d-flex.align-items-center
@@ -107,29 +109,23 @@
                         :on-click #(reset! db-strategy id)})
                      db-strategies)}))
 
-(defn- entity-nav-item
-  [{:keys [id] :entity/keys [name] :as entity}]
-  {:id (format "entity-menu-option-%s" id)
-   :caption name
-   :on-click #(reset! current-entity entity)})
-
-(defn- entities-nav-item []
-  {:id :entities-menu
-   :caption (or (:entity/name @current-entity) "Entities")
-   :children (->> [(when (seq @current-entities) [:divider 1])
-                   {:path "/entities"
-                    :caption "Manage Entities"}]
-                  (remove nil?)
-                  (concat (map entity-nav-item @current-entities))
-                  (into []))})
+(defn- authenticated-nav-items []
+  [{:path "/commodities"
+    :caption "Commodities"}
+   {:caption "Sign Out"
+    :on-click sign-out}])
 
 (defn- build-nav-items []
-  (filter identity
-          [(db-strategy-nav-item)
-           (when @current-user
-             (entities-nav-item))]))
+  (->> (if @current-user
+         (authenticated-nav-items)
+         [])
+       (concat [(db-strategy-nav-item)])
+       (filter identity)))
 
 (defn title-bar []
+
+  (pprint {::env env})
+
   (doseq [x [db-strategy current-user current-entities current-entity]]
     (add-watch x
                ::title-bar
@@ -142,7 +138,9 @@
      {:aria-label "Primary Navigation Menu"}
      [:div.container-fluid
       [:a.navbar-brand {:href "/"}
-       (icon :cash-stack :size :large)]
+       (icon :cash-stack :size :large)
+       [:span.ms-2 (or (:app-name env)
+                       "Multi-Money")]]
       [:button.navbar-toggler {:type :button
                                :data-bs-toggle :collapse
                                :data-bs-target "#primary-nav"
@@ -159,3 +157,7 @@
      {:style {:position :absolute
               :bottom 0}}
      [:div.container.border-top.mt-3.py-3 @db-strategy]]))
+
+(defn spinner []
+  [:div.spinner-border {:role :status}
+   [:span.visually-hidden "Loading..."]])
