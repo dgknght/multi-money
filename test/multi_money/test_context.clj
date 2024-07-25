@@ -90,7 +90,7 @@
         (throw (RuntimeException. (format "Unable to create the %s" model-type))))))
 
 (defmulti ^:private prepare-for-put
-  (fn [m _ctx] (db/model-type m)))
+  db/type-dispatch)
 
 (defmethod prepare-for-put :default [m _] m)
 

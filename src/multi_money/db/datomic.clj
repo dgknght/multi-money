@@ -12,7 +12,6 @@
                                               apply-sort
                                               split-nils
                                               deep-rename-keys]]
-            [multi-money.core :as mm]
             [multi-money.db :as db]
             [multi-money.db.datomic.tasks :as tsks]))
 
@@ -88,7 +87,7 @@
 
 (defmulti ^:private prep-for-put type)
 
-(defmethod prep-for-put ::mm/map
+(defmethod prep-for-put ::utl/map
   [m]
   (let [[m* nils] (split-nils m)]
     (cons (-> m*
@@ -110,7 +109,7 @@
 ; [::db/delete {:id 1 :user/given-name "John"}]
 ; in which case we want to turn it into
 ; [:db/retractEntity 1]
-(defmethod prep-for-put ::mm/vector
+(defmethod prep-for-put ::utl/vector
   [[_action :as args]]
   ; For now, let's assume a deconstruct fn has prepared a legal datomic transaction
   [args])

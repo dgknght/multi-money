@@ -5,9 +5,8 @@
             [clojure.set :refer [union]]
             [config.core :refer [env]]
             [dgknght.app-lib.core :refer [update-in-if]]
-            [multi-money.core :as mm]
-            [multi-money.util :refer [valid-id?
-                                      update-in-criteria]]))
+            [multi-money.util :as utl :refer [valid-id?
+                                              update-in-criteria]]))
 
 (def comparison-opers #{:< :<= :> :>=})
 (def set-opers #{:and :or})
@@ -84,6 +83,10 @@
 
 (declare model-type)
 
+(defn type-dispatch
+  [x & _]
+  (model-type x))
+
 (defn- extract-model-type
   [m-or-t]
   (if (keyword? m-or-t)
@@ -156,7 +159,7 @@
 
 (defmulti normalize-model-ref type)
 
-(defmethod normalize-model-ref ::mm/map
+(defmethod normalize-model-ref ::utl/map
   [m]
   (select-keys m [:id]))
 

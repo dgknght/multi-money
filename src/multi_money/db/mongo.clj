@@ -9,8 +9,8 @@
             [dgknght.app-lib.core :refer [update-in-if]]
             [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :as utl :refer [qualify-keys
-                                              unqualify-keys]]
-            [multi-money.core :as mm]
+                                              unqualify-keys
+                                              type-dispatch]]
             [multi-money.db :as db]
             [multi-money.db.mongo.queries :refer [criteria->pipeline]]
             [multi-money.db.mongo.types :refer [coerce-id]]))
@@ -50,7 +50,7 @@
       unqualify-keys
       ->mongo-keys))
 
-(defmulti ^:private prepare-for-return (fn [x _] (type x)))
+(defmulti ^:private prepare-for-return type-dispatch)
 #_(defmethod prepare-for-return :default [x _] x)
 
 ; A WriteResult means the operation was an update
@@ -59,7 +59,7 @@
   [_ source]
   (:id source))
 
-(defmethod prepare-for-return ::mm/map
+(defmethod prepare-for-return ::utl/map
   [after source]
   (-> after
       (rename-keys {:_id :id})
@@ -115,13 +115,13 @@
 (defmulti ^:private normalize-ids
   "Given a criteria that contains :id keys, rename then to
   a model-qualified :id, like :user/id"
-  (fn [criteria _] (type criteria)))
+  type-dispatch)
 
-(defmethod normalize-ids ::mm/map
+(defmethod normalize-ids ::utl/map
   [criteria qualified-key]
   (rename-keys criteria {:id qualified-key} ))
 
-(defmethod normalize-ids ::mm/vector
+(defmethod normalize-ids ::utl/vector
   [[oper & criterias] qualified-key]
   (apply vector oper (map #(normalize-ids % qualified-key) criterias)))
 

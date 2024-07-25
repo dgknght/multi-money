@@ -16,6 +16,29 @@
             (-compare [d1 d2]
                (Date/compare d1 d2))))
 
+(derive #?(:clj java.lang.String
+           :cljs js/String)
+        ::string)
+(derive #?(:clj java.lang.String
+           :cljs js/String)
+        ::string)
+(derive #?(:clj clojure.lang.PersistentVector
+           :cljs cljs.core/PersistentVector)
+        ::vector)
+(derive #?(:clj clojure.lang.PersistentArrayMap
+           :cljs cljs.core/PersistentArrayMap)
+        ::map)
+(derive #?(:clj clojure.lang.PersistentHashMap
+           :cljs cljs.core/PersistentHashMap)
+        ::map)
+(derive #?(:clj clojure.lang.MapEntry
+           :cljs cljs.core/MapEntry)
+        ::map-entry)
+
+(defn type-dispatch
+  [x & _]
+  (type x))
+
 (defn ->storable-date
   [d]
   #?(:clj (.toEpochDay d)
@@ -30,22 +53,13 @@
 ;   #?(:clj (partial instance? LocalDate)
 ;      :cljs #(throw (js/Error "Not implemented"))))
 
-(defn- key-value-tuple?
-  [x]
-  (and (vector? x)
-       (= 2 (count x))
-       (keyword? (first x))))
-
-(defmulti qualify-key
-  (fn [x & _]
-    (when (key-value-tuple? x)
-      :tuple)))
+(defmulti qualify-key type-dispatch)
 
 (defmethod qualify-key :default
   [x & _]
   x)
 
-(defmethod qualify-key :tuple
+(defmethod qualify-key ::map-entry
   [[k :as x] nspace {:keys [ignore?]}]
   (if (ignore? k)
     x
@@ -69,7 +83,7 @@
   "Replaces qualified keys with the simple values"
   [m]
   (prewalk (fn [x]
-             (if (key-value-tuple? x)
+             (if (map-entry? x)
                (update-in x [0] (comp keyword name))
                x))
            m))

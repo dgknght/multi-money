@@ -4,12 +4,10 @@
             [clojure.set :refer [difference]]
             [reagent.core :as r]
             [dgknght.app-lib.dom :refer [debounce]]
+            [multi-money.util :refer [type-dispatch]]
             [multi-money.state :refer [app-state]]))
 
-(defmulti ^:private expand-alert
-  (fn [a]
-    (when (string? a)
-      :string)))
+(defmulti ^:private expand-alert type-dispatch)
 
 (defmethod expand-alert :string
   [a]
