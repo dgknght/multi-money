@@ -171,9 +171,11 @@
                            first)]
            (id-or-model k)))))
 
-(defn id->ref
+(defn ->model-ref
   [id]
-  {:id id})
+  (if (map? id)
+    (select-keys id [:id])
+    {:id id}))
 
 (defn exclude-self
   "Update a query to exclude the specified model, if the model

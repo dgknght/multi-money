@@ -4,7 +4,7 @@
             [dgknght.app-lib.test-assertions]
             [dgknght.app-lib.validation :as v]
             [multi-money.util :refer [->id
-                                      id->ref]]
+                                      ->model-ref]]
             [multi-money.test-context :refer [with-context
                                               basic-context
                                               find-commodity
@@ -31,7 +31,7 @@
         (with-context
           (let [attr (attributes)
                 result (cdts/put attr)
-                expected (update-in attr [:commodity/entity] (comp id->ref ->id))]
+                expected (update-in attr [:commodity/entity] (comp ->model-ref ->id))]
             (is (:id result) "The result contains an :id")
             (is (comparable? expected result)
                 "The result contains the specified attributes")

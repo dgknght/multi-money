@@ -4,7 +4,7 @@
             [clojure.spec.alpha :as s]
             [dgknght.app-lib.validation :as v]
             [multi-money.util :refer [->id
-                                      id->ref
+                                      ->model-ref
                                       exclude-self]]
             [multi-money.db :as db]))
 
@@ -43,7 +43,7 @@
   {:pre [(or (nil? options)
              (s/valid? ::db/options options))]}
   (map (comp db/set-meta
-             #(update-in % [:commodity/entity] id->ref))
+             #(update-in % [:commodity/entity] ->model-ref))
        (select* criteria options)))
 
 (defn count

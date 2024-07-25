@@ -177,9 +177,12 @@
   (is (= 101 (utl/->id {:user/id 101}))
       "The value at a namespaced key with name \"id\" is returned"))
 
-(deftest convert-an-id-to-a-model-ref
-  (is (= {:id 101}
-         (utl/id->ref 101))))
+(deftest product-a-model-ref
+  (are [input expected] (= expected (utl/->model-ref input))
+       101                  {:id 101}
+       {:id 101}            {:id 101}
+       {:id 101
+        :first-name "John"} {:id 101}))
 
 (deftest ensure-a-model-has-an-id
   (is (= {:id 1} (utl/+id {} (constantly 1)))
