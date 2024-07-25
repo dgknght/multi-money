@@ -1,6 +1,6 @@
 (ns multi-money.db.sql.users
   (:require [clojure.pprint :refer [pprint]]
-            [multi-money.db :as db]
+            [multi-money.util :refer [update-in-criteria]]
             [multi-money.db.sql :as sql])
   (:import java.util.UUID))
 
@@ -22,19 +22,10 @@
         (cons (map (partial inflate-identity id)
                    identities)))))
 
-(defmethod sql/prepare-criteria :user
-  [{:as criteria :user/keys [identities]}]
-  ; Identities should look like this:
-  ; [:= [:google "abc123"]]
-  (if (seq identities)
-    (let [[_ [oauth-provider oauth-id]] identities]
-      (-> criteria
-          (dissoc :user/identities)
-          (assoc [:identity :identity/oauth-provider] oauth-provider
-                 [:identity :identity/oauth-id] oauth-id)
-          (db/model-type :user)))
-    criteria))
-
 (defmethod sql/resolve-temp-ids :identity
   [ident id-map]
   (update-in ident [:identity/user-id] id-map))
+
+(defmethod sql/prepare-criteria :user
+ [criteria]
+ (update-in-criteria criteria [:identity/oauth-provider] name))
