@@ -121,10 +121,10 @@
   key identyfying the model type, or another model from which the type is to be
   extracted"
   ([m]
-   (or (-> m meta :model-type)
+   (or (-> m meta ::type)
        (single-ns m)))
   ([m model-or-type]
-   (vary-meta m assoc :model-type (extract-model-type model-or-type))))
+   (vary-meta m assoc ::type (extract-model-type model-or-type))))
 
 (defn +model-type
   [m-type]
@@ -137,7 +137,7 @@
 
 (defn changed?
   [m]
-  (not= m (-> m meta :original)))
+  (not= m (-> m meta ::original)))
 
 (defn model-or-ref?
   [x]
