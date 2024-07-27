@@ -4,8 +4,7 @@
             [clojure.pprint :refer [pprint]]
             [config.core :refer [env]]
             [dgknght.app-lib.authorization :as auth]
-            [multi-money.db :refer [with-db] :as db])
-  (:import clojure.lang.ExceptionInfo))
+            [multi-money.db :refer [with-db] :as db]))
 
 (defn- parse-db-strategy
   [s]

@@ -177,6 +177,13 @@
   (is (= 101 (utl/->id {:user/id 101}))
       "The value at a namespaced key with name \"id\" is returned"))
 
+(deftest product-a-model-ref
+  (are [input expected] (= expected (utl/->model-ref input))
+       101                  {:id 101}
+       {:id 101}            {:id 101}
+       {:id 101
+        :first-name "John"} {:id 101}))
+
 (deftest ensure-a-model-has-an-id
   (is (= {:id 1} (utl/+id {} (constantly 1)))
       "An :id attribute is added if none is present")
@@ -189,3 +196,20 @@
          (utl/mask-values {:password "password"
                            :safe-value "this should not be masked"}
                           :password))))
+
+(deftest select-keys-with-ambiguous-namespaces
+  (is (= {:user/name "John"}
+         (utl/select-namespaced-keys {:user/name "John"
+                                      :ignore "this"}
+                                     [:user/name]))
+      "Exact matches are included")
+  (is (= {:user/name "John"}
+         (utl/select-namespaced-keys {:name "John"
+                                      :ignore "this"}
+                                     [:user/name]))
+      "Naked keys that match the name are included and given the namespace")
+  (is (= {:user/name "John"}
+         (utl/select-namespaced-keys {:user/name "John"
+                                      :name "Jane"}
+                                     [:user/name]))
+      "Explicit namespaced keys are preferred"))
