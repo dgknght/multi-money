@@ -2,10 +2,13 @@
   (:require [cljs.pprint :refer [pprint]]
             [camel-snake-kebab.core :refer [->kebab-case-string]]
             [goog.string :refer [format]]
+            [reagent.ratom :refer [make-reaction]]
             [dgknght.app-lib.inflection :refer [humanize]]
+            [multi-money.config :refer [env]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [nav-items
+                                       sign-out
                                        current-user
                                        current-entity
                                        current-entities
@@ -66,7 +69,7 @@
         doall)])
 
 (defn- nav-item
-  [{:keys [path on-click caption children id active?] :as item}]
+  [{:keys [path on-click caption children id active?]}]
   ^{:key (str "nav-item-" id)}
   [:li.nav-item {:class (when (seq children) "dropdown")}
    [:a.nav-link.d-flex.align-items-center
@@ -107,27 +110,17 @@
                         :on-click #(reset! db-strategy id)})
                      db-strategies)}))
 
-(defn- entity-nav-item
-  [{:keys [id] :entity/keys [name] :as entity}]
-  {:id (format "entity-menu-option-%s" id)
-   :caption name
-   :on-click #(reset! current-entity entity)})
-
-(defn- entities-nav-item []
-  {:id :entities-menu
-   :caption (or (:entity/name @current-entity) "Entities")
-   :children (->> [(when (seq @current-entities) [:divider 1])
-                   {:path "/entities"
-                    :caption "Manage Entities"}]
-                  (remove nil?)
-                  (concat (map entity-nav-item @current-entities))
-                  (into []))})
+(defn- authenticated-nav-items []
+  [{:path "/commodities"
+    :caption "Commodities"}
+   {:caption "Sign Out"
+    :on-click sign-out}])
 
 (defn- build-nav-items []
-  (filter identity
-          [(db-strategy-nav-item)
-           (when @current-user
-             (entities-nav-item))]))
+  (->> (when @current-user
+         (authenticated-nav-items))
+       (concat [(db-strategy-nav-item)])
+       (filter identity)))
 
 (defn title-bar []
   (doseq [x [db-strategy current-user current-entities current-entity]]
@@ -135,23 +128,76 @@
                ::title-bar
                (fn [& _]
                  (reset! nav-items (build-nav-items)))))
+
   (when-not @nav-items
     (reset! nav-items (build-nav-items)))
+
+  (let [brand-caption (make-reaction #(or (:entity/name @current-entity)
+                                       (:app-name env)
+                                       "Multi-Money"))
+        brand-attr (make-reaction #(if @current-entity
+                                     {:href "#entity-offcanvas"
+                                      :role :button
+                                      :aria-controls "entity-offcanvas"
+                                      :data-bs-toggle :offcanvas}
+                                     {:href "/"}))]
+    (fn []
+      [:nav.navbar.navbar-expand-lg.bg-body-tertiary.rounded.mt-1
+       {:aria-label "Primary Navigation Menu"}
+       [:div.container-fluid
+        [:a.navbar-brand @brand-attr
+         (icon :cash-stack :size :large)
+         [:span.ms-2 @brand-caption]]
+        [:button.navbar-toggler {:type :button
+                                 :data-bs-toggle :collapse
+                                 :data-bs-target "#primary-nav"
+                                 :aria-controls "primary-nav"
+                                 :aria-expanded false
+                                 :aria-label "Toggle Navigation"}
+         [:span.navbar-toggler-icon]]
+        [:div#primary-nav.collapse.navbar-collapse
+         [navbar @nav-items]]]])))
+
+(defn- hide-entity-offcanvas []
+  (.click (.getElementById js/document "entity-offcanvas-close")))
+
+(defn- entity-list-item
+  [entity]
+  ^{:key (str "entity-list-item-" (:id entity))}
+  [:button.list-group-item.list-group-item-action
+   {:class (when (= entity @current-entity) "active")
+    :on-click (fn [e]
+                (.preventDefault e)
+                (reset! current-entity entity)
+                (hide-entity-offcanvas))}
+   (:entity/name entity)])
+
+(defn- entity-list []
   (fn []
-    [:nav.navbar.navbar-expand-lg.bg-body-tertiary.rounded.mt-1
-     {:aria-label "Primary Navigation Menu"}
-     [:div.container-fluid
-      [:a.navbar-brand {:href "/"}
-       (icon :cash-stack :size :large)]
-      [:button.navbar-toggler {:type :button
-                               :data-bs-toggle :collapse
-                               :data-bs-target "#primary-nav"
-                               :aria-controls "primary-nav"
-                               :aria-expanded false
-                               :aria-label "Toggle Navigation"}
-       [:span.navbar-toggler-icon]]
-      [:div#primary-nav.collapse.navbar-collapse
-       [navbar @nav-items]]]]))
+    [:div.row
+     [:div.col-md-6.offset-md-3
+      [:div.list-group
+       (->> @current-entities
+            (map entity-list-item)
+            doall)]]
+     [:div.col-md-1.mt-3.mt-lg-0
+      [:a.btn.btn-primary
+       {:href "/entities"
+        :on-click #(hide-entity-offcanvas)}
+       "Manage"]]]))
+
+(defn entity-offcanvas []
+  [:div#entity-offcanvas.offcanvas.offcanvas-top
+   {:tab-index -1
+    :aria-labelledby "entity-offcanvas-title"}
+   [:div.offcanvas-header
+    [:h5#entity-offcanvas-title.offcanvas-title "Entities"]
+    [:button#entity-offcanvas-close.btn-close
+     {:type :button
+      :data-bs-dismiss :offcanvas
+      :aria-label "Close"}]]
+   [:div.offcanvas-body
+    [entity-list]]])
 
 (defn footer []
   (fn []
@@ -159,3 +205,7 @@
      {:style {:position :absolute
               :bottom 0}}
      [:div.container.border-top.mt-3.py-3 @db-strategy]]))
+
+(defn spinner []
+  [:div.spinner-border {:role :status}
+   [:span.visually-hidden "Loading..."]])

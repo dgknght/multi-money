@@ -1,6 +1,7 @@
 (ns multi-money.api.entities
   (:refer-clojure :exclude [update])
-  (:require [dgknght.app-lib.api :refer [path]]
+  (:require [cljs.pprint :refer [pprint]]
+            [dgknght.app-lib.api :refer [path]]
             [multi-money.api :as api]))
 
 (defn select

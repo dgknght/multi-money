@@ -14,7 +14,6 @@
             [multi-money.models.users :as usrs]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]
-            #_[multi-money.db.xtdb.ref]
             [multi-money.db.datomic.ref]))
 
 (use-fixtures :each reset-db)
@@ -154,6 +153,3 @@
                     (usrs/tokenize user))]
         (is (nil? (usrs/detokenize token))
             "Nil is returned")))))
-
-; TODO: add an identity
-; TODO: remove an identity
