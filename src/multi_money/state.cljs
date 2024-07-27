@@ -6,9 +6,7 @@
 (defonce app-state (r/atom {:process-count 0
                             ; TODO: get strategy from the configuration
                             :db-strategy (cookies/get :db-strategy "sql")
-                            :auth-token (let [auth-token (cookies/get :auth-token)]
-                                          (pprint {:auth-token-from-cookie auth-token})
-                                          auth-token)}))
+                            :auth-token (cookies/get :auth-token)}))
 
 (def current-page (r/cursor app-state [:current-page]))
 (def current-user (r/cursor app-state [:current-user]))
