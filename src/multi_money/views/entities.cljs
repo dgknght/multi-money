@@ -63,8 +63,7 @@
                      {:class (if selected?
                                "btn-success"
                                "btn-outline-success")
-                      :on-click (fn [_]
-                                  (reset! current-entity entity))}
+                      :on-click #(reset! current-entity entity)}
                      (icon (if selected?
                              :check-circle
                              :circle)

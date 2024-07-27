@@ -12,7 +12,8 @@
                                                  +busy
                                                  -busy]]
             [multi-money.views.components :refer [title-bar
-                                                  footer]]
+                                                  footer
+                                                  entity-offcanvas]]
             [multi-money.notifications :refer [toasts
                                                alerts]]
             [multi-money.views.pages]
@@ -31,6 +32,7 @@
     [:<>
      [:div.container
       [title-bar]
+      [entity-offcanvas]
       [alerts]
       [toasts]
       [@current-page]]
@@ -50,7 +52,7 @@
              :callback -busy)))
 
 (defn- fetch-entities []
-  (if @state/auth-token
+  (if @current-user
     (do (+busy)
         (ents/select :on-success (fn [res]
                                    (swap! state/app-state assoc
@@ -64,8 +66,10 @@
 (defn- watch-current-user []
   (add-watch current-user
              ::current-user
-             (fn [& _]
-               (fetch-entities))))
+             (fn [_ _ before after]
+               (if (= before after)
+                 (.warn js/console "false user change notification")
+                 (fetch-entities)))))
 
 (defn- init! []
   (act/configure-navigation!
