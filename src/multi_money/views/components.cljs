@@ -93,23 +93,6 @@
                    expand-nav-item))
         doall)])
 
-(def ^:private db-strategies
-  {"sql" "SQL"
-   "mongo" "MongoDB"
-   "datomic-peer" "Datomic Peer"
-   "datomic-client" "Datomic Client"})
-
-(defn- db-strategy-nav-item []
-  (let [current @db-strategy]
-    {:id :db-strategy-menu
-     :caption (icon-with-text :database (db-strategies current))
-     :children (mapv (fn [[id caption]]
-                       {:id (format "%s-db-strategy" id)
-                        :active? (= id current)
-                        :caption caption
-                        :on-click #(reset! db-strategy id)})
-                     db-strategies)}))
-
 (defn- authenticated-nav-items []
   [{:path "/commodities"
     :caption "Commodities"}
@@ -117,10 +100,9 @@
     :on-click sign-out}])
 
 (defn- build-nav-items []
-  (->> (when @current-user
-         (authenticated-nav-items))
-       (concat [(db-strategy-nav-item)])
-       (filter identity)))
+  (if @current-user
+    (authenticated-nav-items)
+    []))
 
 (defn title-bar []
   (doseq [x [db-strategy current-user current-entities current-entity]]
@@ -158,8 +140,12 @@
         [:div#primary-nav.collapse.navbar-collapse
          [navbar @nav-items]]]])))
 
+(defn- click-button
+  [elem-id]
+  (.click (.getElementById js/document elem-id)))
+
 (defn- hide-entity-offcanvas []
-  (.click (.getElementById js/document "entity-offcanvas-close")))
+  (click-button "entity-offcanvas-close"))
 
 (defn- entity-list-item
   [entity]
@@ -199,12 +185,68 @@
    [:div.offcanvas-body
     [entity-list]]])
 
+(defn- hide-db-strategy-offcanvas []
+  (click-button "db-strategy-offcanvas-close"))
+
+(def ^:private db-strategies
+  {"sql" "SQL"
+   "mongo" "MongoDB"
+   "datomic-peer" "Datomic Peer"
+   "datomic-client" "Datomic Client"})
+
+(defn- db-strategy-list-item
+  [[strategy-id caption] & {:keys [current enabled?]}]
+  ^{:key (str "db-strategy-list-item-" strategy-id)}
+  [:button.list-group-item.list-group-item-action
+   {:class (when (= strategy-id current) "active")
+    :disabled (not enabled?)
+    :on-click (fn [e]
+                (.preventDefault e)
+                (reset! db-strategy strategy-id)
+                (hide-db-strategy-offcanvas))}
+   caption])
+
+(defn- db-strategy-list []
+  (fn []
+    [:div.list-group
+     (->> db-strategies
+          (map #(db-strategy-list-item %
+                                       :current @db-strategy
+                                       :enabled? (not @current-user)))
+          doall)]))
+
+(defn db-strategy-offcanvas []
+  [:div#db-strategy-offcanvas.offcanvas.offcanvas-bottom
+   {:tab-index -1
+    :aria-labelledby "db-strategy-offcanvas-title"}
+   [:div.offcanvas-header
+    [:h5#db-strategy-offcanvas-title.offcanvas-title "DB Strategy"]
+    [:button#db-strategy-offcanvas-close.btn-close
+     {:type :button
+      :data-bs-dismiss :offcanvas
+      :aria-label "Close"}]]
+   [:div.offcanvas-body
+    [:div.row
+     [:div.col-md-6.offset-md-3
+      [db-strategy-list]]
+     [:div.col-md-3
+      {:class (when-not @current-user "d-none")}
+      [:div.alert.alert-info
+       {:role :alert}
+       "Sign out in order to change the DB strategy"]]]]])
+
 (defn footer []
   (fn []
     [:footer.w-100
      {:style {:position :absolute
               :bottom 0}}
-     [:div.container.border-top.mt-3.py-3 @db-strategy]]))
+     [:div.container.border-top.mt-3.py-3
+      [:a.text-decoration-none.link-body-emphasis
+       {:data-bs-toggle :offcanvas
+        :href "#db-strategy-offcanvas"
+        :role :button
+        :aria-controls "db-strategy-offcanvas"}
+       (icon-with-text :database (db-strategies @db-strategy))]]]))
 
 (defn spinner []
   [:div.spinner-border {:role :status}

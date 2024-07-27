@@ -13,7 +13,8 @@
                                                  -busy]]
             [multi-money.views.components :refer [title-bar
                                                   footer
-                                                  entity-offcanvas]]
+                                                  entity-offcanvas
+                                                  db-strategy-offcanvas]]
             [multi-money.notifications :refer [toasts
                                                alerts]]
             [multi-money.views.pages]
@@ -33,6 +34,7 @@
      [:div.container
       [title-bar]
       [entity-offcanvas]
+      [db-strategy-offcanvas]
       [alerts]
       [toasts]
       [@current-page]]
