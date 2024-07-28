@@ -133,7 +133,7 @@
                                                 :validations #{::v/required}}]
        [forms/select-field
         entity
-        [:entity/default-commodity]
+        [:entity/default-commodity :id]
         (cons ["" ""]
               (map (juxt :id :commodity/symbol)
                    @commodities))]
