@@ -2,10 +2,13 @@
   (:require [cljs.pprint :refer [pprint]]
             [camel-snake-kebab.core :refer [->kebab-case-string]]
             [goog.string :refer [format]]
+            [reagent.ratom :refer [make-reaction]]
             [dgknght.app-lib.inflection :refer [humanize]]
+            [multi-money.config :refer [env]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
             [multi-money.state :refer [nav-items
+                                       sign-out
                                        current-user
                                        current-entity
                                        current-entities
@@ -66,7 +69,7 @@
         doall)])
 
 (defn- nav-item
-  [{:keys [path on-click caption children id active?] :as item}]
+  [{:keys [path on-click caption children id active?]}]
   ^{:key (str "nav-item-" id)}
   [:li.nav-item {:class (when (seq children) "dropdown")}
    [:a.nav-link.d-flex.align-items-center
@@ -90,44 +93,16 @@
                    expand-nav-item))
         doall)])
 
-(def ^:private db-strategies
-  {"sql" "SQL"
-   "mongo" "MongoDB"
-   "datomic-peer" "Datomic Peer"
-   "datomic-client" "Datomic Client"})
-
-(defn- db-strategy-nav-item []
-  (let [current @db-strategy]
-    {:id :db-strategy-menu
-     :caption (icon-with-text :database (db-strategies current))
-     :children (mapv (fn [[id caption]]
-                       {:id (format "%s-db-strategy" id)
-                        :active? (= id current)
-                        :caption caption
-                        :on-click #(reset! db-strategy id)})
-                     db-strategies)}))
-
-(defn- entity-nav-item
-  [{:keys [id] :entity/keys [name] :as entity}]
-  {:id (format "entity-menu-option-%s" id)
-   :caption name
-   :on-click #(reset! current-entity entity)})
-
-(defn- entities-nav-item []
-  {:id :entities-menu
-   :caption (or (:entity/name @current-entity) "Entities")
-   :children (->> [(when (seq @current-entities) [:divider 1])
-                   {:path "/entities"
-                    :caption "Manage Entities"}]
-                  (remove nil?)
-                  (concat (map entity-nav-item @current-entities))
-                  (into []))})
+(defn- authenticated-nav-items []
+  [{:path "/commodities"
+    :caption "Commodities"}
+   {:caption "Sign Out"
+    :on-click sign-out}])
 
 (defn- build-nav-items []
-  (filter identity
-          [(db-strategy-nav-item)
-           (when @current-user
-             (entities-nav-item))]))
+  (if @current-user
+    (authenticated-nav-items)
+    []))
 
 (defn title-bar []
   (doseq [x [db-strategy current-user current-entities current-entity]]
@@ -135,27 +110,144 @@
                ::title-bar
                (fn [& _]
                  (reset! nav-items (build-nav-items)))))
+
   (when-not @nav-items
     (reset! nav-items (build-nav-items)))
+
+  (let [brand-caption (make-reaction #(or (:entity/name @current-entity)
+                                       (:app-name env)
+                                       "Multi-Money"))
+        brand-attr (make-reaction #(if @current-entity
+                                     {:href "#entity-offcanvas"
+                                      :role :button
+                                      :aria-controls "entity-offcanvas"
+                                      :data-bs-toggle :offcanvas}
+                                     {:href "/"}))]
+    (fn []
+      [:nav.navbar.navbar-expand-lg.bg-body-tertiary.rounded.mt-1
+       {:aria-label "Primary Navigation Menu"}
+       [:div.container-fluid
+        [:a.navbar-brand @brand-attr
+         (icon :cash-stack :size :large)
+         [:span.ms-2 @brand-caption]]
+        [:button.navbar-toggler {:type :button
+                                 :data-bs-toggle :collapse
+                                 :data-bs-target "#primary-nav"
+                                 :aria-controls "primary-nav"
+                                 :aria-expanded false
+                                 :aria-label "Toggle Navigation"}
+         [:span.navbar-toggler-icon]]
+        [:div#primary-nav.collapse.navbar-collapse
+         [navbar @nav-items]]]])))
+
+(defn- click-button
+  [elem-id]
+  (.click (.getElementById js/document elem-id)))
+
+(defn- hide-entity-offcanvas []
+  (click-button "entity-offcanvas-close"))
+
+(defn- entity-list-item
+  [entity]
+  ^{:key (str "entity-list-item-" (:id entity))}
+  [:button.list-group-item.list-group-item-action
+   {:class (when (= entity @current-entity) "active")
+    :on-click (fn [e]
+                (.preventDefault e)
+                (reset! current-entity entity)
+                (hide-entity-offcanvas))}
+   (:entity/name entity)])
+
+(defn- entity-list []
   (fn []
-    [:nav.navbar.navbar-expand-lg.bg-body-tertiary.rounded.mt-1
-     {:aria-label "Primary Navigation Menu"}
-     [:div.container-fluid
-      [:a.navbar-brand {:href "/"}
-       (icon :cash-stack :size :large)]
-      [:button.navbar-toggler {:type :button
-                               :data-bs-toggle :collapse
-                               :data-bs-target "#primary-nav"
-                               :aria-controls "primary-nav"
-                               :aria-expanded false
-                               :aria-label "Toggle Navigation"}
-       [:span.navbar-toggler-icon]]
-      [:div#primary-nav.collapse.navbar-collapse
-       [navbar @nav-items]]]]))
+    [:div.row
+     [:div.col-md-6.offset-md-3
+      [:div.list-group
+       (->> @current-entities
+            (map entity-list-item)
+            doall)]]
+     [:div.col-md-1.mt-3.mt-lg-0
+      [:a.btn.btn-primary
+       {:href "/entities"
+        :on-click #(hide-entity-offcanvas)}
+       "Manage"]]]))
+
+(defn entity-offcanvas []
+  [:div#entity-offcanvas.offcanvas.offcanvas-top
+   {:tab-index -1
+    :aria-labelledby "entity-offcanvas-title"}
+   [:div.offcanvas-header
+    [:h5#entity-offcanvas-title.offcanvas-title "Entities"]
+    [:button#entity-offcanvas-close.btn-close
+     {:type :button
+      :data-bs-dismiss :offcanvas
+      :aria-label "Close"}]]
+   [:div.offcanvas-body
+    [entity-list]]])
+
+(defn- hide-db-strategy-offcanvas []
+  (click-button "db-strategy-offcanvas-close"))
+
+(def ^:private db-strategies
+  {"sql" "SQL"
+   "mongo" "MongoDB"
+   "datomic-peer" "Datomic Peer"
+   "datomic-client" "Datomic Client"})
+
+(defn- db-strategy-list-item
+  [[strategy-id caption] & {:keys [current enabled?]}]
+  ^{:key (str "db-strategy-list-item-" strategy-id)}
+  [:button.list-group-item.list-group-item-action
+   {:class (when (= strategy-id current) "active")
+    :disabled (not enabled?)
+    :on-click (fn [e]
+                (.preventDefault e)
+                (reset! db-strategy strategy-id)
+                (hide-db-strategy-offcanvas))}
+   caption])
+
+(defn- db-strategy-list []
+  (fn []
+    [:div.list-group
+     (->> db-strategies
+          (map #(db-strategy-list-item %
+                                       :current @db-strategy
+                                       :enabled? (not @current-user)))
+          doall)]))
+
+(defn db-strategy-offcanvas []
+  [:div#db-strategy-offcanvas.offcanvas.offcanvas-bottom
+   {:tab-index -1
+    :aria-labelledby "db-strategy-offcanvas-title"}
+   [:div.offcanvas-header
+    [:h5#db-strategy-offcanvas-title.offcanvas-title "DB Strategy"]
+    [:button#db-strategy-offcanvas-close.btn-close
+     {:type :button
+      :data-bs-dismiss :offcanvas
+      :aria-label "Close"}]]
+   [:div.offcanvas-body
+    [:div.row
+     [:div.col-md-6.offset-md-3
+      [db-strategy-list]]
+     [:div.col-md-3
+      {:class (when-not @current-user "d-none")}
+      [:div.alert.alert-info
+       {:role :alert}
+       "Sign out in order to change the DB strategy"]]]]])
 
 (defn footer []
   (fn []
     [:footer.w-100
      {:style {:position :absolute
               :bottom 0}}
-     [:div.container.border-top.mt-3.py-3 @db-strategy]]))
+     [:div.container.border-top.mt-3.py-3
+      [:a.text-decoration-none.link-body-emphasis
+       {:data-bs-toggle :offcanvas
+        :href "#db-strategy-offcanvas"
+        :role :button
+        :aria-controls "db-strategy-offcanvas"}
+       (icon-with-text :database (db-strategies @db-strategy))]]]))
+
+(defn spinner []
+  [:div.spinner-border {:role :status}
+   [:span.visually-hidden "Loading..."]])

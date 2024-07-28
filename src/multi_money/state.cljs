@@ -22,6 +22,17 @@
 (defn -busy []
   (swap! app-state update-in [:process-count] dec))
 
+(defn sign-out []
+  ; I don't think it's necessary to clean the state and do the navigation
+  ; but I'm struggling to get the browser to forget everything and just
+  ; log out for real.
+  (swap! app-state dissoc
+         :auth-token
+         :current-user
+         :current-entities
+         :current-entity)
+  (set! (.. js/document -location -href) "/sign-out"))
+
 (add-watch db-strategy
            ::state
            (fn [_cursor _id _before strategy]
