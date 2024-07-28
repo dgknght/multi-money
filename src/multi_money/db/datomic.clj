@@ -33,8 +33,6 @@
 
 (def ^:private not-deleted '(not [?x :model/deleted? true]))
 
-(def ->id (comp coerce-id utl/->id))
-
 (defn ->simple-model-ref
   [x]
   (db/->simple-model-ref x coerce-id))
