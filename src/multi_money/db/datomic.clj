@@ -1,39 +1,29 @@
 (ns multi-money.db.datomic
   (:require [clojure.set :refer [rename-keys]]
             [clojure.pprint :refer [pprint]]
+            [clojure.walk :refer [postwalk]]
             [datomic.api :as d-peer]
             [datomic.client.api :as d-client]
+            [stowaway.datalog :refer [apply-options]]
             [multi-money.db.datomic.types :refer [coerce-id
                                                   ->storable]]
             [multi-money.datalog :as dtl]
-            [multi-money.util :refer [+id
-                                      apply-sort
-                                      split-nils]]
+            [multi-money.util :as utl :refer [+id
+                                              apply-sort
+                                              split-nils
+                                              deep-rename-keys]]
             [multi-money.db :as db]
             [multi-money.db.datomic.tasks :as tsks]))
 
-(derive clojure.lang.PersistentVector ::vector)
-(derive clojure.lang.PersistentArrayMap ::map)
-(derive clojure.lang.PersistentHashMap ::map)
-
 (derive :datomic/peer :datomic/service)
 (derive :datomic/client :datomic/service)
+
+(def ->id (comp coerce-id utl/->id))
 
 (defprotocol DatomicAPI
   (transact [this tx-data options])
   (query [this arg-map])
   (reset [this]))
-
-(defn- conj* [& args]
-  (apply (fnil conj []) args))
-
-(defn apply-id
-  [query {:keys [id]}]
-  (if id
-    (-> query
-        (update-in [:args] conj* (coerce-id id))
-        (update-in [:query :in] conj* '?x))
-    query))
 
 (defmulti bounding-where-clause
   (fn [crit-or-model-type]
@@ -41,50 +31,61 @@
       crit-or-model-type
       (db/model-type crit-or-model-type))))
 
+(def ^:private not-deleted '(not [?x :model/deleted? true]))
+
+(defn ->simple-model-ref
+  [x]
+  (db/->simple-model-ref x coerce-id))
+
 (defn- unbounded-query?
-  [{{:keys [in where]} :query}]
-  (and (empty? where)
+  [{:keys [in where]}]
+  (and (empty? (remove #(= not-deleted %) where))
        (not-any? #(= '?x %) in)))
 
 (defn- ensure-bounded-query
   [query criteria]
   (if (unbounded-query? query)
-    (assoc-in query [:query :where] [(bounding-where-clause criteria)])
+    (assoc-in query [:where] [(bounding-where-clause criteria)])
     query))
 
-(defn- exclude-deleted
-  [query _opts]
-  (update-in query [:query :where] conj* '(not [?x :model/deleted? true])))
+(defn- rearrange-query
+  "Takes a simple datalog query and adjust the attributes
+  to match the format expected by datomic."
+  [query]
+  (-> query
+      (select-keys [:args])
+      (assoc :query (dissoc query :args))))
 
 (defn- criteria->query
-  [criteria opts]
+  [criteria {:as opts :keys [count]}]
   (let [m-type (or (db/model-type criteria)
                    (:model-type opts))]
-    (-> '{:query {:find [(pull ?x [*])]
-                  :in [$]}
-          :args []}
-        (apply-id criteria)
-        (dtl/apply-criteria (dissoc criteria :id)
-                            :model-type m-type
-                            :query-prefix [:query]
+    (-> {:find (if count
+                 '[(count ?x)]
+                 '[(pull ?x [*])])
+         :in '[$]
+         :where [not-deleted]
+         :args []}
+        (dtl/apply-criteria criteria
+                            :target m-type
                             :coerce ->storable)
         (ensure-bounded-query criteria)
-        (exclude-deleted opts)
-        (dtl/apply-options opts :model-type m-type))))
+        (apply-options (dissoc opts :order-by :sort))
+        rearrange-query)))
 
 (defmulti deconstruct db/model-type)
 (defmulti before-save db/model-type)
 (defmulti after-read db/model-type)
 (defmulti prepare-criteria db/model-type)
 
-(defmethod deconstruct :default [m] m)
+(defmethod deconstruct :default [m] [m])
 (defmethod before-save :default [m] m)
 (defmethod after-read :default [m] m)
 (defmethod prepare-criteria :default [c] c)
 
 (defmulti ^:private prep-for-put type)
 
-(defmethod prep-for-put ::map
+(defmethod prep-for-put ::utl/map
   [m]
   (let [[m* nils] (split-nils m)]
     (cons (-> m*
@@ -106,13 +107,15 @@
 ; [::db/delete {:id 1 :user/given-name "John"}]
 ; in which case we want to turn it into
 ; [:db/retractEntity 1]
-(defmethod prep-for-put ::vector
+(defmethod prep-for-put ::utl/vector
   [[_action :as args]]
   ; For now, let's assume a deconstruct fn has prepared a legal datomic transaction
   [args])
 
 (defn- put*
   [models {:keys [api]}]
+  {:pre [(sequential? models)]}
+
   (let [prepped (->> models
                      (map #(+id % (comp str random-uuid)))
                      (mapcat deconstruct)
@@ -130,33 +133,46 @@
               #(= 1 (count %))
               #(= :db/id (first (keys %)))))
 
-(defn- extract-ref-ids
-  "When datomic returns a reference to another entity, it looks like
-  {:db/id <id-value>}. We want to extract the <id-value> part."
-  [m]
-  (->> m
-       (map #(update-in %
-                        [1]
-                        (fn [v]
-                          (if (naked-id? v)
-                            (:db/id v)
-                            v))))
-       (into {})))
+(defn- coerce-criteria-id
+  [criteria]
+  (postwalk (fn [x]
+              (if (and (map-entry? x)
+                       (= :id (first x)))
+                (update-in x [1] coerce-id)
+                x))
+            criteria))
+
+; TODO: Remove this, it's part of stowaway now
+(defn- extract-model-ref-ids
+  [criteria]
+  (postwalk (fn [x]
+              (if (and (map-entry? x)
+                       (db/simple-model-ref? (second x)))
+                (update-in x [1] :id)
+                x))
+            criteria))
 
 (defn- select*
-  [criteria options {:keys [api]}]
-  (let [qry (criteria->query criteria options)
+  [criteria {:as options :keys [count]} {:keys [api]}]
+  (let [qry (-> criteria
+                coerce-criteria-id
+                extract-model-ref-ids
+                prepare-criteria
+                (criteria->query options))
         raw-result (query api qry)]
-    (->> raw-result
-         (map first)
-         (remove naked-id?)
-         (map (comp after-read
-                    #(rename-keys % {:db/id :id})
-                    extract-ref-ids))
-         (apply-sort options))))
+    (if count
+      (ffirst raw-result)
+      (->> raw-result
+           (map first)
+           (remove naked-id?)
+           (map (comp after-read
+                      #(deep-rename-keys % {:db/id :id})))
+           (apply-sort options)))))
 
 (defn- delete*
   [models {:keys [api]}]
+  {:pre [(and (sequential? models)
+              (not-any? nil? models))]}
   (transact api
             (mapv #(vector :db/add (:id %) :model/deleted? true)
                   models)
@@ -176,9 +192,9 @@
       ; TODO: take in the as-of date-time
       (apply d-peer/q
              query
-             (cons (-> uri d-peer/connect d-peer/db)
-                   args)))
+             (cons (-> uri d-peer/connect d-peer/db) args)))
     (reset [_]
+      (d-peer/delete-database uri)
       (tsks/apply-schema config {:suppress-output? true}))))
 
 (defmethod init-api :datomic/client

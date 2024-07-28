@@ -10,6 +10,8 @@
 
 (def current-page (r/cursor app-state [:current-page]))
 (def current-user (r/cursor app-state [:current-user]))
+(def current-entities (r/cursor app-state [:current-entities]))
+(def current-entity (r/cursor app-state [:current-entity]))
 (def db-strategy (r/cursor app-state [:db-strategy]))
 (def auth-token (r/cursor app-state [:auth-token]))
 (def nav-items (r/cursor app-state [:nav-items]))
@@ -19,6 +21,17 @@
 
 (defn -busy []
   (swap! app-state update-in [:process-count] dec))
+
+(defn sign-out []
+  ; I don't think it's necessary to clean the state and do the navigation
+  ; but I'm struggling to get the browser to forget everything and just
+  ; log out for real.
+  (swap! app-state dissoc
+         :auth-token
+         :current-user
+         :current-entities
+         :current-entity)
+  (set! (.. js/document -location -href) "/sign-out"))
 
 (add-watch db-strategy
            ::state

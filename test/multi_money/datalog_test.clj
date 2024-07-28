@@ -1,101 +1,29 @@
 (ns multi-money.datalog-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest is]]
+            [stowaway.datalog :as s]
+            [dgknght.app-lib.test-assertions]
             [multi-money.datalog :as dtl]))
 
-(def ^:private query '{:find [?x]})
-
-(deftest apply-a-simple-criterion
-  (is (= '{:find [?x]
-           :where [[?x :entity/name ?name-in]]
-           :in [?name-in]
-           :args ["Personal"]}
-         (dtl/apply-criteria query
-                             #:entity{:name "Personal"}))))
-
-(deftest specify-the-args-key
-  (is (= '{:find [?x]
-           :where [[?x :entity/name ?name-in]]
-           :in [?name-in]
-           :mny/args ["Personal"]}
-         (dtl/apply-criteria query
-                             #:entity{:name "Personal"}
-                             :args-key [:mny/args]))))
-
-(deftest specify-the-query-key-prefix
-  (is (= {:query '{:find [?x]
-                   :where [[?x :entity/name ?name-in]]
-                   :in [?name-in]}
-          :args ["Personal"]}
-         (dtl/apply-criteria {:query query}
-                             #:entity{:name "Personal"}
-                             :query-prefix [:query]))))
-
-(deftest apply-a-remapped-simple-criterion
-  (is (= '{:find [?x]
-           :where [[?x :xt/id ?id-in]]
-           :in [?id-in]
-           :args [123]}
-         (dtl/apply-criteria query
-                             {:id 123}
-                             :remap {:id :xt/id}))))
-
-(deftest apply-a-comparison-criterion
-  (is (= '{:find [?x]
-           :where [[?x :account/balance ?balance]
-                   [(>= ?balance ?balance-in)]]
-           :in [?balance-in]
-           :args [500M]}
-         (dtl/apply-criteria query
-                             #:account{:balance [:>= 500M]}))))
-
-(deftest apply-an-intersection-criterion
-  (is (= '{:find [?x]
-           :where [[?x :transaction/transaction-date ?transaction-date]
-                   [(>= ?transaction-date ?transaction-date-in-1)]
-                   [(< ?transaction-date ?transaction-date-in-2)]]
-           :in [?transaction-date-in-1 ?transaction-date-in-2]
-           :args ["2020-01-01" "2020-02-01"]}
-         (dtl/apply-criteria query
-                             #:transaction{:transaction-date [:and
-                                                              [:>= "2020-01-01"]
-                                                              [:< "2020-02-01"]]}))
-      "statements are added directly to the where chain"))
-
-(deftest apply-a-tuple-matching-criterion
-  ; here it's necessary to use the := operator explicitly so that
-  ; the query logic doesn't mistake :google for the operator
-  (is (= '{:find [?x]
-           :where [[?x :user/identities ?identities-in]]
-           :in [?identities-in]
-           :args [[:google "abc123"]]}
-         (dtl/apply-criteria query
-                             #:user{:identities [:= [:google "abc123"]]}))))
-
-(deftest apply-options
-  (testing "limit"
-    (is (= '{:find [?x]
-             :limit 1}
-           (dtl/apply-options query
-                              {:limit 1}))
-        "The limit attribute is copied"))
-  (testing "sorting"
-    (is (= '{:find [?x ?size]
-             :where [[?x :shirt/size ?size]]
-             :order-by [[?size :asc]]}
-           (dtl/apply-options query
-                              {:order-by :shirt/size}))
-        "A single column is symbolized and ascended is assumed")
-    (is (= '{:find [?x ?size]
-             :where [[?x :shirt/size ?size]]
-             :order-by [[?size :desc]]}
-           (dtl/apply-options query
-                              {:order-by [[:shirt/size :desc]]}))
-        "An explicit direction is copied")
-    (is (= '{:find [?x ?size ?weight]
-             :where [[?x :shirt/size ?size]
-                     [?x :shirt/weight ?weight]]
-             :order-by [[?size :asc]
-                        [?weight :desc]]}
-           (dtl/apply-options query
-                              {:order-by [:shirt/size [:shirt/weight :desc]]}))
-        "Multiple fields are handled appropriately")))
+(deftest apply-a-criteria
+  (let [calls (atom [])
+        orig s/apply-criteria
+        query {:find ['?x]}
+        criteria #:entity{:name "Personal"}]
+    (with-redefs [s/apply-criteria (fn [& args]
+                                     (swap! calls conj args)
+                                     (apply orig args))]
+      (is (= '{:find [?x]
+               :where [[?x :entity/name ?a]]
+               :in [?a]
+               :args ["Personal"]}
+             (dtl/apply-criteria query criteria)))
+      (let [[c :as cs] @calls]
+        (is (= 1 (count cs))
+            "The stowaway library is called once")
+        (is (comparable? [query
+                          criteria
+                          {:relationships #{[:user :entity]
+                                            [:entity :commodity]}
+                           :query-prefix [:query]}]
+                         c)
+            "The relationships and query prefix are specified in the call to the stowaway library.")))))

@@ -4,14 +4,26 @@
             [accountant.core :as act]
             [secretary.core :as sct]
             [reagent.dom :as rdom]
+            [dgknght.app-lib.forms :as forms]
+            [dgknght.app-lib.bootstrap-5 :as bs]
             [multi-money.state :as state :refer [current-page
                                                  current-user
+                                                 current-entities
                                                  +busy
                                                  -busy]]
             [multi-money.views.components :refer [title-bar
-                                                  footer]]
+                                                  footer
+                                                  entity-offcanvas
+                                                  db-strategy-offcanvas]]
+            [multi-money.notifications :refer [toasts
+                                               alerts]]
             [multi-money.views.pages]
-            [multi-money.api.users :as usrs]))
+            [multi-money.views.entities]
+            [multi-money.views.commodities]
+            [multi-money.api.users :as usrs]
+            [multi-money.api.entities :as ents]))
+
+(swap! forms/defaults assoc-in [::forms/decoration ::forms/framework] ::bs/bootstrap-5)
 
 (defn get-app-element []
   (gdom/getElement "app"))
@@ -21,6 +33,10 @@
     [:<>
      [:div.container
       [title-bar]
+      [entity-offcanvas]
+      [db-strategy-offcanvas]
+      [alerts]
+      [toasts]
       [@current-page]]
      [footer]]))
 
@@ -37,13 +53,35 @@
     (usrs/me :on-success #(reset! current-user %)
              :callback -busy)))
 
+(defn- fetch-entities []
+  (if @current-user
+    (do (+busy)
+        (ents/select :on-success (fn [res]
+                                   (swap! state/app-state assoc
+                                          :current-entities res
+                                          :current-entity (first res))
+                                   (when (empty? res)
+                                     (sct/dispatch! "/entities")))
+                     :callback -busy))
+    (reset! current-entities [])))
+
+(defn- watch-current-user []
+  (add-watch current-user
+             ::current-user
+             (fn [_ _ before after]
+               (if (= before after)
+                 (.warn js/console "false user change notification")
+                 (fetch-entities)))))
+
 (defn- init! []
   (act/configure-navigation!
     {:nav-handler sct/dispatch!
      :path-exists? sct/locate-route-value})
   (act/dispatch-current!)
   (mount-app-element)
-  (fetch-user))
+  (watch-current-user)
+  (fetch-user)
+  (fetch-entities))
 
 (init!)
 

@@ -46,6 +46,8 @@
                                 commons-io
                                 org.slf4j/slf4j-api
                                 org.checkerframework/checker-qual]]
+                  [stowaway "0.1.19" :exclusions [potemkin
+                                                  org.clojure/data.priority-map]]
                   [com.datomic/client-impl-shared "1.0.102"
                    :exclusions [com.cognitect/transit-java
                                 org.eclipse.jetty/jetty-client
@@ -76,7 +78,7 @@
                                 org.slf4j/slf4j-api
                                 com.fasterxml.jackson.core/jackson-core
                                 org.clojure/data.json]]
-                  [com.github.dgknght/app-lib "0.3.10"
+                  [com.github.dgknght/app-lib "0.3.13"
                    :exclusions [ring/ring-core
                                 org.clojure/clojure
                                 commons-io

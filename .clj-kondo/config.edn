@@ -1,12 +1,15 @@
 {:linters {:unresolved-symbol {:exclude [(clojure.test/is [comparable?
                                                            html-response-with-content?
+                                                           http-created?
                                                            http-success?
                                                            http-not-found?
                                                            http-no-content?
                                                            http-unauthorized?
                                                            http-redirect-to?
                                                            http-response-with-cookie?
-                                                           seq-of-maps-like?])
+                                                           http-unprocessable?
+                                                           seq-of-maps-like?
+                                                           throw-witn-ex-data?])
                                          (cljs.test/is [seq-of-maps-like?])
                                          (secretary.core/defroute)
                                          (multi-money.xtdb/query-map)
@@ -29,7 +32,9 @@
                                                       multi-money.util/valid-id?
                                                       multi-money.util/truncate-html
                                                       multi-money.handler/print-routes}}
-           :unresolved-var {:exclude [figwheel.main.testing/run-tests-async]}
+           :unresolved-var {:exclude [figwheel.main.testing/run-tests-async
+                                      dgknght.app-lib.validation/with-ex-validation
+                                      dgknght.app-lib.test-assertions/comparable?]}
            :unused-referred-var {:exclude {clojure.pprint [pprint]
                                            cljs.pprint [pprint]}}
            :unused-namespace {:exclude [clojure.pprint
