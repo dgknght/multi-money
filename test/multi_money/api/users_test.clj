@@ -12,14 +12,11 @@
 
 (def ^:private attr
   #:user{:email "john@doe.com"
-                  :given-name "John"
-                  :surname "Doe"})
+         :given-name "John"
+         :surname "Doe"})
 
-(def ^:private user-ctx
-  {:users [attr]})
-
-(deftest get-my-profiles
-  (with-context user-ctx
+(deftest get-my-profile
+  (with-context
     (let [user (find-user "john@doe.com")
           res (request :get (path :api :me)
                        :user user)]
