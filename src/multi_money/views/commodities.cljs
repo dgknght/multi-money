@@ -123,8 +123,9 @@
     (load-commodities page-state)
     (add-watch current-entity
                ::index
-               (fn [& _]
-                 (load-commodities page-state)))
+               (dom/debounce ; on change, value is changed forward, then backward, and then forward again
+                 (fn [& _]
+                   (load-commodities page-state))))
     (fn []
       [:div.container
        [:h1.mt-3 "Commodities"]
