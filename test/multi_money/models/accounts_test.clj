@@ -10,6 +10,7 @@
                                               find-account
                                               find-commodity]]
             [multi-money.models.accounts :as acts]
+            [multi-money.db :as db]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]
             [multi-money.db.datomic.ref]))
@@ -59,7 +60,7 @@
   (with-context
     (is (thrown-with-ex-data?
           "Validation failed"
-          {::v/errors #:account{:type ["Type is required"]}}
+          {::v/errors #:account{:type ["Type must be expense, equity, liability, income, or asset"]}}
           (acts/put (assoc (attributes)
                            :account/type :unknown))))))
 
@@ -85,7 +86,7 @@
           "Validation failed"
           {::v/errors #:account{:name ["Name is already in use"]}}
           (acts/put (assoc (attributes)
-                           :name "Checking"))))))
+                           :account/name "Checking"))))))
 
 (dbtest account-name-is-not-unique-across-entities
   (with-context
@@ -123,7 +124,8 @@
                                   #:account{:name "Salary"}
                                   #:account{:name "Rent"}
                                   #:account{:name "Groceries"}]
-                                 (acts/select {:account/entity (find-entity "Personal")})))))
+                                 (acts/select {:account/entity (db/->model-ref
+                                                                 (find-entity "Personal"))})))))
 
 (dbtest delete-an-account
   (with-context
