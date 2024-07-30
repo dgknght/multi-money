@@ -26,8 +26,7 @@
 
 (defn select
   [criteria & {:as options}]
-  {:pre [(or (nil? options)
-             (s/valid? ::db/options options))]}
+  {:pre [(s/valid? (s/nilable ::db/options) options)]}
 
   (map db/set-meta
        (db/select (db/storage)
