@@ -4,6 +4,7 @@
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.validation :as v]
             [multi-money.util :refer [->id
+                                      ->model-ref
                                       exclude-self]]
             [multi-money.db :as db]))
 
@@ -13,7 +14,7 @@
   [e]
   (-> e
       (select-keys [:account/name :account/entity])
-      (update-in [:account/entity] ->id)
+      (update-in [:account/entity] ->model-ref)
       (exclude-self e)
       find-by
       nil?))
@@ -32,8 +33,7 @@
 
 (defn select
   [criteria & {:as options}]
-  {:pre [(or (nil? options)
-             (s/valid? ::db/options options))]}
+  {:pre [(s/valid? (s/nilable ::db/options) options)]}
 
   (map db/set-meta
        (db/select (db/storage)
@@ -57,14 +57,6 @@
   [id]
   (find-by {:id (->id id)}))
 
-(defn realize
-  "Given a model that references an account, replace the account
-  reference with the account model."
-  [model k]
-  (if (:account/name model)
-    model
-    (update-in model [k] find)))
-
 (defn- resolve-put-result
   [x]
   (if (map? x)
@@ -73,9 +65,6 @@
 
 (defn put
   [account]
-
-  (pprint {::put account})
-
   (v/with-ex-validation account ::account
     (let [records-or-ids (db/put (db/storage)
                                  [account])]
