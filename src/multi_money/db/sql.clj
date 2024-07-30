@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [update])
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
+            [clojure.set :refer [rename-keys]]
             [next.jdbc :as jdbc]
             [next.jdbc.plan :refer [select!
                                     select-one!]]
@@ -140,11 +141,20 @@
   (when-let [target (db/model-type x)]
     (keyword (name target) "id")))
 
-(defn- massage-ids
-  [x]
-  (let [k (id-key x)]
-    (cond-> (utl/update-in-criteria x [:id] coerce-id)
-      k (utl/rename-criteria-keys {:id k}))))
+(defmulti ^:private massage-ids
+  "Coerces ids and appends the appropriate namespace
+  to the :id key"
+  utl/type-dispatch)
+
+(defmethod massage-ids ::utl/map
+  [m]
+  (let [k (id-key m)]
+    (cond-> (utl/update-in-criteria m [:id] coerce-id)
+      k (rename-keys {:id k}))))
+
+(defmethod massage-ids ::utl/vector
+  [[oper & cs]]
+  (apply vector oper (map massage-ids cs)))
 
 (def ^:private model-refs->ids
   {:entity/owner :entity/owner-id
