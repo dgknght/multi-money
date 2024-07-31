@@ -23,6 +23,10 @@
       (update-in [:account/entity] ->model-ref)
       (update-in [:account/commodity] ->model-ref)))
 
+(defmethod sql/prepare-criteria :account
+  [criteria]
+  (sqlize-ids criteria))
+
 (defmethod sql/before-save :account
   [account]
   (-> account
