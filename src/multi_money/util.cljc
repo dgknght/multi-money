@@ -283,3 +283,13 @@
                 (rename-keys x key-map)
                 x))
             m))
+
+(defn pp->
+  [value msg]
+  (pprint {msg value})
+  value)
+
+(defn pp->>
+  [value msg]
+  (pprint {msg value})
+  value)
