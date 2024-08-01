@@ -146,6 +146,7 @@
                            #(put-with % put-fn)
                            #(prepare-for-put % ctx))
                      coll))))
+
 (defn- apply-default-commodities
   [{:keys [commodities] :as ctx}]
   (let [comm-map (->> commodities
@@ -153,9 +154,11 @@
                       (map #(update-in % [1] first))
                       (into {}))]
     (update-in ctx [:entities] (fn [entities]
-                                 (mapv #(assoc %
-                                        :entity/default-commodity
-                                        (comm-map (:id %)))
+                                 (mapv (comp
+                                         ents/put
+                                         #(assoc %
+                                                 :entity/default-commodity
+                                                 (comm-map (:id %))))
                                        entities)))))
 
 (defn realize

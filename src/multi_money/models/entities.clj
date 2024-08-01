@@ -54,7 +54,7 @@
   "Given a model that references an entity, replace the entity
   reference with the entity model."
   [model k]
-  (if (:entity/name model)
+  (if (get-in model [k :entity/name])
     model
     (update-in model [k] find)))
 

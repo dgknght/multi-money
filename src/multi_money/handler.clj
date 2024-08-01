@@ -29,6 +29,7 @@
             [multi-money.api.users :as usrs]
             [multi-money.api.entities :as ents]
             [multi-money.api.commodities :as cdts]
+            [multi-money.api.accounts :as acts]
             [multi-money.db.datomic.ref]
             [multi-money.db.mongo.ref]
             [multi-money.db.sql.ref]))
@@ -136,7 +137,8 @@
                              [wrap-authentication {:authenticate-fn validate-token-and-lookup-user}]]}
         usrs/routes
         ents/routes
-        cdts/routes]])
+        cdts/routes
+        acts/routes]])
     (ring/routes
       (ring/create-resource-handler {:path "/"})
       (ring/create-default-handler))))
