@@ -1,5 +1,6 @@
 (ns multi-money.views.accounts
   (:require [cljs.pprint :refer [pprint]]
+            [clojure.string :as str]
             [secretary.core :as sct]
             [reagent.core :as r]
             [reagent.ratom :refer [make-reaction]]
@@ -9,6 +10,7 @@
             [dgknght.app-lib.forms :as forms]
             [dgknght.app-lib.forms-validation :as v]
             [dgknght.app-lib.inflection :refer [humanize]]
+            [multi-money.accounts :refer [annotate]]
             [multi-money.notifications :refer [toast
                                                alert]]
             [multi-money.icons :refer [icon
@@ -37,7 +39,7 @@
   [page-state]
   (+busy)
   (acts/select :callback -busy
-               :on-success #(swap! page-state assoc :accounts %)))
+               :on-success #(swap! page-state assoc :accounts (annotate %))))
 
 (defn- delete-account
   [account page-state]
@@ -49,7 +51,9 @@
   [account page-state]
   ^{:key (str "account-row-" (:id account))}
   [:tr
-   [:td (:account/name account)]
+   [:td [:div
+         {:class (str "left-depth-" (:depth account))}
+         (:account/name account)]]
    [:td.text-end [:div.btn-group
                   [:button.btn.btn-sm.btn-secondary
                    {:on-click (fn [_]
@@ -102,7 +106,8 @@
 
 (defn- account-form
   [page-state]
-  (let [account (r/cursor page-state [:selected])
+  (let [accounts (r/cursor page-state [:accounts])
+        account (r/cursor page-state [:selected])
         commodities (r/cursor page-state [:commodities])
         local-validation-errors (r/cursor account [::v/validation ::v/messages [:account/name]])
         server-validation-errors (r/cursor page-state [:validation-errors :account/name])
@@ -124,9 +129,22 @@
              [:asset :liability :equity :income :expense])]
        [forms/select-field
         account
+        [:account/parent :id]
+        (cons ["" "None"]
+              (->> @accounts
+                   (filter #(= (:account/type %)
+                               (:account/type @account)))
+                   (remove #(= (:id %)
+                               (:id @account)))
+                   (map (juxt :id (comp #(str/join ":" %)
+                                        :path)))))
+        {:caption "Parent"}]
+       [forms/select-field
+        account
         [:account/commodity :id]
         (map (juxt :id :commodity/symbol)
-             @commodities)]
+             @commodities)
+        {:caption "Commodity"}]
        [:div
         [:button.btn.btn-primary {:type :submit}
          (icon-with-text :floppy2 "Save" :size :small)]

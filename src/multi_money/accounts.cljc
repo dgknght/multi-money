@@ -56,3 +56,5 @@
 (defn unnest
   [accounts]
   (mapcat unnest-account accounts))
+
+(def annotate (comp unnest nest))
