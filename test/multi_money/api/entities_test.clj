@@ -83,7 +83,7 @@
                                     :user (find-user "jane@doe.com")
                                     :json-body {:name "The new name"})))
       (is (= (:entity/name entity)
-             (:name (ents/find entity)))
+             (:entity/name (ents/find entity)))
           "The name is not updated in the database"))))
 
 (deftest an-unauthenticated-user-cannot-update-an-entity
