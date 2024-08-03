@@ -1,6 +1,7 @@
 (ns multi-money.test-runner
   (:require
     [multi-money.util-test]
+    [multi-money.accounts-test]
     [multi-money.icons-test]
     [multi-money.views.components-test]
     [multi-money.api.entities-test]
