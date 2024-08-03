@@ -15,7 +15,8 @@
   (-> body
       (utl/select-namespaced-keys [:account/name
                                    :account/type
-                                   :account/commodity])
+                                   :account/commodity
+                                   :account/parent])
       (update-in-if [:account/type] keyword)))
 
 (defn- ensure-commodity

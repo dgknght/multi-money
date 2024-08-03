@@ -5,23 +5,27 @@
             [multi-money.db.sql :as sql]))
 
 (defmethod sql/attributes :account [_]
-  [:id :name :entity-id :commodity-id :type])
+  [:id :name :entity-id :commodity-id :parent-id :type])
 
 (defn- sqlize-ids
   [m]
   (-> m
-      (rename-keys {:account/entity :account/entity-id
-                    :account/commodity :account/commodity-id})
-      (update-in-if [:account/entity-id] sql/->id)
-      (update-in-if [:account/commodity-id] sql/->id)))
+      (rename-keys {:account/entity    :account/entity-id
+                    :account/commodity :account/commodity-id
+                    :account/parent    :account/parent-id})
+      (update-in-if [:account/entity-id]    sql/->id)
+      (update-in-if [:account/commodity-id] sql/->id)
+      (update-in-if [:account/parent-id]    sql/->id)))
 
 (defn- generalize-ids
   [m]
   (-> m
-      (rename-keys {:account/entity-id :account/entity
-                    :account/commodity-id :account/commodity})
-      (update-in [:account/entity] ->model-ref)
-      (update-in [:account/commodity] ->model-ref)))
+      (rename-keys {:account/entity-id    :account/entity
+                    :account/commodity-id :account/commodity
+                    :account/parent-id    :account/parent})
+      (update-in    [:account/entity]    ->model-ref)
+      (update-in    [:account/commodity] ->model-ref)
+      (update-in-if [:account/parent]    ->model-ref)))
 
 (defmethod sql/prepare-criteria :account
   [criteria]

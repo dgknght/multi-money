@@ -2,6 +2,7 @@ create table accounts (
   id serial,
   entity_id int not null references entities (id) on delete cascade,
   commodity_id int not null references commodities (id),
+  parent_id int null references accounts (id),
   name varchar(100) NOT NULL,
   type varchar(10) NOT NULL,
   created_at timestamp with time zone DEFAULT now() NOT NULL,

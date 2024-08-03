@@ -5,9 +5,11 @@
 
 (defn- adjust-ids
   [m]
-  (-> m
-      (update-in-criteria [:account/entity] ->id)
-      (update-in-criteria [:account/commodity] ->id)))
+  (reduce #(update-in-criteria %1 [%2] ->id)
+          m
+          [:account/entity
+           :account/commodity
+           :account/parent]))
 
 (defmethod d/before-save :account
   [account]

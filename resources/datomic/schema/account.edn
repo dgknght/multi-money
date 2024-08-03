@@ -6,6 +6,10 @@
   :db/valueType :db.type/keyword
   :db/cardinality :db.cardinality/one
   :db/doc "Indicates the nature of the account"}
+ {:db/ident :account/parent
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "The parent account to which the account belongs"}
  {:db/ident :account/entity
   :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/one

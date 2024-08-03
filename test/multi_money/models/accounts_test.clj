@@ -40,6 +40,22 @@
       (is (:id result)
           "The result contains an :id value"))))
 
+(dbtest create-a-child-account
+        (with-context
+          (let [entity (find-entity "Personal")
+                parent (find-account "Groceries")
+                commodity (find-commodity "USD" "Personal")
+                result (acts/put #:account{:name "Food"
+                                           :type :asset
+                                           :commodity commodity
+                                           :entity entity
+                                           :parent parent})]
+            (is (:id result) "The result contains an :id")
+            (is (comparable? #:account{:name "Food"
+                                       :parent {:id (:id parent)}}
+                             (acts/find result))
+                "The record can be retrieved after create"))))
+
 (dbtest account-name-is-required
   (with-context
     (is (thrown-with-ex-data?
