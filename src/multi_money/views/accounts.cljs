@@ -156,9 +156,14 @@
 
 (defn- index []
   (let [page-state (r/atom {})
-        selected (r/cursor page-state [:selected])]
-    (load-accounts page-state)
-    (load-commodities page-state)
+        selected (r/cursor page-state [:selected])
+        load (dom/debounce (fn []
+                             (load-accounts page-state)
+                             (load-commodities page-state)))]
+    (load)
+    (add-watch current-entity ::index (fn [_ _ before after]
+                                        (when (not= before after)
+                                          (load))))
     (fn []
       [:div.container
        [:h1.mt-3 "Accounts"]
