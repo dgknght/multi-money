@@ -144,18 +144,19 @@
   (and (map? x)
        (contains? x :id)))
 
-(defn simple-model-ref?
+(defn model-ref?
   [m]
   (and (map? m)
        (= #{:id} (set (keys m)))))
 
-(defn ->simple-model-ref
-  [x coerce]
-  (if (map? x)
-    (-> x
-        (select-keys [:id])
-        (update-in-if [:id] coerce))
-    {:id (coerce x)}))
+(defn ->model-ref
+  ([x] (->model-ref x identity))
+  ([x coerce]
+   (if (map? x)
+     (-> x
+         (select-keys [:id])
+         (update-in-if [:id] coerce))
+     {:id (coerce x)})))
 
 (defmulti normalize-model-ref type)
 
