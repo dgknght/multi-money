@@ -4,6 +4,7 @@
             [clojure.string :as string]
             [clojure.set :refer [rename-keys]]
             [dgknght.app-lib.core :refer [update-in-if]]
+            [dgknght.app-lib.inflection :refer [humanize]]
             #?(:clj [clojure.pprint :refer [pprint]]
                :cljs [cljs.pprint :refer [pprint]])
             #?(:cljs [cljs-time.core :as t])
@@ -290,6 +291,13 @@
   value)
 
 (defn pp->>
-  [value msg]
+  [msg value]
   (pprint {msg value})
   value)
+
+(defn path->caption
+  [path]
+  (->> (string/split path #"/")
+       (remove #(= 0 (count %)))
+       (map humanize)
+       (string/join " ")))
