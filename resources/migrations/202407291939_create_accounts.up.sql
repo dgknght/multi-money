@@ -8,6 +8,7 @@ create table accounts (
   updated_at timestamp with time zone DEFAULT now() NOT NULL,
   primary key (id)
 );
-create unique index uk_accountss_name on accounts(entity_id, name);
+create unique index uk_accounts_name on accounts(entity_id, name);
+create index ix_accounts_commodity_id on accounts(commodity_id);
 grant select, insert, update, delete on accounts to app_user;
 grant select, insert, update, delete on accounts_id_seq to app_user;

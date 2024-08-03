@@ -6,7 +6,9 @@
             [multi-money.util :refer [->id
                                       ->model-ref
                                       exclude-self]]
-            [multi-money.db :as db]))
+            [multi-money.db :as db]
+            [multi-money.models.accounts :as acts]
+            [multi-money.models.entities :as ents]))
 
 (declare find-by)
 
@@ -70,6 +72,13 @@
       (find (first ids)))))
 
 (defn delete
-  [commodity]
+  [{:as commodity :commodity/keys [entity]}]
   {:pre [(:id commodity)]}
+  (when-let [accounts (seq (acts/select {:account/commodity commodity}))]
+    (throw (ex-info "The commodity cannot be deleted because it is in use"
+                    {:commodity commodity
+                     :accounts accounts})))
+  (when (= (:id commodity) (:entity/default-commodity-id (ents/find entity)))
+    (throw (ex-info "The commodity cannot be deleted because it is the default for the entity"
+                    {:commodity commodity})))
   (db/delete (db/storage) [commodity]))
