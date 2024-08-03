@@ -31,6 +31,8 @@
                                                       multi-money.util/split-nils
                                                       multi-money.util/valid-id?
                                                       multi-money.util/truncate-html
+                                                      multi-money.util/pp->
+                                                      multi-money.util/pp->>
                                                       multi-money.handler/print-routes}}
            :unresolved-var {:exclude [figwheel.main.testing/run-tests-async
                                       dgknght.app-lib.validation/with-ex-validation

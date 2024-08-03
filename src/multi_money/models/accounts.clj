@@ -1,9 +1,10 @@
-(ns multi-money.models.entities
+(ns multi-money.models.accounts
   (:refer-clojure :exclude [find count])
   (:require [clojure.spec.alpha :as s]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.validation :as v]
             [multi-money.util :refer [->id
+                                      ->model-ref
                                       exclude-self]]
             [multi-money.db :as db]))
 
@@ -12,16 +13,22 @@
 (defn- name-is-unique?
   [e]
   (-> e
-      (select-keys [:entity/name :entity/owner])
-      (update-in [:entity/owner] ->id)
+      (select-keys [:account/name :account/entity])
+      (update-in [:account/entity] ->model-ref)
       (exclude-self e)
       find-by
       nil?))
 (v/reg-spec name-is-unique? {:message "%s is already in use"
-                             :path [:entity/name]})
+                             :path [:account/name]})
 
-(s/def :entity/name string?)
-(s/def ::entity (s/and (s/keys :req [:entity/name])
+(s/def :account/name string?)
+(s/def :account/type #{:asset :liability :income :expense :equity})
+(s/def :account/entity db/model-or-ref?)
+(s/def :account/commodity db/model-or-ref?)
+(s/def ::account (s/and (s/keys :req [:account/name
+                                      :account/type
+                                      :account/entity
+                                      :account/commodity])
                        name-is-unique?))
 
 (defn select
@@ -32,14 +39,14 @@
        (db/select (db/storage)
                   (-> criteria
                       db/normalize-model-refs
-                      (db/model-type :entity))
+                      (db/model-type :account))
                   (update-in options [:order-by] (fnil identity [:name])))))
 
 (defn count
   ([] (count {}))
   ([criteria]
    (db/select (db/storage)
-              (db/model-type criteria :entity)
+              (db/model-type criteria :account)
               {:count true})))
 
 (defn find-by
@@ -50,29 +57,21 @@
   [id]
   (find-by {:id (->id id)}))
 
-(defn realize
-  "Given a model that references an entity, replace the entity
-  reference with the entity model."
-  [model k]
-  (if (get-in model [k :entity/name])
-    model
-    (update-in model [k] find)))
-
 (defn- resolve-put-result
   [x]
   (if (map? x)
-    (db/model-type x :entity)
+    (db/model-type x :account)
     (find x)))
 
 (defn put
-  [entity]
-  (v/with-ex-validation entity ::entity
+  [account]
+  (v/with-ex-validation account ::account
     (let [records-or-ids (db/put (db/storage)
-                                 [entity])]
+                                 [account])]
       ; TODO: return all of the saved models instead of the first?
       (resolve-put-result (first records-or-ids)))))
 
 (defn delete
-  [entity]
-  {:pre [entity (map? entity)]}
-  (db/delete (db/storage) [entity]))
+  [account]
+  {:pre [account (map? account)]}
+  (db/delete (db/storage) [account]))

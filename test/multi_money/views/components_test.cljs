@@ -7,7 +7,7 @@
           '([:li.nav-item
              {:class nil}
              [:a.nav-link.d-flex.align-items-center
-              {:href "fully-implied"
+              {:href "/fully-implied"
                :on-click nil}
               "Fully implied"]
              nil]
@@ -47,7 +47,7 @@
                  {:href "#"
                   :on-click :fn}
                  "Child item 2"]])]])]
-         (c/navbar ["fully-implied"
+         (c/navbar ["/fully-implied"
                     {:path "implied-caption"}
                     {:path "explicit-path"
                      :caption "Explicit caption"}
