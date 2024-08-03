@@ -54,4 +54,6 @@
                                               :unique true)})
       (pprint {::commodities-entity (m/add-index! :commodities
                                                   [:entity_id :symbol]
-                                                  :unique true)}))))
+                                                  :unique true)})
+      (pprint {::accounts-entity (m/add-index! :accounts
+                                               [:entity_id])}))))
