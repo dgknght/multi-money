@@ -171,8 +171,8 @@
           "The retrieved commodity has the updated attributes"))))
 
 (dbtest delete-a-commodity
-  (with-context
-    (let [commodity (find-commodity "USD" "Personal")]
+  (with-context find-ctx
+    (let [commodity (find-commodity "GBP" "Personal")]
           (cdts/delete commodity)
       (is (nil? (cdts/find commodity))
           "The commodity cannot be retrieved after delete"))))
