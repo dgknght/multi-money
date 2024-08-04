@@ -1,5 +1,5 @@
 (ns multi-money.models.commodities-test
-  (:require [clojure.test :refer [is use-fixtures]]
+  (:require [clojure.test :refer [is use-fixtures testing]]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.test-assertions]
             [dgknght.app-lib.validation :as v]
@@ -171,8 +171,16 @@
           "The retrieved commodity has the updated attributes"))))
 
 (dbtest delete-a-commodity
-  (with-context
-    (let [commodity (find-commodity "USD" "Personal")]
-          (cdts/delete commodity)
-      (is (nil? (cdts/find commodity))
-          "The commodity cannot be retrieved after delete"))))
+  (with-context find-ctx
+    (testing "an unreferenced commodity can be deleted"
+      (let [commodity (find-commodity "GBP" "Personal")]
+        (cdts/delete commodity)
+        (is (nil? (cdts/find commodity))
+            "The commodity cannot be retrieved after delete")))
+    (testing "a referenced commodity cannot be deleted"
+      (let [commodity (find-commodity "USD" "Personal")]
+        (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                              #"The commodity cannot be deleted because it is in use"
+                              (cdts/delete commodity)))
+        (is (cdts/find commodity)
+            "The commodity can be retrieved after failed delete attempt")))))

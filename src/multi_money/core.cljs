@@ -20,6 +20,7 @@
             [multi-money.views.pages]
             [multi-money.views.entities]
             [multi-money.views.commodities]
+            [multi-money.views.accounts]
             [multi-money.api.users :as usrs]
             [multi-money.api.entities :as ents]))
 

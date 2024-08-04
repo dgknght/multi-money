@@ -136,7 +136,8 @@
         [:entity/default-commodity :id]
         (cons ["" ""]
               (map (juxt :id :commodity/symbol)
-                   @commodities))]
+                   @commodities))
+        {:caption "Default commodity"}]
        [:div
         [:button.btn.btn-primary {:type :submit}
          (icon-with-text :floppy2 "Save" :size :small)]

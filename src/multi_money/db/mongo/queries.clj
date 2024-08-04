@@ -26,7 +26,8 @@
 
 (def ^:private relationships
   #{[:users :entities]
-    [:entities :commodities]})
+    [:entities :commodities]
+    [:entities :accounts]})
 
 (defn criteria->pipeline
   [criteria options]

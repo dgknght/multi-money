@@ -213,3 +213,9 @@
                                       :name "Jane"}
                                      [:user/name]))
       "Explicit namespaced keys are preferred"))
+
+(deftest convert-a-path-to-a-caption
+  (are [path expected] (= expected
+                          (utl/path->caption path))
+       "my-stuff" "My stuff"
+       "/my-stuff" "My stuff"))

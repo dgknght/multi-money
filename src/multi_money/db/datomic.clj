@@ -33,9 +33,9 @@
 
 (def ^:private not-deleted '(not [?x :model/deleted? true]))
 
-(defn ->simple-model-ref
+(defn ->model-ref
   [x]
-  (db/->simple-model-ref x coerce-id))
+  (db/->model-ref x coerce-id))
 
 (defn- unbounded-query?
   [{:keys [in where]}]
@@ -147,7 +147,7 @@
   [criteria]
   (postwalk (fn [x]
               (if (and (map-entry? x)
-                       (db/simple-model-ref? (second x)))
+                       (db/model-ref? (second x)))
                 (update-in x [1] :id)
                 x))
             criteria))

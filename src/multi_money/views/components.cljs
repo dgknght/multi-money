@@ -3,7 +3,7 @@
             [camel-snake-kebab.core :refer [->kebab-case-string]]
             [goog.string :refer [format]]
             [reagent.ratom :refer [make-reaction]]
-            [dgknght.app-lib.inflection :refer [humanize]]
+            [multi-money.util :refer [path->caption]]
             [multi-money.config :refer [env]]
             [multi-money.icons :refer [icon
                                        icon-with-text]]
@@ -34,12 +34,10 @@
 
 (defmethod expand-nav-item ::map
   [{:keys [path id] :as item :or {path "#"}}]
-  {:pre [(or (:path item)
-             (:caption item))]}
   (-> item
       (assoc :path path
              :id (or id (->kebab-case-string path)))
-      (update-in [:caption] (fnil identity (humanize path)))))
+      (update-in [:caption] (fnil identity (path->caption path)))))
 
 (defmulti ^:private dropdown-item type)
 
@@ -94,8 +92,8 @@
         doall)])
 
 (defn- authenticated-nav-items []
-  [{:path "/commodities"
-    :caption "Commodities"}
+  ["/accounts"
+   "/commodities"
    {:caption "Sign Out"
     :on-click sign-out}])
 

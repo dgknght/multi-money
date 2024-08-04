@@ -82,8 +82,8 @@
       (is (http-not-found? (request :patch (path :api :entities (:id entity))
                                     :user (find-user "jane@doe.com")
                                     :json-body {:name "The new name"})))
-      (is (not= "The new name"
-                (:name (ents/find entity)))
+      (is (= (:entity/name entity)
+             (:entity/name (ents/find entity)))
           "The name is not updated in the database"))))
 
 (deftest an-unauthenticated-user-cannot-update-an-entity

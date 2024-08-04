@@ -150,5 +150,5 @@
     (let [commodity (find-commodity "USD" "Personal")]
       (is (http-unauthorized? (request :delete (path :api :commodities (:id commodity)))))
       (is (comparable? {:commodity/name "United States Dollar"}
-                       cdts/find commodity)
+                       (cdts/find commodity))
           "The commodity can be retrieved after rejected delete request"))))

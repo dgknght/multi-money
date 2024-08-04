@@ -8,4 +8,4 @@
 
 (defmethod d/prepare-criteria :commodity
   [criteria]
-  (update-in-if criteria [:commodity/entity] d/->simple-model-ref))
+  (update-in-if criteria [:commodity/entity] d/->model-ref))

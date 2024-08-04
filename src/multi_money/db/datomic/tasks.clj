@@ -16,7 +16,7 @@
            "entity"
            "commodity"
            #_"price"
-           #_"account"
+           "account"
            #_"transaction"]))
 
 (defn apply-schema
