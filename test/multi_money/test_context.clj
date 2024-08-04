@@ -3,7 +3,8 @@
             [multi-money.db :as db]
             [multi-money.models.users :as usrs]
             [multi-money.models.entities :as ents]
-            [multi-money.models.commodities :as cdts]))
+            [multi-money.models.commodities :as cdts]
+            [multi-money.models.accounts :as acts]))
 
 (defonce ^:dynamic *context* nil)
 
@@ -29,7 +30,22 @@
                  #:commodity{:symbol "CAD"
                              :name "Candadian Dollar"
                              :type :currency
-                             :entity "Jane's Money"}]})
+                             :entity "Jane's Money"}]
+   :accounts [#:account{:name "Checking"
+                        :entity "Personal"
+                        :type :asset}
+              #:account{:name "Salary"
+                        :entity "Personal"
+                        :type :income}
+              #:account{:name "Rent"
+                        :entity "Personal"
+                        :type :expense}
+              #:account{:name "Groceries"
+                        :entity "Personal"
+                        :type :expense}
+              #:account{:name "Credit Card"
+                        :entity "Personal"
+                        :type :liability}]})
 
 (defn- key-value-pred
   [kvs]
@@ -51,11 +67,11 @@
 (defn- find-model
   [coll k v & kvs]
   (or (apply detect-model coll k v kvs)
-       (throw (ex-info "Unable to find model" (->> kvs
-                                                   (concat [k v])
-                                                   (partition 2)
-                                                   (map vec)
-                                                   (into {}))))))
+      (throw (ex-info "Unable to the find model" (->> kvs
+                                                      (concat [k v])
+                                                      (partition 2)
+                                                      (map vec)
+                                                      (into {}))))))
 (defn find-user
   ([identifier] (find-user identifier *context*))
   ([identifier {:keys [users]}]
@@ -78,6 +94,11 @@
                  :commodity/symbol symbol
                  :commodity/entity entity))))
 
+(defn find-account
+  ([name] (find-account name *context*))
+  ([name {:keys [accounts]}]
+   (find-model accounts :account/name name)))
+
 (defn- put-with
   [m f]
   (or (f m)
@@ -92,7 +113,9 @@
 (defmulti ^:private prepare-for-put
   db/type-dispatch)
 
-(defmethod prepare-for-put :default [m _] m)
+(defmethod prepare-for-put :user
+  [user _]
+  user)
 
 (defmethod prepare-for-put :entity
   [entity ctx]
@@ -101,6 +124,18 @@
 (defmethod prepare-for-put :commodity
   [commodity ctx]
   (update-in commodity [:commodity/entity] #(find-entity % ctx)))
+
+(defmethod prepare-for-put :account
+  [{:as account :account/keys [entity]} ctx]
+  (let [entity (find-entity entity ctx)]
+    (-> account
+        (assoc :account/entity entity)
+        (update-in [:account/commodity]
+                   #(or (if %
+                          (find-commodity % entity)
+                          (:entity/default-commodity entity))
+                        (throw (ex-info "Unable to find commodity for the account" {:account account
+                                                                                    :entity entity})))))))
 
 (defn- realize-collection
   [ctx coll-key desc put-fn]
@@ -111,12 +146,29 @@
                            #(put-with % put-fn)
                            #(prepare-for-put % ctx))
                      coll))))
+
+(defn- apply-default-commodities
+  [{:keys [commodities] :as ctx}]
+  (let [comm-map (->> commodities
+                      (group-by (comp :id :commodity/entity))
+                      (map #(update-in % [1] first))
+                      (into {}))]
+    (update-in ctx [:entities] (fn [entities]
+                                 (mapv (comp
+                                         ents/put
+                                         #(assoc %
+                                                 :entity/default-commodity
+                                                 (comm-map (:id %))))
+                                       entities)))))
+
 (defn realize
   [ctx]
   (-> ctx
       (realize-collection :users "user" usrs/put)
       (realize-collection :entities "entity" ents/put)
-      (realize-collection :commodities "commodity" cdts/put)))
+      (realize-collection :commodities "commodity" cdts/put)
+      (apply-default-commodities)
+      (realize-collection :accounts "account" acts/put)))
 
 (defmacro with-context
   [& [a1 :as args]]

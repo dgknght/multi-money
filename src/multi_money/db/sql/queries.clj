@@ -6,7 +6,8 @@
 (def ^:private default-options
   {:relationships #{[:users :identities]
                     [:users :entities]
-                    [:entities :commodities]}})
+                    [:entities :commodities]
+                    [:entities :accounts]}})
 
 (defn criteria->query
   [criteria & [options]]

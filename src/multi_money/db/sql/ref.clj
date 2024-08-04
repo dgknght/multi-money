@@ -3,4 +3,5 @@
             multi-money.db.sql.users
             multi-money.db.sql.identities
             multi-money.db.sql.entities
-            multi-money.db.sql.commodities))
+            multi-money.db.sql.commodities
+            multi-money.db.sql.accounts))
