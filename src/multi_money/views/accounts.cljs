@@ -10,6 +10,7 @@
             [dgknght.app-lib.forms :as forms]
             [dgknght.app-lib.forms-validation :as v]
             [dgknght.app-lib.inflection :refer [humanize]]
+            [multi-money.views.components :refer [spinner]]
             [multi-money.accounts :refer [annotate]]
             [multi-money.notifications :refer [toast
                                                alert]]
@@ -74,9 +75,20 @@
          [:th "Name"]
          [:th (html/space)]]]
        [:tbody
-        (->> @accounts
-             (map #(account-row % page-state))
-             doall)]
+        (cond
+          (nil? @accounts)
+          [:tr [:td.text-center {:col-span 2} (spinner)]]
+
+          (seq @accounts)
+          (->> @accounts
+               (map #(account-row % page-state))
+               doall)
+
+          :else
+          [:tr
+           [:td.text-center.text-secondary
+            {:col-span 2}
+            "Click \"Add\" to create the first account."]])]
        [:tfoot
         [:tr
          [:td.border-bottom-0.pt-3 {:col-span 2}
@@ -158,6 +170,7 @@
   (let [page-state (r/atom {})
         selected (r/cursor page-state [:selected])
         load (dom/debounce (fn []
+                             (swap! page-state dissoc :accounts :commodities)
                              (load-accounts page-state)
                              (load-commodities page-state)))]
     (load)
