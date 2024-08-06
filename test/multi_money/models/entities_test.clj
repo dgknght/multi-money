@@ -83,7 +83,7 @@
 (dbtest update-an-entity
   (with-context update-context
     (let [entity (find-entity "Personal")
-          commodity (find-commodity "USD" entity)
+          commodity (find-commodity ["USD" entity])
           updated (ents/put (assoc entity
                                    :entity/name "My Money"
                                    :entity/default-commodity commodity))]
