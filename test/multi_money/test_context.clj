@@ -4,7 +4,8 @@
             [multi-money.models.users :as usrs]
             [multi-money.models.entities :as ents]
             [multi-money.models.commodities :as cdts]
-            [multi-money.models.accounts :as acts]))
+            [multi-money.models.accounts :as acts]
+            [multi-money.models.transactions :as trxs]))
 
 (defonce ^:dynamic *context* nil)
 
@@ -99,6 +100,13 @@
   ([name {:keys [accounts]}]
    (find-model accounts :account/name name)))
 
+(defn find-transaction
+  ([date description] (find-transaction date description *context*))
+  ([date description {:keys [transactions]}]
+   (find-model transactions
+               :transaction/date date
+               :transaction/description description)))
+
 (defn- put-with
   [m f]
   (or (f m)
@@ -168,7 +176,8 @@
       (realize-collection :entities "entity" ents/put)
       (realize-collection :commodities "commodity" cdts/put)
       (apply-default-commodities)
-      (realize-collection :accounts "account" acts/put)))
+      (realize-collection :accounts "account" acts/put)
+      (realize-collection :transactions "transaction" trxs/put)))
 
 (defmacro with-context
   [& [a1 :as args]]
