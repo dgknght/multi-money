@@ -75,7 +75,7 @@
                                                           (into {}))
                                               :collection coll}))))
 (defn- parse-model-ident
-  [ident & [k & ks]]
+  [ident & [k :as ks]]
   (cond
     (map? ident)    ident
     (vector? ident) (zipmap ks ident)
@@ -103,7 +103,9 @@
 (defn find-commodity
   ([ident] (find-commodity ident *context*))
   ([ident {:keys [commodities] :as ctx}]
-   (let [{:keys [symbol entity-ref]} (parse-model-ident ident :symbol :entity-ref)
+   (let [{:keys [symbol entity-ref]} (parse-model-ident ident
+                                                        :symbol
+                                                        :entity-ref)
          entity (resolve-entity-ref entity-ref ctx)]
      (find-model commodities
                  :commodity/symbol symbol
@@ -162,7 +164,7 @@
         (assoc :account/entity entity)
         (update-in [:account/commodity]
                    #(or (if %
-                          (find-commodity % entity)
+                          (find-commodity [% entity] ctx)
                           (:entity/default-commodity entity))
                         (throw (ex-info "Unable to find commodity for the account" {:account account
                                                                                     :entity entity})))))))

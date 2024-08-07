@@ -24,7 +24,7 @@
                                      (find-entity "Personal"))
                                  [:id])
             :commodity (select-keys (or commodity
-                                        (find-commodity "USD" "Personal"))
+                                        (find-commodity ["USD" "Personal"]))
                                     [:id])
             :type :asset})
 
@@ -44,7 +44,7 @@
         (with-context
           (let [entity (find-entity "Personal")
                 parent (find-account "Groceries")
-                commodity (find-commodity "USD" "Personal")
+                commodity (find-commodity ["USD" "Personal"])
                 result (acts/put #:account{:name "Food"
                                            :type :asset
                                            :commodity commodity

@@ -161,7 +161,7 @@
 
 (dbtest update-a-commodity
   (with-context
-    (let [commodity (find-commodity "USD" "Personal")
+    (let [commodity (find-commodity ["USD" "Personal"])
           updated (cdts/put (assoc commodity :commodity/name "US Bucks"))]
       (is (= (:id commodity) (:id updated))
           "The same commodity is returned")
@@ -173,12 +173,12 @@
 (dbtest delete-a-commodity
   (with-context find-ctx
     (testing "an unreferenced commodity can be deleted"
-      (let [commodity (find-commodity "GBP" "Personal")]
+      (let [commodity (find-commodity ["GBP" "Personal"])]
         (cdts/delete commodity)
         (is (nil? (cdts/find commodity))
             "The commodity cannot be retrieved after delete")))
     (testing "a referenced commodity cannot be deleted"
-      (let [commodity (find-commodity "USD" "Personal")]
+      (let [commodity (find-commodity ["USD" "Personal"])]
         (is (thrown-with-msg? clojure.lang.ExceptionInfo
                               #"The commodity cannot be deleted because it is in use"
                               (cdts/delete commodity)))

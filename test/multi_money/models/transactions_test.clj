@@ -25,8 +25,8 @@
                   :description "Kroger"
                   :memo "notes about the purchase"
                   :entity entity
-                  :items [{:debit-account (find-account "Credit Card" entity)
-                           :credit-account (find-account "Dining" entity)
+                  :items [{:debit-account (find-account ["Credit Card" entity])
+                           :credit-account (find-account ["Dining" entity])
                            :quantity 100M}]}))
 
 (dbtest create-a-transaction
@@ -78,8 +78,8 @@
           "Validation failed"
           {::v/errors #:transaction{:items ["All items must belong to the same entity"]}}
           (trxs/put (assoc (attributes)
-                            :transaction/items [{:debit-account (find-account "Checking" "Business")
-                                                 :credit-account (find-account "Rent" "Personal")
+                            :transaction/items [{:debit-account (find-account ["Checking">] "Business")
+                                                 :credit-account (find-account ["Rent" "Personal"])
                                                  :quantity 100M}]))))))
 
 (dbtest transaction-item-accounts-must-have-the-same-entity-as-the-transaction
@@ -95,18 +95,18 @@
          :transactions
          [#:transaction{:description "Paycheck"
                         :date (t/local-date 2020 1 1)
-                        :items [#:transaction-item{:debit-account (find-account "Checking" "Personal")
-                                                   :credit-account (find-account "Salary" "Personal")
+                        :items [#:transaction-item{:debit-account (find-account ["Checking" "Personal"])
+                                                   :credit-account (find-account ["Salary" "Personal"])
                                                    :quantity 5000M}]}
           #:transaction{:description "Landlord"
                         :date (t/local-date 2020 1 2)
-                        :items [#:transaction-item{:debit-account (find-account "Rent" "Personal")
-                                                   :credit-account (find-account "Checking" "Personal")
+                        :items [#:transaction-item{:debit-account (find-account ["Rent" "Personal"])
+                                                   :credit-account (find-account ["Checking" "Personal"])
                                                    :quantity 1000M}]}
           #:transaction{:description "Kroger"
                         :date (t/local-date 2020 1 3)
-                        :items [#:transaction-item{:debit-account (find-account "Groceries" "Personal")
-                                                   :credit-account (find-account "Credit Card" "Personal")
+                        :items [#:transaction-item{:debit-account (find-account ["Groceries" "Personal"])
+                                                   :credit-account (find-account ["Credit Card" "Personal"])
                                                    :quantity 100M}]}]))
 
 (dbtest update-a-transaction

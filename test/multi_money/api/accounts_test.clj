@@ -34,7 +34,7 @@
 
 (deftest an-authenticated-user-can-create-an-account-in-his-entity
   (with-context
-    (let [commodity (find-commodity "USD" "Personal")
+    (let [commodity (find-commodity ["USD" "Personal"])
           res (create-account
                 :entity (find-entity "Personal")
                 :commodity commodity
