@@ -67,13 +67,14 @@
 
 (defn- find-model
   [coll k v & kvs]
+  {:pre [(coll? coll)]}
   (or (apply detect-model coll k v kvs)
-      (throw (ex-info "Unable to find model" {:match (->> kvs
-                                                          (concat [k v])
-                                                          (partition 2)
-                                                          (map vec)
-                                                          (into {}))
-                                              :collection coll}))))
+      (throw (ex-info "Unable to find the model" {:match (->> kvs
+                                                              (concat [k v])
+                                                              (partition 2)
+                                                              (map vec)
+                                                              (into {}))
+                                                  :collection coll}))))
 (defn- parse-model-ident
   [ident & [k :as ks]]
   (cond
@@ -89,39 +90,46 @@
 
 (defn find-entity
   ([name] (find-entity name *context*))
-  ([name {:keys [entities]}]
+  ([name {:keys [entities] :as context}]
+   {:pre [(map? context)]}
    (find-model entities :entity/name name)))
 
 (defn- resolve-entity-ref
-  [ref ctx]
+  [ref context]
+  {:pre [(map? context)
+         (or (string? ref)
+             (map? ref))]}
   (when ref
     (select-keys (if (string? ref)
-                   (find-entity ref ctx)
+                   (find-entity ref context)
                    ref)
                  [:id])))
 
 (defn find-commodity
   ([ident] (find-commodity ident *context*))
-  ([ident {:keys [commodities] :as ctx}]
+  ([ident {:keys [commodities] :as context}]
+   {:pre [(map? context)]}
    (let [{:keys [symbol entity-ref]} (parse-model-ident ident
                                                         :symbol
                                                         :entity-ref)
-         entity (resolve-entity-ref entity-ref ctx)]
+         entity (resolve-entity-ref entity-ref context)]
      (find-model commodities
                  :commodity/symbol symbol
                  :commodity/entity entity))))
 
 (defn find-account
   ([ident] (find-account ident *context*))
-  ([ident {:keys [accounts] :as ctx}]
+  ([ident {:keys [accounts] :as context}]
+   {:pre [(map? context)]}
    (let [{:keys [name entity-ref]} (parse-model-ident ident :name :entity-ref)]
      (find-model accounts
                  :account/name name
-                 :account/entity (resolve-entity-ref entity-ref ctx)))))
+                 :account/entity (resolve-entity-ref entity-ref context)))))
 
 (defn find-transaction
   ([ident] (find-transaction ident *context*))
-  ([ident {:keys [transactions] :as ctx}]
+  ([ident {:keys [transactions] :as context}]
+   {:pre [(map? context)]}
    (let [{:keys [date description entity-ref]} (parse-model-ident ident
                                                                   :date
                                                                   :description
@@ -129,7 +137,7 @@
      (find-model transactions
                  :transaction/date date
                  :transaction/description description
-                 :transactin/entity (resolve-entity-ref entity-ref ctx)))))
+                 :transactin/entity (resolve-entity-ref entity-ref context)))))
 
 (defn- put-with
   [m f]

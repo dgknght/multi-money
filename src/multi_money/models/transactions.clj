@@ -21,6 +21,12 @@
 #_(v/reg-spec name-is-unique? {:message "%s is already in use"
                              :path [:transaction/name]})
 
+(s/def :transaction-item/quantity decimal?)
+(s/def :transaction-item/debit-account db/model-or-ref?)
+(s/def :transaction-item/credit-account db/model-or-ref?)
+(s/def ::transaction-item (s/keys :req [:transaction-item/quantity
+                                        :transaction-item/debit-account
+                                        :transaction-item/credit-account]))
 (s/def :transaction/date t/local-date?)
 (s/def :transaction/description string?)
 (s/def :transaction/memo string?)

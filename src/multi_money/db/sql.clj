@@ -22,6 +22,10 @@
 (def ->id
   (comp coerce-id utl/->id))
 
+(defn ->model-ref
+  [x]
+  (db/->model-ref x coerce-id))
+
 (defmulti before-save db/model-type)
 (defmethod before-save :default [m] m)
 
@@ -39,6 +43,10 @@
         s (for-insert table
                       model
                       jdbc/snake-kebab-opts)
+
+        _ (pprint {::insert model
+                   ::sql s})
+
         result (jdbc/execute-one! db s {:return-keys [:id]})]
 
     ; TODO: scrub for sensitive data
@@ -132,6 +140,7 @@
                  (mapcat deconstruct)
                  (map (comp wrap-oper
                             before-save))
+                 (utl/pp->> ::ready-to-put)
                  (reduce (partial execute-and-aggregate tx)
                          {:id-map {}
                           :saved []})))))
@@ -158,7 +167,8 @@
 
 (def ^:private model-refs->ids
   {:entity/owner :entity/owner-id
-   :commodity/entity :commodity/entity-id})
+   :commodity/entity :commodity/entity-id
+   :transaction/entity :transaction/entity-id})
 
 (defn- ->ids
   [criteria]
