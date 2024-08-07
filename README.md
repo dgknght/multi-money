@@ -24,13 +24,41 @@ erDiagram
     string oauth-id
     string oauth-provider
   }
-  entity ||--|{ user : "belongs to"
+  user }|--|| entity : "has one or more"
   entity {
     string name
     user owner
     date first-trx-date
     date last-trx-date
+    commodity default-commodity
   }
+  entity }|--|| commodity : "has one or more"
+  commodity {
+    string name
+    string symbol
+    keyword type
+    entity entity
+  }
+  entity }|--|| account : "has many"
+  account {
+    string name
+    keyword type
+    entity entity
+    commodity commodity
+  }
+  transaction }|--|| entity : "has many"
+  transaction {
+    local-date date
+    string description
+  }
+  transaction-item }|--|| transaction : "has one or more"
+  transaction-item {
+    account debit-account
+    account credit-account
+    money quantity
+  }
+  transaction-item ||--|| account : "debits"
+  transaction-item ||--|| account : "credits"
 ```
 ## Setup
 
