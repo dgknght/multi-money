@@ -13,6 +13,7 @@
                   [cljsjs/react "17.0.2-0"]
                   [cljsjs/react-dom "17.0.2-0"]
                   [clojure.java-time "1.4.2"]
+                  [org.clojure/tools.cli "1.1.230"]
                   [metosin/reitit-ring "0.7.0-alpha7" :exclusions [ring/ring-core ring/ring-codec commons-fileupload crypto-equality commons-io crypto-random commons-codec]]
                   [hiccup "2.0.0-RC2"]
                   [ring-oauth2 "0.2.2" :exclusions [ring/ring-core commons-fileupload]]
@@ -46,8 +47,7 @@
                                 commons-io
                                 org.slf4j/slf4j-api
                                 org.checkerframework/checker-qual]]
-                  [stowaway "0.1.19" :exclusions [potemkin
-                                                  org.clojure/data.priority-map]]
+                  [stowaway "0.1.19" :exclusions [org.clojure/spec.alpha org.clojure/clojure potemkin org.clojure/data.priority-map]]
                   [com.datomic/client-impl-shared "1.0.102"
                    :exclusions [com.cognitect/transit-java
                                 org.eclipse.jetty/jetty-client
@@ -93,6 +93,7 @@
              "index-mongo"    ["run" "-m" "multi-money.db.mongo.tasks/index"]
              "create-sql"     ["run" "-m" "multi-money.db.sql.tasks/create"]
              "init-sql"       ["do" "create-sql," "migrate"]
+             "partition-sql"  ["run" "-m" "multi-money.db.sql.tasks/partition"]
              "migrate"        ["run" "-m" "multi-money.db.sql.tasks/migrate"]
              "rollback"       ["run" "-m" "multi-money.db.sql.tasks/rollback"]
              "remigrate"      ["run" "-m" "multi-money.db.sql.tasks/remigrate"]

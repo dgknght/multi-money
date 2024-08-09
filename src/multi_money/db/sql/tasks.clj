@@ -1,11 +1,14 @@
 (ns multi-money.db.sql.tasks
   (:require [clojure.pprint :refer [pprint]]
             [clojure.tools.logging :as log]
+            [clojure.tools.cli :refer [parse-opts]]
+            [java-time.api :as t]
             [config.core :refer [env]]
             [next.jdbc :as j]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as repl]
             [ragtime.strategy :refer [apply-new]]
+            [multi-money.db.sql.partitioning :refer [create-partition-tables]]
             [multi-money.util :refer [mask-values]]
             [multi-money.db :as db]))
 
@@ -85,3 +88,17 @@
           (j/execute! ds [create])
           (println "done."))
         (println (format "%s already exists." label))))))
+
+(def ^:private partition-opts
+  [["-s" "--start START" "The start of the period for which partitions are to be created, inclusive."
+    :parse-fn (partial t/local-date (t/formatter :iso-date))]
+   ["-e" "--end START" "The end of the period for which partitions are to be created, exclusive."
+    :parse-fn (partial t/local-date (t/formatter :iso-date))]
+   ["-n" "--dry-run" "Only print the commands, do not execute them."]])
+
+(defn partition
+  [& args]
+  (let [{{:as options :keys [start end]} :options} (parse-opts args partition-opts)]
+    (pprint {::partition [start end]
+             ::options options})
+    (create-partition-tables start end (dissoc options :start :end))))
