@@ -3,6 +3,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [rename-keys]]
+            [clojure.string :as string]
             [next.jdbc :as jdbc]
             [next.jdbc.plan :refer [select!
                                     select-one!]]
@@ -43,10 +44,6 @@
         s (for-insert table
                       model
                       jdbc/snake-kebab-opts)
-
-        _ (pprint {::insert model
-                   ::sql s})
-
         result (jdbc/execute-one! db s {:return-keys [:id]})]
 
     ; TODO: scrub for sensitive data
@@ -89,12 +86,21 @@
     (jdbc/execute! db s)
     1))
 
+(defn temp-id []
+  (str "temp-" (random-uuid)))
+
+(defn- temp-id?
+  [id-or-model]
+  (let [id (utl/->id id-or-model)]
+    (and (string? id)
+         (string/starts-with? id "temp-"))))
+
 (defn- wrap-oper
   [m]
   (if (vector? m)
     m
     [(if (and (:id m) ; TODO: Change this to find the id attribute
-              (not (uuid? (:id m))))
+              (not (temp-id? m)))
        ::db/update
        ::db/insert)
      m]))
@@ -118,10 +124,6 @@
   [model _id-map]
   model)
 
-(defn- temp-id?
-  [{:keys [id]}]
-  (uuid? id))
-
 (defn- execute-and-aggregate
   [db {:as result :keys [id-map]} [operator m]]
   (let [ready-to-save (cond-> (resolve-temp-ids m id-map)
@@ -140,7 +142,6 @@
                  (mapcat deconstruct)
                  (map (comp wrap-oper
                             before-save))
-                 (utl/pp->> ::ready-to-put)
                  (reduce (partial execute-and-aggregate tx)
                          {:id-map {}
                           :saved []})))))
