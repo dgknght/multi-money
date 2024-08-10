@@ -24,9 +24,9 @@
     #:transaction{:date (t/local-date 2020 3 2)
                   :description "Kroger"
                   :memo "notes about the purchase"
-                  :entity entity
-                  :items [#:transaction-item{:debit-account (find-account ["Credit Card" entity])
-                                             :credit-account (find-account ["Groceries" entity])
+                  :entity (db/->model-ref entity)
+                  :items [#:transaction-item{:debit-account (db/->model-ref (find-account ["Credit Card" entity]))
+                                             :credit-account (db/->model-ref (find-account ["Groceries" entity]))
                                              :quantity 100M}]}))
 
 (dbtest create-a-transaction
@@ -120,6 +120,9 @@
       (is (comparable? #:transaction{:name "Cheques"}
                        (trxs/find transaction))
           "A retrieved model has the updated attributes"))))
+; TODO: update a transaction item
+; TODO: remove a transaction item
+; TODO: add a transaction item
 
 (dbtest fetch-all-transactions-for-an-account
   (with-context existing-trxs
