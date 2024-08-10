@@ -1,10 +1,11 @@
 ; should this really exist in sql-storage?
 (ns multi-money.db.sql.partitioning
   (:require [clojure.pprint :refer [pprint]]
+            [clojure.spec.alpha :as s]
             [next.jdbc :as jdbc]
             [java-time.api :as t]
             [config.core :refer [env]]
-            [multi-money.util :as utl]))
+            [multi-money.db :as db]))
 
 (defn- first-day-of-the-month
   [date]
@@ -85,13 +86,13 @@
 
 (defn- create-table-cmd
   [{:keys [table-name dates suffix]}]
-  (format
-   "create table if not exists %s%s partition of %s for values from ('%s') to ('%s');"
-   table-name
-   suffix
-   table-name
-   (first dates)
-   (second dates)))
+  [(format
+     "CREATE TABLE IF NOT EXISTS %s%s PARTITION OF %s FOR VALUES FROM ('%s') TO ('%s');"
+     table-name
+     suffix
+     table-name
+     (first dates)
+     (second dates))])
 
 (def ^:private earliest-date (t/local-date 1900 1 1))
 
@@ -120,6 +121,11 @@
        (map #(assoc % :suffix (suffix %)))
        (map create-table-cmd)))
 
+(s/def ::silent boolean?)
+(s/def ::dry-run boolean?)
+(s/def ::partition-options (s/keys :opt-un [::silent
+                                            ::dry-run]))
+
 (defn create-partition-tables
   "Creates the specified partition tables.
 
@@ -128,12 +134,17 @@
     end-date   - the end of the range for which tables are to be created
   Options:
     :silent    - do not output the commands that are generated
-    :dry-run   - do not execute the commands that are generated
-    :rules     - a map of table names to interval type and count"
+    :dry-run   - do not execute the commands that are generated"
   ([start-date end-date options]
-   (let [config (get-in env [:db :strategies :sql])]
+   {:pre [(t/local-date? start-date)
+          (t/local-date? end-date)
+          (t/before? start-date end-date)
+          (s/valid? ::partition-options options)]}
+   (let [db (assoc (db/config :sql)
+                   :user     (env :sql-ddl-user)
+                   :password (env :sql-ddl-password))]
      (doseq [cmd (create-table-cmds start-date end-date options)]
        (when-not (:silent options)
          (println cmd))
        (when-not (:dry-run options)
-         (jdbc/execute! (jdbc/get-datasource config) cmd))))))
+         (jdbc/execute! db cmd))))))
