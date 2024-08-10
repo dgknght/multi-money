@@ -86,6 +86,11 @@ Optionally, you can specify one of the following profiles:
 - datomic-client
 
 ### Test the server
+Prepare for testing by creating SQL partitions.
+```bash
+lein with-profile +test partition-sql -- --start 2020-01-01 --end 2021-12-31
+```
+
 ```bash
 lein test
 ```
