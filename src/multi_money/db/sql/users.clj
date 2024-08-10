@@ -14,7 +14,7 @@
 
 (defmethod sql/deconstruct :user
   [{:as user :user/keys [identities]}]
-  (let [id (or (:id user) (random-uuid))]
+  (let [id (or (:id user) (sql/temp-id))]
     (-> user
         (assoc :id id)
         (dissoc :user/identities)
