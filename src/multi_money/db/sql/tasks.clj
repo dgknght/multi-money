@@ -1,4 +1,5 @@
 (ns multi-money.db.sql.tasks
+  (:refer-clojure :exclude [partition])
   (:require [clojure.pprint :refer [pprint]]
             [clojure.tools.logging :as log]
             [clojure.tools.cli :refer [parse-opts]]
@@ -99,6 +100,4 @@
 (defn partition
   [& args]
   (let [{{:as options :keys [start end]} :options} (parse-opts args partition-opts)]
-    (pprint {::partition [start end]
-             ::options options})
     (create-partition-tables start end (dissoc options :start :end))))
