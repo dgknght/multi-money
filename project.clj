@@ -27,7 +27,7 @@
                   [ring/ring-defaults "0.4.0" :exclusions [ring/ring-core commons-fileupload]]
                   [venantius/accountant "0.2.5"]
                   [clj-commons/secretary "1.2.4"]
-                  [com.github.seancorfield/next.jdbc "1.3.909" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
+                  [com.github.seancorfield/next.jdbc "1.3.939" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha]]
                   [org.postgresql/postgresql "42.6.0" :exclusions [org.checkerframework/checker-qual]]
                   [dev.weavejester/ragtime "0.9.3" :exclusions [org.clojure/spec.alpha org.clojure/clojure org.clojure/core.specs.alpha org.clojure/tools.logging]]
                   [congomongo "2.6.0" :exclusions [org.clojure/data.json]]
