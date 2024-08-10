@@ -5,4 +5,5 @@
             multi-money.db.sql.entities
             multi-money.db.sql.commodities
             multi-money.db.sql.accounts
-            multi-money.db.sql.transactions))
+            multi-money.db.sql.transactions
+            multi-money.db.sql.transaction-items))
