@@ -4,9 +4,7 @@
             [clojure.pprint :refer [pprint]]
             [java-time.api :as t]
             [dgknght.app-lib.validation :as v]
-            [multi-money.util :refer [->id
-                                      ->model-ref
-                                      exclude-self]]
+            [multi-money.util :refer [->id]]
             [multi-money.db :as db]))
 
 (declare find-by)
@@ -38,16 +36,48 @@
                                    :transaction/items]
                              :opt [:transaction/memo]))
 
+(defn- date-range
+  [trxs]
+  (let [sorted-dates (->> trxs
+                          (map :transaction/date)
+                          (sort-by t/before?))]
+    [(first sorted-dates) (last sorted-dates)]))
+
+(defn- mass-append-items
+  [trxs]
+  (let [ids (map :id trxs)
+        [start-date end-date] (date-range trxs)
+        items (->> (db/select (db/storage)
+                              {:transaction-item/transaction-id ids
+                               :transaction-item/date [:between start-date end-date]}
+                              {})
+                   (group-by #(get-in % [:transaction-item/transaction :id])))]
+    (map #(assoc % :transaction/items (items (:id %))) trxs)))
+
+(defn- lacks-items?
+  [[trx :as trxs]]
+  (and (seq trxs)
+       (nil? (:transaction/items trx))))
+
+(defn- post-select
+  [trxs]
+  (if (lacks-items? trxs)
+    (->> trxs
+         (partition-all 10)
+         (mapcat mass-append-items))
+    trxs))
+
 (defn select
   [criteria & {:as options}]
   {:pre [(s/valid? (s/nilable ::db/options) options)]}
 
-  (map db/set-meta
-       (db/select (db/storage)
-                  (-> criteria
-                      db/normalize-model-refs
-                      (db/model-type :transaction))
-                  (update-in options [:order-by] (fnil identity [:name])))))
+  (post-select
+    (map db/set-meta
+         (db/select (db/storage)
+                    (-> criteria
+                        db/normalize-model-refs
+                        (db/model-type :transaction))
+                    (update-in options [:order-by] (fnil identity [:name]))))))
 
 (defn count
   ([] (count {}))
