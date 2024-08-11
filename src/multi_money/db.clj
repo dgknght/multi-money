@@ -2,7 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.walk :refer [postwalk]]
             [clojure.pprint :refer [pprint]]
-            [clojure.set :refer [union]]
+            [clojure.set :refer [union rename-keys]]
             [config.core :refer [env]]
             [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.util :as utl :refer [valid-id?
@@ -186,3 +186,16 @@
          ~@body)
        (finally
          (close storage#)))))
+
+(defmacro def->model-refs
+  [fn-name & keys]
+  (let [id-keys (mapv #(keyword (namespace %)
+                                (str (name %) "-id"))
+                      keys)
+        key-map (zipmap id-keys keys)]
+    `(defn- ~fn-name
+       [model#]
+       (rename-keys (reduce #(update-in-if %1 [%2] ->model-ref)
+                            model#
+                            ~id-keys)
+                    ~key-map))))

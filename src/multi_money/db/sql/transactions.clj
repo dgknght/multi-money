@@ -1,12 +1,14 @@
 (ns multi-money.db.sql.transactions
   (:require [clojure.pprint :refer [pprint]]
-            [clojure.set :refer [rename-keys]]
             [java-time.api :as t]
             [multi-money.db :as db]
             [multi-money.db.sql :as sql]))
 
 (defmethod sql/attributes :transaction [_]
   [:id :entity-id :date :description :memo])
+
+(declare ->sql-refs)
+(sql/def->sql-refs ->sql-refs :transaction/entity)
 
 (defn- inflate-item
   [trx {:as item :transaction-item/keys [debit-account credit-account]}]
@@ -19,19 +21,22 @@
               :transaction-item/credit-account)))
 
 (defmethod sql/deconstruct :transaction
-  [{:transaction/keys [items entity] :as transaction}]
+  [{:transaction/keys [items] :as transaction}]
   (let [id (or (:id transaction)
-               (sql/temp-id))]
-    (-> transaction
-        (assoc :id id
-               :transaction/entity-id (:id entity))
-        (dissoc :transaction/items :transaction/entity)
-        (cons (map (partial inflate-item (assoc transaction :id id))
+               (sql/temp-id))
+        with-id (assoc transaction :id id)]
+    (-> with-id
+        ->sql-refs
+        (assoc :id id)
+        (dissoc :transaction/items)
+        (cons (map (partial inflate-item with-id)
                    items)))))
+
+(declare adj-model-refs)
+(db/def->model-refs adj-model-refs :transaction/entity)
 
 (defmethod sql/after-read :transaction
   [trx]
   (-> trx
       (update-in [:transaction/date] t/local-date)
-      (update-in [:transaction/entity-id] db/->model-ref)
-      (rename-keys {:transaction/entity-id :transaction/entity})))
+      (adj-model-refs)))

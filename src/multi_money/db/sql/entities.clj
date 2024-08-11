@@ -1,32 +1,21 @@
 (ns multi-money.db.sql.entities
   (:require [clojure.pprint :refer [pprint]]
-            [clojure.set :refer [rename-keys]]
-            [dgknght.app-lib.core :refer [update-in-if]]
+            [multi-money.db :as db]
             [multi-money.db.sql :as sql]))
 
 (defmethod sql/attributes :entity [_]
   [:id :name :owner-id :default-commodity-id])
 
-(defn- owner->id
-  [x]
-  (-> x
-      (update-in-if [:entity/owner] sql/->id)
-      (rename-keys {:entity/owner :entity/owner-id})))
-
-(defn- default-commodity->id
-  [x]
-  (-> x
-      (update-in-if [:entity/default-commodity] sql/->id)
-      (rename-keys {:entity/default-commodity :entity/default-commodity-id})))
+(declare ->sql-refs)
+(sql/def->sql-refs ->sql-refs :entity/owner :entity/default-commodity)
 
 (defmethod sql/before-save :entity
   [entity]
-  (-> entity owner->id default-commodity->id))
+  (->sql-refs entity))
+
+(declare ->model-refs)
+(db/def->model-refs ->model-refs :entity/owner :entity/default-commodity)
 
 (defmethod sql/after-read :entity
   [entity]
-  (-> entity
-      (rename-keys {:entity/owner-id :entity/owner
-                    :entity/default-commodity-id :entity/default-commodity})
-      (update-in [:entity/owner] #(hash-map :id %))
-      (update-in-if [:entity/default-commodity] #(hash-map :id %))))
+  (->model-refs entity))

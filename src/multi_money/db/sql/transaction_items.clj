@@ -1,6 +1,5 @@
 (ns multi-money.db.sql.transaction-items
-  (:require [clojure.set :refer [rename-keys]]
-            [multi-money.db :as db]
+  (:require [multi-money.db :as db]
             [multi-money.db.sql :as sql]))
 
 (defmethod sql/attributes :transaction-item [_]
@@ -10,12 +9,12 @@
   [item id-map]
   (update-in item [:transaction-item/transaction-id] id-map))
 
+(declare adj-model-refs)
+(db/def->model-refs adj-model-refs
+  :transaction-item/debit-account
+  :transaction-item/credit-account
+  :transaction-item/transaction)
+
 (defmethod sql/after-read :transaction-item
   [item]
-  (-> item
-      (rename-keys {:transaction-item/debit-account-id :transaction-item/debit-account
-                    :transaction-item/credit-account-id :transaction-item/credit-account
-                    :transaction-item/transaction-id :transaction-item/transaction})
-      (update-in [:transaction-item/debit-account] db/->model-ref)
-      (update-in [:transaction-item/credit-account] db/->model-ref)
-      (update-in [:transaction-item/transaction] db/->model-ref)))
+  (adj-model-refs item))

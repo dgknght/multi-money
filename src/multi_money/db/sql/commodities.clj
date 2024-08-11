@@ -1,28 +1,24 @@
 (ns multi-money.db.sql.commodities
-  (:require [clojure.set :refer [rename-keys]]
-            [dgknght.app-lib.core :refer [update-in-if]]
-            [multi-money.util :refer [->id]]
-            [multi-money.db.sql :as sql]
-            [multi-money.db.sql.types :refer [coerce-id]]))
-
+  (:require [multi-money.db :as db]
+            [multi-money.db.sql :as sql]))
 
 (defmethod sql/attributes :commodity [_]
   [:id :entity-id :symbol :name :type])
 
-(defn- entity->id
-  [x]
-  (-> x
-      (update-in-if [:commodity/entity] (comp coerce-id ->id))
-      (rename-keys {:commodity/entity :commodity/entity-id})))
+(declare ->sql-refs)
+(sql/def->sql-refs ->sql-refs :commodity/entity)
 
 (defmethod sql/before-save :commodity
   [commodity]
   (-> commodity
-      entity->id
+      ->sql-refs
       (update-in [:commodity/type] name)))
+
+(declare ->model-refs)
+(db/def->model-refs ->model-refs :commodity/entity)
 
 (defmethod sql/after-read :commodity
   [commodity]
   (-> commodity
-      (rename-keys {:commodity/entity-id :commodity/entity})
+      ->model-refs
       (update-in [:commodity/type] keyword)))

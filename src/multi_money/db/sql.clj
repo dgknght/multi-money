@@ -10,6 +10,7 @@
             [next.jdbc.sql.builder :refer [for-insert
                                            for-update
                                            for-delete]]
+            [dgknght.app-lib.core :refer [update-in-if]]
             [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :as utl]
             [multi-money.db.sql.queries :refer [criteria->query]]
@@ -237,3 +238,15 @@
       (reset [_]            (reset* db))
       db/StorageMeta
       (strategy-id [_] :sql))))
+
+(defmacro def->sql-refs
+  [fn-name & keys]
+  (let [id-keys (mapv #(keyword (namespace %)
+                                (str (name %) "-id"))
+                      keys)
+        key-map (zipmap keys id-keys)]
+    `(defn- ~fn-name
+       [model#]
+       (reduce #(update-in-if %1 [%2] ->id)
+               (rename-keys model# ~key-map)
+               ~id-keys))))
