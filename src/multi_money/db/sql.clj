@@ -23,14 +23,16 @@
 (def ->id
   (comp coerce-id utl/->id))
 
-(defn ->model-ref
-  [x]
-  (db/->model-ref x coerce-id))
-
-(defmulti before-save db/model-type)
+(defmulti before-save
+  "Called before insert/update so that values can be adjusted
+  from clojure idioms to SQL idioms"
+  db/model-type)
 (defmethod before-save :default [m] m)
 
-(defmulti deconstruct db/model-type)
+(defmulti deconstruct
+  "Called on a model before before-save so that complex objects
+  can be extracted prior to insert/update"
+  db/model-type)
 (defmethod deconstruct :default [m] [m])
 
 (def ^:private infer-table-name
@@ -191,15 +193,16 @@
                   prepare-criteria
                   (criteria->query (assoc options
                                           :target (db/model-type criteria))))]
+
     ; TODO: scrub sensitive data
     (log/debugf "database select %s with options %s -> %s" criteria options query)
 
-    (let [q (db/model-type criteria)]
-      (if (:count options)
-        (select-one! db
-                     :record-count
-                     query
-                     jdbc/unqualified-snake-kebab-opts)
+    (if (:count options)
+      (select-one! db
+                   :record-count
+                   query
+                   jdbc/unqualified-snake-kebab-opts)
+      (let [q (db/model-type criteria)]
         (map (comp after-read
                    #(utl/qualify-keys % q :ignore #{:id}))
              (select! db
