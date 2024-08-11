@@ -97,8 +97,7 @@
 (defn- resolve-entity-ref
   [ref context]
   {:pre [(map? context)
-         (or (string? ref)
-             (map? ref))]}
+         ((some-fn nil? string? map?) ref)]}
   (when ref
     (select-keys (if (string? ref)
                    (find-entity ref context)
