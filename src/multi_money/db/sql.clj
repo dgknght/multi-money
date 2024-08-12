@@ -3,7 +3,6 @@
   (:require [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
             [clojure.set :refer [rename-keys]]
-            [clojure.string :as string]
             [next.jdbc :as jdbc]
             [next.jdbc.plan :refer [select!
                                     select-one!]]
@@ -14,7 +13,8 @@
             [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :as utl]
             [multi-money.db.sql.queries :refer [criteria->query]]
-            [multi-money.db.sql.types :refer [coerce-id]]
+            [multi-money.db.sql.types :refer [coerce-id
+                                              temp-id?]]
             [multi-money.db :as db]))
 
 (defn- id
@@ -88,15 +88,6 @@
 
     (jdbc/execute! db s)
     1))
-
-(defn temp-id []
-  (str "temp-" (random-uuid)))
-
-(defn- temp-id?
-  [id-or-model]
-  (let [id (utl/->id id-or-model)]
-    (and (string? id)
-         (string/starts-with? id "temp-"))))
 
 (defn- wrap-oper
   [m]
