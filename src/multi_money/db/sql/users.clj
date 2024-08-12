@@ -1,7 +1,8 @@
 (ns multi-money.db.sql.users
   (:require [clojure.pprint :refer [pprint]]
             [multi-money.util :refer [update-in-criteria]]
-            [multi-money.db.sql :as sql]))
+            [multi-money.db.sql :as sql]
+            [multi-money.db.sql.types :refer [temp-id]]))
 
 (defmethod sql/attributes :user [_]
   [:id :username :email :given-name :surname])
@@ -14,7 +15,7 @@
 
 (defmethod sql/deconstruct :user
   [{:as user :user/keys [identities]}]
-  (let [id (or (:id user) (sql/temp-id))]
+  (let [id (or (:id user) (temp-id))]
     (-> user
         (assoc :id id)
         (dissoc :user/identities)

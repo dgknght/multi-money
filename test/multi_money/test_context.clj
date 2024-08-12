@@ -138,6 +138,10 @@
                  :transaction/description description
                  :transactin/entity (resolve-entity-ref entity-ref context)))))
 
+(defn- resolve-account
+  [model key ctx]
+  (update-in model [key] #(find-account % ctx)))
+
 (defn- put-with
   [m f]
   (or (f m)
@@ -175,6 +179,16 @@
                           (:entity/default-commodity entity))
                         (throw (ex-info "Unable to find commodity for the account" {:account account
                                                                                     :entity entity})))))))
+
+(defmethod prepare-for-put :transaction
+  [{:as trx :transaction/keys [entity]} ctx]
+  (-> trx
+      (assoc :transaction/entity (find-entity entity ctx))
+      (update-in [:transaction/items]
+                 (fn [items]
+                   (map (comp #(resolve-account % :transaction-item/debit-account ctx)
+                              #(resolve-account % :transaction-item/credit-account ctx))
+                        items)))))
 
 (defn- realize-collection
   [ctx coll-key desc put-fn]

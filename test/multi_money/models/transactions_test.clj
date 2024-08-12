@@ -111,9 +111,9 @@
 
 (dbtest update-a-transaction
   (with-context existing-trxs
-    (let [transaction (find-transaction (t/local-date 2020 1 1) "Landlord")
+    (let [transaction (find-transaction [(t/local-date 2020 1 2) "Landlord"])
           updated (trxs/put (assoc-in transaction
-                                      [:transaction/items 0 :transaction-item/amount] 1001M))]
+                                      [:transaction/items 0 :transaction-item/quantity] 1001M))]
       (is (comparable? #:transaction{:name "Cheques"}
                        updated)
           "The result contains the updated attributes")
@@ -133,7 +133,7 @@
 
 (dbtest delete-a-transaction
   (with-context existing-trxs
-    (let [transaction (find-transaction (t/local-date 2020 1 3) "Kroger")]
+    (let [transaction (find-transaction [(t/local-date 2020 1 3) "Kroger"])]
       (trxs/delete transaction)
       (is (nil? (trxs/find transaction))
           "The transaction cannot be retrieved after delete"))))

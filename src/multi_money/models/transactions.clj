@@ -27,7 +27,7 @@
                                         :transaction-item/credit-account]))
 (s/def :transaction/date t/local-date?)
 (s/def :transaction/description string?)
-(s/def :transaction/memo string?)
+(s/def :transaction/memo (s/nilable string?))
 (s/def :transaction/entity db/model-or-ref?)
 (s/def :transaction/items (s/coll-of ::transaction-item :min-count 1))
 (s/def ::transaction (s/keys :req [:transaction/date
