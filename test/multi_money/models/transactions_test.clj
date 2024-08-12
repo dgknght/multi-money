@@ -112,12 +112,11 @@
 (dbtest update-a-transaction
   (with-context existing-trxs
     (let [transaction (find-transaction [(t/local-date 2020 1 2) "Landlord"])
-          updated (trxs/put (assoc-in transaction
-                                      [:transaction/items 0 :transaction-item/quantity] 1001M))]
-      (is (comparable? #:transaction{:name "Cheques"}
+          updated (trxs/put (assoc transaction :transaction/description "Landdude"))]
+      (is (comparable? #:transaction{:description "Landdude"}
                        updated)
           "The result contains the updated attributes")
-      (is (comparable? #:transaction{:name "Cheques"}
+      (is (comparable? #:transaction{:description "Landdude"}
                        (trxs/find transaction))
           "A retrieved model has the updated attributes"))))
 ; TODO: update a transaction item

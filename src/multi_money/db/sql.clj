@@ -120,7 +120,8 @@
 
 (defn- execute-and-aggregate
   [db {:as result :keys [id-map]} [operator m]]
-  (let [ready-to-save (cond-> (resolve-temp-ids m id-map)
+  (let [ready-to-save (cond-> m
+                        (seq id-map) (resolve-temp-ids id-map)
                         (temp-id? m) (dissoc :id))
         saved (put-one db [operator ready-to-save])]
     (cond-> (update-in result [:saved] conj saved)
@@ -137,8 +138,7 @@
                  (map (comp wrap-oper
                             before-save))
                  (reduce (partial execute-and-aggregate tx)
-                         {:id-map {}
-                          :saved []})))))
+                         {:saved []})))))
 
 (defn- id-key
   [x]
