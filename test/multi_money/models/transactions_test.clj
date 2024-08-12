@@ -44,7 +44,7 @@
   (with-context
     (is (thrown-with-ex-data?
           "Validation failed"
-          {::v/errors #:transaction{:date ["date is required"]}}
+          {::v/errors #:transaction{:date ["Date is required"]}}
           (trxs/put (dissoc (attributes)
                             :transaction/date))))))
 
@@ -52,7 +52,7 @@
   (with-context
     (is (thrown-with-ex-data?
           "Validation failed"
-          {::v/errors #:transaction{:description ["description is required"]}}
+          {::v/errors #:transaction{:description ["Description is required"]}}
           (trxs/put (dissoc (attributes)
                             :transaction/description))))))
 
@@ -60,7 +60,7 @@
   (with-context
     (is (thrown-with-ex-data?
           "Validation failed"
-          {::v/errors #:transaction{:items ["items is required"]}}
+          {::v/errors #:transaction{:items ["Items is required"]}}
           (trxs/put (dissoc (attributes)
                             :transaction/items))))))
 
@@ -68,25 +68,35 @@
   (with-context
     (is (thrown-with-ex-data?
           "Validation failed"
-          {::v/errors #:transaction{:items ["Must contain at least one item"]}}
+          {::v/errors #:transaction{:items ["Items must contain at least 1 item(s)"]}}
           (trxs/put (assoc (attributes)
                             :transaction/items []))))))
 
+(def ^:private business-accounts-ctx
+  (-> basic-context
+      (update-in [:commodities] conj #:commodity{:name "US Dollar"
+                                                 :symbol "USD"
+                                                 :type :currency
+                                                 :entity "Business"})
+      (update-in [:accounts] conj #:account{:name "Checking"
+                                            :type :asset
+                                            :entity "Business"})))
+
 (dbtest transaction-item-accounts-cannot-have-different-entities
-  (with-context
+  (with-context business-accounts-ctx
     (is (thrown-with-ex-data?
           "Validation failed"
-          {::v/errors #:transaction{:items ["All items must belong to the same entity"]}}
+          {::v/errors #:transaction{:items ["All items must have accounts that belong to the same entity as the transaction"]}}
           (trxs/put (assoc (attributes)
-                            :transaction/items [{:debit-account (find-account ["Checking">] "Business")
-                                                 :credit-account (find-account ["Rent" "Personal"])
-                                                 :quantity 100M}]))))))
+                           :transaction/items [#:transaction-item{:debit-account (find-account ["Checking" "Business"])
+                                                                  :credit-account (find-account ["Rent" "Personal"])
+                                                                  :quantity 100M}]))))))
 
 (dbtest transaction-item-accounts-must-have-the-same-entity-as-the-transaction
   (with-context
     (is (thrown-with-ex-data?
           "Validation failed"
-          {::v/errors #:transaction{:items ["All items must belong to the same entity"]}}
+          {::v/errors #:transaction{:items ["All items must have accounts that belong to the same entity as the transaction"]}}
           (trxs/put (assoc (attributes)
                             :transaction/entity (find-entity "Business")))))))
 
@@ -139,4 +149,4 @@
 
 (dbtest get-a-count-of-transactions
   (with-context existing-trxs
-    (is (= 5 (trxs/count {:transaction/entity (find-entity "Personal")})))))
+    (is (= 3 (trxs/count {:transaction/entity (find-entity "Personal")})))))

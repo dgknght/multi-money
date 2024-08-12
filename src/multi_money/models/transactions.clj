@@ -5,19 +5,25 @@
             [java-time.api :as t]
             [dgknght.app-lib.validation :as v]
             [multi-money.util :refer [->id]]
-            [multi-money.db :as db]))
+            [multi-money.db :as db]
+            [multi-money.models.accounts :as acts]))
 
 (declare find-by)
 
-#_(defn- account-entities-match?
-  [{:transaction/keys [:items]}]
-  (if (seq items)
-    (->> items
-         (map #(get-in % [:transaction-item/account :account/entity]))
-         (apply =))
-    true))
-#_(v/reg-spec name-is-unique? {:message "%s is already in use"
-                             :path [:transaction/name]})
+(defn- entities-match?
+  [{:transaction/keys [items entity]}]
+  (let [ids (->> items
+                 (mapcat (juxt :transaction-item/debit-account
+                               :transaction-item/credit-account))
+                 (map (comp
+                        #(get-in % [:account/entity :id])
+                        #(if (db/model-ref? %)
+                           (acts/find %)
+                           %)))
+                 (into #{(:id entity)}))]
+    (= 1 (clojure.core/count ids))))
+(v/reg-spec entities-match? {:message "All items must have accounts that belong to the same entity as the transaction"
+                             :path [:transaction/items]})
 
 (s/def :transaction-item/quantity decimal?)
 (s/def :transaction-item/debit-account db/model-or-ref?)
@@ -30,11 +36,12 @@
 (s/def :transaction/memo (s/nilable string?))
 (s/def :transaction/entity db/model-or-ref?)
 (s/def :transaction/items (s/coll-of ::transaction-item :min-count 1))
-(s/def ::transaction (s/keys :req [:transaction/date
-                                   :transaction/description
-                                   :transaction/entity
-                                   :transaction/items]
-                             :opt [:transaction/memo]))
+(s/def ::transaction (s/and (s/keys :req [:transaction/date
+                                          :transaction/description
+                                          :transaction/entity
+                                          :transaction/items]
+                                    :opt [:transaction/memo])
+                            entities-match?))
 
 (defn- date-range
   [trxs]
