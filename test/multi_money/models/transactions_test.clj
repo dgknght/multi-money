@@ -1,5 +1,5 @@
 (ns multi-money.models.transactions-test
-  (:require [clojure.test :refer [is use-fixtures]]
+  (:require [clojure.test :refer [deftest is use-fixtures]]
             [clojure.pprint :refer [pprint]]
             [java-time.api :as t]
             [dgknght.app-lib.test-assertions]
@@ -138,7 +138,14 @@
     (is (seq-of-maps-like? [#:transaction{:date (t/local-date 2020 1 1) :description "Paycheck"}
                             #:transaction{:date (t/local-date 2020 1 2) :description "Landlord"}]
                            (trxs/select {:transaction/account (db/->model-ref
-                                                                (find-account "Checking"))})))))
+                                                                (find-account "Checking"))
+                                         :transaction/date [:between
+                                                            (t/local-date 2020 1 1)
+                                                            (t/local-date 2020 1 3)]})))))
+
+(deftest transaction-criteria-must-include-a-date-range
+  (is (thrown? java.lang.AssertionError
+               (trxs/select {:transaction/entity {:id 1}}))))
 
 (dbtest delete-a-transaction
   (with-context existing-trxs

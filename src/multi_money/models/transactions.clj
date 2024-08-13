@@ -4,9 +4,12 @@
             [clojure.pprint :refer [pprint]]
             [java-time.api :as t]
             [dgknght.app-lib.validation :as v]
-            [multi-money.util :refer [->id]]
             [multi-money.db :as db]
             [multi-money.models.accounts :as acts]))
+
+(derive clojure.lang.PersistentVector ::vector)
+(derive clojure.lang.PersistentArrayMap ::map)
+(derive clojure.lang.PersistentHashMap ::map)
 
 (declare find-by)
 
@@ -43,6 +46,24 @@
                                     :opt [:transaction/memo])
                             entities-match?))
 
+(defmulti ^:private specifies-date-range? type)
+
+(defmethod specifies-date-range? ::map
+  [{:transaction/keys [date]}]
+  (not (not date)))
+
+(defmethod specifies-date-range? ::vector
+  [[oper & cs]]
+  (if (= oper :and)
+    (some specifies-date-range? cs)
+    (every? specifies-date-range? cs)))
+
+; TODO: create the :transaction-criterion/date spec
+(s/def ::criteria (s/and (s/keys :opt [:transaction/entity
+                                       :transaction-criterion/date
+                                       :transaction/account])
+                         specifies-date-range?))
+
 (defn- date-range
   [trxs]
   (let [sorted-dates (->> trxs
@@ -74,15 +95,29 @@
          (mapcat mass-append-items))
     trxs))
 
+(defn- normalize-account-refs
+  [{:transaction/keys [account] :as criteria}]
+  (if account
+    [:and
+     (dissoc criteria :transaction/account)
+     [:or
+      {:transaction-item/debit-account account}
+      {:transaction-item/credit-account account}]]
+    criteria))
+
 (defn select
   [criteria & {:as options}]
-  {:pre [(s/valid? (s/nilable ::db/options) options)]}
+  {:pre [#_(s/valid? ::criteria criteria)
+         (s/valid? (s/nilable ::db/options) options)]}
+
+  (s/explain ::criteria criteria)
 
   (post-select
     (map db/set-meta
          (db/select (db/storage)
                     (-> criteria
                         db/normalize-model-refs
+                        normalize-account-refs
                         (db/model-type :transaction))
                     (update-in options [:order-by] (fnil identity [:name]))))))
 
@@ -98,22 +133,27 @@
   (first (apply select criteria (mapcat identity (assoc options :limit 1)))))
 
 (defn find
-  [id]
-  (find-by {:id (->id id)}))
+  ([m]
+   {:pre [(:id m) (:transaction/date m)]}
+   (-> m
+       (select-keys [:id :transaction/date])
+       find-by))
+  ([id date]
+   (find-by {:id id :transaction/date date})))
 
 (defn- resolve-put-result
-  [x]
+  [x date]
   (if (map? x)
     (db/model-type x :transaction)
-    (find x)))
+    (find x date)))
 
 (defn put
-  [transaction]
+  [{:as transaction :transaction/keys [date]}]
   (v/with-ex-validation transaction ::transaction
     (let [records-or-ids (db/put (db/storage)
                                  [transaction])]
       ; TODO: return all of the saved models instead of the first?
-      (resolve-put-result (first records-or-ids)))))
+      (resolve-put-result (first records-or-ids) date))))
 
 (defn delete
   [transaction]
