@@ -7,7 +7,9 @@
   {:relationships #{[:users :identities]
                     [:users :entities]
                     [:entities :commodities]
-                    [:entities :accounts]}})
+                    [:entities :accounts]
+                    [:entities :transactions]
+                    [:transactions :transaction-items]}})
 
 (defn criteria->query
   [criteria & [options]]
