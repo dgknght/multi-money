@@ -58,12 +58,6 @@
     (some specifies-date-range? cs)
     (every? specifies-date-range? cs)))
 
-; TODO: create the :transaction-criterion/date spec
-(s/def ::criteria (s/and (s/keys :opt [:transaction/entity
-                                       :transaction-criterion/date
-                                       :transaction/account])
-                         specifies-date-range?))
-
 (defn- date-range
   [trxs]
   (let [sorted-dates (->> trxs
@@ -107,11 +101,8 @@
 
 (defn select
   [criteria & {:as options}]
-  {:pre [#_(s/valid? ::criteria criteria)
+  {:pre [(specifies-date-range? criteria)
          (s/valid? (s/nilable ::db/options) options)]}
-
-  (s/explain ::criteria criteria)
-
   (post-select
     (map db/set-meta
          (db/select (db/storage)

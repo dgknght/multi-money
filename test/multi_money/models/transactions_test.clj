@@ -145,7 +145,8 @@
 
 (deftest transaction-criteria-must-include-a-date-range
   (is (thrown? java.lang.AssertionError
-               (trxs/select {:transaction/entity {:id 1}}))))
+               (trxs/select {:transaction/entity {:id 1}}))
+      "No date attributes is invalid"))
 
 (dbtest delete-a-transaction
   (with-context existing-trxs
