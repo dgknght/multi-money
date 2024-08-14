@@ -67,10 +67,10 @@
 
 (defn- mass-append-items
   [trxs]
-  (let [ids (map :id trxs)
+  (let [ids (mapv :id trxs)
         [start-date end-date] (date-range trxs)
         items (->> (db/select (db/storage)
-                              {:transaction-item/transaction-id ids
+                              {:transaction-item/transaction-id [:in ids]
                                :transaction-item/date [:between start-date end-date]}
                               {})
                    (group-by #(get-in % [:transaction-item/transaction :id])))]

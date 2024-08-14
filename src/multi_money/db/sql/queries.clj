@@ -9,7 +9,7 @@
                     [:entities :commodities]
                     [:entities :accounts]
                     [:entities :transactions]
-                    [:transactions :transaction-items]}})
+                    [:transactions :transaction_items]}})
 
 (defn criteria->query
   [criteria & [options]]
