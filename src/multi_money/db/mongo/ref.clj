@@ -3,4 +3,5 @@
             multi-money.db.mongo.users
             multi-money.db.mongo.entities
             multi-money.db.mongo.commodities
-            multi-money.db.mongo.accounts))
+            multi-money.db.mongo.accounts
+            multi-money.db.mongo.transactions))
