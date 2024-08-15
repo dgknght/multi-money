@@ -23,14 +23,6 @@
 
 (def ->id (comp coerce-id utl/->id))
 
-(defn mongoify-model-refs
-  [model attr-map]
-  (rename-keys (reduce (fn [m k]
-                         (update-in-if m [k] ->id))
-                       model
-                       (keys attr-map))
-               attr-map))
-
 (defmulti before-save db/model-type)
 (defmethod before-save :default [m] m)
 
@@ -164,7 +156,11 @@
 (defn- reset*
   [conn]
   (m/with-mongo conn
-    (doseq [c [:users :entities :commodities]]
+    (doseq [c [:users
+               :entities
+               :commodities
+               :accounts
+               :transactions]]
       (m/destroy! c {}))))
 
 (defn connect
@@ -188,3 +184,30 @@
       (reset [_]            (reset* conn))
       db/StorageMeta
       (strategy-id [_] :mongo))))
+
+(defmacro def->mongo-refs
+  [fn-name & keys]
+  (let [id-keys (mapv #(keyword (namespace %)
+                                (str (name %) "-id"))
+                      keys)
+        key-map (zipmap keys id-keys)]
+    `(defn- ~fn-name
+       [model#]
+       (reduce (fn [m# k#]
+                 (update-in-if m# [k#] ->id))
+               (rename-keys model# ~key-map)
+               ~id-keys))))
+
+(defmacro def<-mongo-refs
+  [fn-name & keys]
+  (let [id-keys (mapv #(keyword (namespace %)
+                                (str (name %) "-id"))
+                      keys)
+        key-map (zipmap id-keys keys)]
+    `(defn- ~fn-name
+       [model#]
+       (rename-keys (reduce (fn [m# k#]
+                              (update-in-if m# [k#] utl/->model-ref))
+                            model#
+                            ~id-keys)
+                    ~key-map))))
