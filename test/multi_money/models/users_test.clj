@@ -97,18 +97,18 @@
 ; but grouped differently
 
 (dbtest find-a-user-by-oauth-id
-        (let [expected #:user{:email "john@doe.com"
-                              :given-name "John"
-                              :surname "Doe"
-                              :identities {:google "abc123"
-                                           :github "def456"}}]
-          (with-context oauth-context
-            (is (comparable? expected
-                             (usrs/find-by-oauth [:google "abc123"]))
-                "A given ID is used as-is")
-            (is (comparable? expected
-                             (usrs/find-by-oauth [:google {:id "abc123"}]))
-                "An ID is extracted from a given map"))))
+  (let [expected #:user{:email "john@doe.com"
+                        :given-name "John"
+                        :surname "Doe"
+                        :identities {:google "abc123"
+                                     :github "def456"}}]
+    (with-context oauth-context
+      (is (comparable? expected
+                       (usrs/find-by-oauth [:google "abc123"]))
+          "A given ID is used as-is")
+      (is (comparable? expected
+                       (usrs/find-by-oauth [:google {:id "abc123"}]))
+          "An ID is extracted from a given map"))))
 
 (dbtest create-a-user-from-an-oauth-profile
   (testing "known provider"
