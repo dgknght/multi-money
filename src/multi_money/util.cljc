@@ -71,14 +71,16 @@
   the :model-type from the meta data to the keys of the map."
   [m ns-key & {:keys [ignore]}]
   {:pre [(map? m)]}
-  (let [k (if (keyword? ns-key)
+  (let [qualifier (if (keyword? ns-key)
             (name ns-key)
             ns-key)
         ignore? (if ignore
                   (some-fn ignore namespace)
                   namespace)]
-    (prewalk #(qualify-key % k {:ignore? ignore?})
-             m)))
+    (update-keys m (fn [k]
+                     (if (ignore? k)
+                       k
+                       (keyword qualifier (name k)))))))
 
 (defn unqualify-keys
   "Replaces qualified keys with the simple values"
