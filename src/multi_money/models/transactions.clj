@@ -115,6 +115,7 @@
 (defn count
   ([] (count {}))
   ([criteria]
+   {:pre [(specifies-date-range? criteria)]}
    (db/select (db/storage)
               (db/model-type criteria :transaction)
               {:count true})))

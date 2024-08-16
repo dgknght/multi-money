@@ -1,5 +1,7 @@
 (ns multi-money.db.mongo.transactions
   (:require [clojure.pprint :refer [pprint]]
+            [clojure.walk :refer [prewalk]]
+            [java-time.api :as t]
             [multi-money.util :as utl]
             [multi-money.db.mongo :as m]))
 
@@ -42,6 +44,18 @@
       <-trx-mongo-refs
       (update-in [:transaction/items] after-read-items)))
 
+(defn- coerce-dates
+  [criteria]
+  (prewalk #(if (t/local-date? %)
+              (t/java-date
+                (t/zoned-date-time %
+                                   (t/local-time 0 0 0 0)
+                                   (t/zone-offset 0 0)))
+              %)
+           criteria))
+
 (defmethod m/prepare-criteria :transaction
   [criteria]
-  (->trx-mongo-refs criteria))
+  (-> criteria
+      ->trx-mongo-refs
+      coerce-dates))

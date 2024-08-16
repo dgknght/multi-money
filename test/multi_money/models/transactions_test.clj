@@ -157,4 +157,7 @@
 
 (dbtest get-a-count-of-transactions
   (with-context existing-trxs
-    (is (= 3 (trxs/count {:transaction/entity (find-entity "Personal")})))))
+    (is (= 3 (trxs/count {:transaction/entity (find-entity "Personal")
+                          :transaction/date [:between>
+                                             (t/local-date 2020 1 1)
+                                             (t/local-date 2021 1 1)]})))))
