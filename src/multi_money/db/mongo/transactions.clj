@@ -41,3 +41,7 @@
   (-> transaction
       <-trx-mongo-refs
       (update-in [:transaction/items] after-read-items)))
+
+(defmethod m/prepare-criteria :transaction
+  [criteria]
+  (->trx-mongo-refs criteria))
