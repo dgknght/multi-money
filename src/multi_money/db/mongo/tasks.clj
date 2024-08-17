@@ -56,4 +56,6 @@
                                                   [:entity_id :symbol]
                                                   :unique true)})
       (pprint {::accounts-entity (m/add-index! :accounts
-                                               [:entity_id])}))))
+                                               [:entity_id])})
+      (pprint {::transactions-date-entity (m/add-index! :transactions
+                                                        [:date :entity_id])}))))
