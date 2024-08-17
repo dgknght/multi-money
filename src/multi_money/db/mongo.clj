@@ -111,11 +111,15 @@
 
 (defmethod normalize-ids ::utl/map
   [criteria qualified-key]
-  (rename-keys criteria {:id qualified-key} ))
+  (rename-keys criteria {:id qualified-key}))
 
 (defmethod normalize-ids ::utl/vector
-  [[oper & criterias] qualified-key]
-  (apply vector oper (map #(normalize-ids % qualified-key) criterias)))
+  [[oper & cs :as criteria] qualified-key]
+  (with-meta (apply vector
+                    oper
+                    (map #(normalize-ids % qualified-key)
+                         cs))
+             (meta criteria)))
 
 (defn- aggregate
   [col-name pipeline]

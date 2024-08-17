@@ -1,5 +1,6 @@
 (ns multi-money.util-test
   (:require [clojure.test :refer [deftest testing is are]]
+            [clojure.set :refer [rename-keys]]
             #?(:clj [java-time.api :as t]
                :cljs [cljs-time.core :as t])
             [dgknght.app-lib.test-assertions]
@@ -219,3 +220,21 @@
                           (utl/path->caption path))
        "my-stuff" "My stuff"
        "/my-stuff" "My stuff"))
+
+(deftest apply-a-fn-to-maps-criteria
+  (testing "a map"
+    (let [applied (utl/apply-to-criteria ^:marked {:a 1}
+                                         #(rename-keys % {:a :b}))]
+      (is (= {:b 1} applied)
+          "The fn is applied to a map")
+      (is (= {:marked true}
+             (meta applied))
+          "The meta data is preserved")))
+  (testing "a vector"
+    (let [applied (utl/apply-to-criteria ^:marked [:or {:a 1} {:c 2}]
+                                         #(rename-keys % {:a :b}))]
+      (is (= [:or {:b 1} {:c 2}] applied)
+          "The fn is applied to maps within the vector")
+      (is (= {:marked true}
+             (meta applied))
+          "The meta data is preserved"))))

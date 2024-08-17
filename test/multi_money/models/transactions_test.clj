@@ -137,8 +137,7 @@
   (with-context existing-trxs
     (is (seq-of-maps-like? [#:transaction{:date (t/local-date 2020 1 1) :description "Paycheck"}
                             #:transaction{:date (t/local-date 2020 1 2) :description "Landlord"}]
-                           (trxs/select {:transaction/account (db/->model-ref
-                                                                (find-account "Checking"))
+                           (trxs/select {:transaction/account (find-account "Checking")
                                          :transaction/date [:between
                                                             (t/local-date 2020 1 1)
                                                             (t/local-date 2020 1 3)]})))))

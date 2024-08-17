@@ -28,8 +28,7 @@
   #{[:users :entities]
     [:entities :commodities]
     [:entities :accounts]
-    [:entities :transactions]
-    [:transactions :transaction-items]})
+    [:entities :transactions]})
 
 (defn criteria->pipeline
   [criteria options]

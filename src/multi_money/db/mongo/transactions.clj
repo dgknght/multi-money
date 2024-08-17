@@ -54,8 +54,26 @@
               %)
            criteria))
 
+(defn- translate-items
+  "Convert our transaction-item syntax into the MongoDB
+  syntax for querying embedded objects"
+  [criteria]
+  (let [ks (filterv #(= "transaction-item"
+                        (namespace %))
+                    (keys criteria))]
+    (reduce (fn [c k]
+              (-> c
+                  (dissoc k)
+                  (assoc (keyword "transactions.transaction-items")
+                         {:$elemMatch #{(name k) (criteria k)} }))
+              )
+            criteria
+            ks)))
+
 (defmethod m/prepare-criteria :transaction
   [criteria]
-  (-> criteria
-      ->trx-mongo-refs
-      coerce-dates))
+  (utl/apply-to-criteria
+    criteria
+    (comp translate-items
+          coerce-dates
+          ->trx-mongo-refs)))
