@@ -224,11 +224,13 @@
 (defmulti apply-to-criteria type-dispatch)
 
 (defmethod apply-to-criteria ::vector
-  [[oper & cs] f]
-  (apply vector
-         oper
-         (map #(apply-to-criteria % f)
-              cs)))
+  [[oper & cs :as criteria] f]
+  (with-meta
+    (apply vector
+           oper
+           (map #(apply-to-criteria % f)
+                cs))
+    (meta criteria)))
 
 (defmethod apply-to-criteria ::map
   [criteria f]
