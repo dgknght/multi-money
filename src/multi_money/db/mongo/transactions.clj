@@ -65,8 +65,7 @@
               (-> c
                   (dissoc k)
                   (assoc (keyword "transactions.transaction-items")
-                         {:$elemMatch #{(name k) (criteria k)} }))
-              )
+                         [:including-match {(-> k name keyword) (criteria k)}])))
             criteria
             ks)))
 
@@ -75,5 +74,6 @@
   (utl/apply-to-criteria
     criteria
     (comp translate-items
+          utl/refify-criteria
           coerce-dates
           ->trx-mongo-refs)))
