@@ -178,12 +178,25 @@
   (is (= 101 (utl/->id {:user/id 101}))
       "The value at a namespaced key with name \"id\" is returned"))
 
-(deftest product-a-model-ref
-  (are [input expected] (= expected (utl/->model-ref input))
-       101                  {:id 101}
-       {:id 101}            {:id 101}
-       {:id 101
-        :first-name "John"} {:id 101}))
+(deftest convert-a-model-ref
+  (testing "refs within a model"
+    (are [input expected] (= expected (utl/->model-ref input))
+         101                  {:id 101}
+         {:id 101}            {:id 101}
+         {:id 101
+          :first-name "John"} {:id 101}))
+  (testing "refs within criteria"
+    (are [input expected] (= expected (utl/refify-criteria input))
+         {:this 101}                    {:this 101}
+         {:this {:id 101}}              {:this {:id 101}}
+         {:this {:id 101
+                 :first-name "John"}}   {:this {:id 101}}
+         [:or
+          {:this {:id 101}}
+          {:that {:id 102
+                  :first-name "John"}}] [:or
+                                         {:this {:id 101}}
+                                         {:that {:id 102}}])))
 
 (deftest ensure-a-model-has-an-id
   (is (= {:id 1} (utl/+id {} (constantly 1)))

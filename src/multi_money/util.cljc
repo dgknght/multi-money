@@ -194,6 +194,22 @@
     (select-keys id [:id])
     {:id id}))
 
+(defn refify-criteria
+  [c]
+  {:pre [(or (map? c) (vector? c))]}
+  (prewalk (fn [x]
+             (if (map-entry? x)
+               (update-in x [1] (fn [v]
+                                  (cond
+                                    (map? v)    (select-keys v [:id])
+                                    (vector? v) (mapv #(if (map? %)
+                                                         (select-keys % [:id])
+                                                         %)
+                                                      v)
+                                    :else v)))
+               x))
+           c))
+
 (defn exclude-self
   "Update a query to exclude the specified model, if the model
   has an :id attribute"
