@@ -2,6 +2,7 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.walk :refer [prewalk]]
             [java-time.api :as t]
+            [multi-money.dates :refer [->java-date]]
             [multi-money.util :as utl]
             [multi-money.db.mongo :as m]))
 
@@ -47,10 +48,7 @@
 (defn- coerce-dates
   [criteria]
   (prewalk #(if (t/local-date? %)
-              (t/java-date
-                (t/zoned-date-time %
-                                   (t/local-time 0 0 0 0)
-                                   (t/zone-offset 0 0)))
+              (->java-date %)
               %)
            criteria))
 
