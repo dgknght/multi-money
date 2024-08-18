@@ -86,12 +86,20 @@
 
 (defmulti ^:private prep-for-put type)
 
+(defn- ->mongo-id-keys
+  [m]
+  (postwalk (fn [x]
+              (if (map-entry? x)
+                (update-in x [0] #(if (= :id %) :db/id %))
+                x))
+            m))
+
 (defmethod prep-for-put ::utl/map
   [m]
   (let [[m* nils] (split-nils m)]
     (cons (-> m*
               before-save
-              (rename-keys {:id :db/id}))
+              ->mongo-id-keys)
           (->> nils
                (remove #(nil? (-> m meta :original %)))
                (map #(vector :db/retract (:id m) %))))))
