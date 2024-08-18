@@ -22,7 +22,8 @@
 
 (defmethod d/prepare-criteria :transaction
   [criteria]
-  (apply-to-criteria criteria ->trx-ids))
+  (apply-to-criteria criteria (comp ->trx-ids
+                                    ->item-ids)))
 
 (defmethod d/after-read :transaction
   [trx]
