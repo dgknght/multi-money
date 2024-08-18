@@ -1,18 +1,17 @@
 (ns multi-money.db.datomic.entities
   (:require [clojure.pprint :refer [pprint]]
-            [multi-money.util :refer [update-in-criteria]]
-            [multi-money.db.datomic :as d :refer [->id]]))
+            [multi-money.util :refer [apply-to-criteria]]
+            [multi-money.db.datomic :as d]))
 
-(defn- adjust-ids
-  [m]
-  (-> m
-      (update-in-criteria [:entity/owner] ->id)
-      (update-in-criteria [:entity/default-commodity] ->id)))
+(declare ->ids)
+(d/def->ids ->ids
+  :entity/owner
+  :entity/default-commodity)
 
 (defmethod d/before-save :entity
   [entity]
-  (adjust-ids entity))
+  (->ids entity))
 
 (defmethod d/prepare-criteria :entity
   [criteria]
-  (adjust-ids criteria))
+  (apply-to-criteria criteria ->ids))

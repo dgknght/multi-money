@@ -1,11 +1,14 @@
 (ns multi-money.db.datomic.commodities
-  (:require [dgknght.app-lib.core :refer [update-in-if]]
+  (:require [multi-money.util :refer [apply-to-criteria]]
             [multi-money.db.datomic :as d]))
+
+(declare ->ids)
+(d/def->ids ->ids :commodity/entity)
 
 (defmethod d/before-save :commodity
   [commodity]
-  (update-in-if commodity [:commodity/entity] d/->id))
+  (->ids commodity))
 
 (defmethod d/prepare-criteria :commodity
   [criteria]
-  (update-in-if criteria [:commodity/entity] d/->model-ref))
+  (apply-to-criteria criteria ->ids))

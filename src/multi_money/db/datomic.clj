@@ -5,6 +5,7 @@
             [datomic.api :as d-peer]
             [datomic.client.api :as d-client]
             [stowaway.datalog :refer [apply-options]]
+            [dgknght.app-lib.core :refer [update-in-if]]
             [multi-money.db.datomic.types :refer [coerce-id
                                                   ->storable]]
             [multi-money.datalog :as dtl]
@@ -225,3 +226,12 @@
       (delete [_ models]    (delete* models {:api api}))
       (close [_])
       (reset [_]            (reset api)))))
+
+(defmacro def->ids
+  [fn-name & keys]
+  (let [ks (vec keys)]
+    `(defn- ~fn-name
+       [model#]
+       (reduce #(update-in-if %1 [%2] ->id)
+               model#
+               ~ks))))
