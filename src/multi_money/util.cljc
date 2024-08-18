@@ -319,14 +319,22 @@
             m))
 
 (defn pp->
-  [value msg]
-  (pprint {msg value})
+  [value msg & {if-fn :if
+                :or {if-fn (constantly true)}}]
+  (when (if-fn value)
+    (pprint {msg value}))
   value)
 
 (defn pp->>
-  [msg value]
-  (pprint {msg value})
-  value)
+  ([msg values]
+   (pp->> msg {} values))
+  ([msg
+    {if-fn :if
+     :or {if-fn (constantly true)}}
+    values]
+   (when (if-fn values)
+     (pprint {msg values}))
+   values))
 
 (defn path->caption
   [path]
