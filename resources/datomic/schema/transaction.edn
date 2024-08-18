@@ -1,0 +1,33 @@
+[{:db/ident :transaction/entity
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "The entity to which the transaction belongs"}
+ {:db/ident :transaction/date
+  :db/valueType :db.type/instant
+  :db/cardinality :db.cardinality/one
+  :db/doc "The date on which the transaction took place (time is ignored)"}
+ {:db/ident :transaction/description
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "A description of the transaction, such as the payee"}
+ {:db/ident :transaction/memo
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "An optional note with extract detail about the transaction"}
+ {:db/ident :transaction/items
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/many
+  :db/isComponent true
+  :db/doc "The items describing the transfer of money"}
+ {:db/ident :transaction-item/quantity
+  :db/valueType :db.type/bigdec
+  :db/cardinality :db.cardinality/one
+  :db/doc "The amount of money transfered from account to account"}
+ {:db/ident :transaction-item/debit-account
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "The account that is debited by the amount in quauntity"}
+ {:db/ident :transaction-item/credit-account
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "The account that is credited by the amount in quauntity"}]

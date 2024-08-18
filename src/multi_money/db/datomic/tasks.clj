@@ -17,7 +17,7 @@
            "commodity"
            #_"price"
            "account"
-           #_"transaction"]))
+           "transaction"]))
 
 (defn apply-schema
   ([] (apply-schema :datomic-peer))
