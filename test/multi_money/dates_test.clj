@@ -5,7 +5,8 @@
   (:import [java.util Calendar TimeZone]))
 
 (def java-date (let [cal (Calendar/getInstance (TimeZone/getTimeZone "UTC"))]
-                 (.set cal 2020 2 2 0 0 0) ; January is 0
+                 (.clear cal)
+                 (.set cal 2020 2 2) ; January is 0
                  (.getTime cal)))
 
 (deftest convert-a-local-date-to-a-java-date
