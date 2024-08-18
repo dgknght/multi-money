@@ -1,7 +1,7 @@
 (ns multi-money.db.datomic
-  (:require [clojure.set :refer [rename-keys]]
-            [clojure.pprint :refer [pprint]]
+  (:require [clojure.pprint :refer [pprint]]
             [clojure.walk :refer [postwalk]]
+            [java-time.api :as t]
             [datomic.api :as d-peer]
             [datomic.client.api :as d-client]
             [stowaway.datalog :refer [apply-options]]
@@ -9,6 +9,7 @@
             [multi-money.db.datomic.types :refer [coerce-id
                                                   ->storable]]
             [multi-money.datalog :as dtl]
+            [multi-money.dates :refer [->java-date]]
             [multi-money.util :as utl :refer [+id
                                               apply-sort
                                               split-nils
@@ -57,6 +58,24 @@
       (select-keys [:args])
       (assoc :query (dissoc query :args))))
 
+(defn- ->mongo-id-keys
+  "Given a model or criteria, replace all :ids with :db/id"
+  [m]
+  (postwalk (fn [x]
+              (if (map-entry? x)
+                (update-in x [0] #(if (= :id %) :db/id %))
+                x))
+            m))
+
+(defn- ->java-dates
+  "Given a model or criteria, replace all local-date instances with java dates"
+  [m]
+  (postwalk (fn [x]
+              (if (t/local-date? x)
+                (->java-date x)
+                x))
+            m))
+
 (defn- criteria->query
   [criteria {:as opts :keys [count]}]
   (let [m-type (or (db/model-type criteria)
@@ -86,19 +105,12 @@
 
 (defmulti ^:private prep-for-put type)
 
-(defn- ->mongo-id-keys
-  [m]
-  (postwalk (fn [x]
-              (if (map-entry? x)
-                (update-in x [0] #(if (= :id %) :db/id %))
-                x))
-            m))
-
 (defmethod prep-for-put ::utl/map
   [m]
   (let [[m* nils] (split-nils m)]
     (cons (-> m*
               before-save
+              ->java-dates
               ->mongo-id-keys)
           (->> nils
                (remove #(nil? (-> m meta :original %)))
@@ -167,6 +179,7 @@
                 coerce-criteria-id
                 extract-model-ref-ids
                 prepare-criteria
+                ->java-dates
                 (criteria->query options))
         raw-result (query api qry)]
     (if count

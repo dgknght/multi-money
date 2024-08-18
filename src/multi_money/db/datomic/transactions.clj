@@ -22,8 +22,7 @@
 
 (defmethod d/prepare-criteria :transaction
   [criteria]
-  (apply-to-criteria criteria (comp ->trx-ids
-                                    #(update-in % [:transaction/date] ->java-date))))
+  (apply-to-criteria criteria ->trx-ids))
 
 (defmethod d/after-read :transaction
   [trx]
