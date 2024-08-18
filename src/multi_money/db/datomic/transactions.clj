@@ -1,0 +1,30 @@
+(ns multi-money.db.datomic.transactions
+  (:require [clojure.pprint :refer [pprint]]
+            [java-time.api :as t]
+            [multi-money.util :refer [apply-to-criteria]]
+            [multi-money.dates :refer [->java-date]]
+            [multi-money.db.datomic :as d]))
+
+(declare ->trx-ids)
+(d/def->ids ->trx-ids :transaction/entity)
+
+(declare ->item-ids)
+(d/def->ids ->item-ids
+  :transaction-item/debit-account
+  :transaction-item/credit-account)
+
+(defmethod d/before-save :transaction
+  [trx]
+  (-> trx
+      ->trx-ids
+      (update-in [:transaction/date] ->java-date)
+      (update-in [:transaction/items] #(map ->item-ids %))))
+
+(defmethod d/prepare-criteria :transaction
+  [criteria]
+  (apply-to-criteria criteria (comp ->trx-ids
+                                    #(update-in % [:transaction/date] ->java-date))))
+
+(defmethod d/after-read :transaction
+  [trx]
+  (update-in trx [:transaction/date] t/local-date))

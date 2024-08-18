@@ -3,4 +3,5 @@
             multi-money.db.datomic.users
             multi-money.db.datomic.entities
             multi-money.db.datomic.commodities
-            multi-money.db.datomic.accounts))
+            multi-money.db.datomic.accounts
+            multi-money.db.datomic.transactions))
