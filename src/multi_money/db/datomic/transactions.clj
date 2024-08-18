@@ -1,8 +1,8 @@
 (ns multi-money.db.datomic.transactions
   (:require [clojure.pprint :refer [pprint]]
-            [java-time.api :as t]
             [multi-money.util :refer [apply-to-criteria]]
-            [multi-money.dates :refer [->java-date]]
+            [multi-money.dates :refer [->java-date
+                                       ->local-date]]
             [multi-money.db.datomic :as d]))
 
 (declare ->trx-ids)
@@ -27,4 +27,4 @@
 
 (defmethod d/after-read :transaction
   [trx]
-  (update-in trx [:transaction/date] t/local-date))
+  (update-in trx [:transaction/date] ->local-date))
