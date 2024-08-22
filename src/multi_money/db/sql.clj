@@ -160,28 +160,10 @@
   [[oper & cs]]
   (apply vector oper (map massage-ids cs)))
 
-(def ^:private model-refs->ids
-  {:entity/owner :entity/owner-id
-   :commodity/entity :commodity/entity-id
-   :transaction/entity :transaction/entity-id})
-
-(defn- ->ids
-  [criteria]
-  (reduce #(utl/update-in-criteria %1 [%2] (comp coerce-id utl/->id))
-          criteria
-          (vals model-refs->ids)))
-
-(defn- sqlize-criteria
-  [criteria]
-  (-> criteria
-      (utl/rename-criteria-keys model-refs->ids)
-      ->ids))
-
 (defn- select*
   [db criteria options]
   (let [query (-> criteria
                   massage-ids
-                  sqlize-criteria
                   prepare-criteria
                   (criteria->query (assoc options
                                           :target (db/model-type criteria))))]
