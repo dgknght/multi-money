@@ -75,3 +75,10 @@
   [account]
   {:pre [account (map? account)]}
   (db/delete (db/storage) [account]))
+
+(defn resolve
+  ([model] (resolve model :account))
+  ([model k]
+   (update-in model [k] #(if (:account/name %)
+                           %
+                           (find %)))))

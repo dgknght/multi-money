@@ -5,6 +5,7 @@
             [java-time.api :as t]
             [dgknght.app-lib.validation :as v]
             [multi-money.db :as db]
+            [multi-money.orchestration :as orc]
             [multi-money.models.accounts :as acts]))
 
 (derive clojure.lang.PersistentVector ::vector)
@@ -143,7 +144,7 @@
   [{:as transaction :transaction/keys [date]}]
   (v/with-ex-validation transaction ::transaction
     (let [records-or-ids (db/put (db/storage)
-                                 [transaction])]
+                                 (orc/propagate-transaction transaction))]
       ; TODO: return all of the saved models instead of the first?
       (resolve-put-result (first records-or-ids) date))))
 

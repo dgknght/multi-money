@@ -1,5 +1,5 @@
 (ns multi-money.models.transactions-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.pprint :refer [pprint]]
             [java-time.api :as t]
             [dgknght.app-lib.test-assertions]
@@ -11,6 +11,8 @@
                                               find-entity
                                               find-account
                                               find-transaction]]
+            [multi-money.models.entities :as ents]
+            [multi-money.models.accounts :as acts]
             [multi-money.models.transactions :as trxs]
             [multi-money.db :as db]
             [multi-money.db.mongo.ref]
@@ -19,26 +21,69 @@
 
 (use-fixtures :each reset-db)
 
-(defn- attributes []
-  (let [entity (find-entity "Personal")]
-    #:transaction{:date (t/local-date 2020 3 2)
-                  :description "Kroger"
-                  :memo "notes about the purchase"
-                  :entity (db/->model-ref entity)
-                  :items [#:transaction-item{:debit-account (db/->model-ref (find-account ["Credit Card" entity]))
-                                             :credit-account (db/->model-ref (find-account ["Groceries" entity]))
-                                             :quantity 100M}]}))
+(defn- attributes
+  ([] (attributes (find-entity "Personal")))
+  ([entity]
+   #:transaction{:date (t/local-date 2020 3 2)
+                 :description "Kroger"
+                 :memo "notes about the purchase"
+                 :entity (db/->model-ref entity)
+                 :items [#:transaction-item{:debit-account (db/->model-ref (find-account ["Credit Card" entity]))
+                                            :credit-account (db/->model-ref (find-account ["Groceries" entity]))
+                                            :quantity 100M}]}))
 
 (dbtest create-a-transaction
   (with-context
-    (let [attr (attributes)
+    (let [entity (find-entity "Personal")
+          attr (attributes entity)
           result (trxs/put attr)]
       (is (comparable? attr result)
           "The result contains the correct attributes")
       (is (comparable? attr (trxs/find result))
           "The transaction can be retrieved")
       (is (:id result)
-          "The result contains an :id value"))))
+          "The result contains an :id value")
+      (testing "entity updates"
+        (let [{:transaction/keys [first-transaction-date
+                                  last-transaction-date]} (ents/find entity)]
+          (is (= (t/local-date 2020 3 2)
+                 first-transaction-date)
+              ":first-transaction-date is set on the entity")
+          (is (= (t/local-date 2020 3 2)
+                 last-transaction-date)
+              ":last-transaction-date is set on the entity")))
+      (testing "debit account updates"
+        (let [{:account/keys
+               [first-transaction-date
+                last-transaction-date
+                quantity]} (acts/find (get-in result
+                                              [:transaction/items
+                                               0
+                                               :transaction-item/debit-account]))]
+          (is (= (t/local-date 2020 3 2)
+                 first-transaction-date)
+              ":first-transaction-date is set on the debit account")
+          (is (= (t/local-date 2020 3 2)
+                 last-transaction-date)
+              ":last-transaction-date is set on the debit account")
+          (is (= 100M quantity)
+              "The :quantity is set on the debit account")))
+      (testing "credit account updates"
+        (let [{:account/keys
+               [first-transaction-date
+                last-transaction-date
+                quantity]} (acts/find (get-in result
+                                              [:transaction/items
+                                               0
+                                               :transaction-item/credit-account]))]
+          (is (= (t/local-date 2020 3 2)
+                 first-transaction-date)
+              ":first-transaction-date is set on the credit account")
+          (is (= (t/local-date 2020 3 2)
+                 last-transaction-date)
+              ":last-transaction-date is set on the credit account")
+          (is (= 100M quantity)
+              "The :quantity is set on the credit account"))))))
 
 (dbtest transaction-date-is-required
   (with-context
