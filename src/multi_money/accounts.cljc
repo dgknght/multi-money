@@ -6,20 +6,19 @@
   [{:account/keys [type]}]
   (#{:asset :expense} type))
 
-; TODO: move polarze to a transactions ns
-#_(defn- polarizer
+(defn- polarizer
   [action account]
   (if (left-side? account)
     (if (= :credit action) -1M 1M)
     (if (= :credit action) 1M -1M)))
 
-#_(defn polarize
+(defn polarize
   ([{:keys [quantity action account]}]
    (polarize quantity action account))
   ([quantity action account]
    {:pre [quantity
           (#{:debit :credit} action)
-          (:type account)]}
+          (:account/type account)]}
    (* quantity (polarizer action account))))
 
 (defn- assoc-children
