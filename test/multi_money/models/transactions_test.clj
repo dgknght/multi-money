@@ -129,9 +129,6 @@
       (is (comparable? #:transaction{:description "Landdude"}
                        (trxs/find transaction))
           "A retrieved model has the updated attributes"))))
-; TODO: update a transaction item
-; TODO: remove a transaction item
-; TODO: add a transaction item
 
 (dbtest fetch-all-transactions-for-an-account
   (with-context existing-trxs
