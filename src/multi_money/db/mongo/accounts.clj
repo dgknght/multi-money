@@ -1,6 +1,6 @@
 (ns multi-money.db.mongo.accounts
   (:require [clojure.pprint :refer [pprint]]
-            [multi-money.util :refer [apply-to-criteria]]
+            [stowaway.criteria :as crt]
             [multi-money.db.mongo :as m]))
 
 (declare <-mongo-refs)
@@ -23,7 +23,7 @@
 
 (defmethod m/prepare-criteria :account
   [criteria]
-  (apply-to-criteria criteria ->mongo-refs))
+  (crt/apply-to criteria ->mongo-refs))
 
 (defmethod m/before-save :account
   [account]

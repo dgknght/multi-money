@@ -2,6 +2,7 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.walk :refer [prewalk]]
             [java-time.api :as t]
+            [stowaway.criteria :as crt]
             [multi-money.dates :refer [->java-date]]
             [multi-money.util :as utl]
             [multi-money.db.mongo :as m]))
@@ -69,7 +70,7 @@
 
 (defmethod m/prepare-criteria :transaction
   [criteria]
-  (utl/apply-to-criteria
+  (crt/apply-to
     criteria
     (comp translate-items
           utl/refify-criteria

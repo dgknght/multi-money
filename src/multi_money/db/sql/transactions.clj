@@ -1,7 +1,7 @@
 (ns multi-money.db.sql.transactions
   (:require [clojure.pprint :refer [pprint]]
             [java-time.api :as t]
-            [multi-money.util :refer [apply-to-criteria]]
+            [stowaway.criteria :as crt]
             [multi-money.db :as db]
             [multi-money.db.sql :as sql]
             [multi-money.db.sql.types :refer [temp-id]]))
@@ -44,4 +44,4 @@
 
 (defmethod sql/prepare-criteria :transaction
   [criteria]
-  (apply-to-criteria criteria (comp ->sql-refs ->item-sql-refs)))
+  (crt/apply-to criteria (comp ->sql-refs ->item-sql-refs)))

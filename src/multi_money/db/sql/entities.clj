@@ -1,6 +1,6 @@
 (ns multi-money.db.sql.entities
   (:require [clojure.pprint :refer [pprint]]
-            [multi-money.util :refer [apply-to-criteria]]
+            [stowaway.criteria :as crt]
             [multi-money.db :as db]
             [multi-money.db.sql :as sql]))
 
@@ -23,4 +23,4 @@
 
 (defmethod sql/prepare-criteria :entity
   [criteria]
-  (apply-to-criteria criteria ->sql-refs))
+  (crt/apply-to criteria ->sql-refs))

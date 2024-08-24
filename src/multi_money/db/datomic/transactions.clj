@@ -1,6 +1,6 @@
 (ns multi-money.db.datomic.transactions
   (:require [clojure.pprint :refer [pprint]]
-            [multi-money.util :refer [apply-to-criteria]]
+            [stowaway.criteria :as crt]
             [multi-money.dates :refer [->java-date
                                        ->local-date]]
             [multi-money.db.datomic :as d]))
@@ -22,8 +22,8 @@
 
 (defmethod d/prepare-criteria :transaction
   [criteria]
-  (apply-to-criteria criteria (comp ->trx-ids
-                                    ->item-ids)))
+  (crt/apply-to criteria (comp ->trx-ids
+                               ->item-ids)))
 
 (defmethod d/after-read :transaction
   [trx]

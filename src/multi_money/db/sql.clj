@@ -9,6 +9,7 @@
             [next.jdbc.sql.builder :refer [for-insert
                                            for-update
                                            for-delete]]
+            [stowaway.criteria :as crt]
             [dgknght.app-lib.core :refer [update-in-if]]
             [dgknght.app-lib.inflection :refer [plural]]
             [multi-money.util :as utl]
@@ -156,7 +157,7 @@
 (defn- select*
   [db criteria options]
   (let [query (-> criteria
-                  (utl/apply-to-criteria massage-ids)
+                  (crt/apply-to massage-ids)
                   prepare-criteria
                   (criteria->query (assoc options
                                           :target (db/model-type criteria))))]

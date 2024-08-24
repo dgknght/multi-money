@@ -237,21 +237,6 @@
       [:span {:title s}
        (truncate s opts)])))
 
-(defmulti apply-to-criteria type-dispatch)
-
-(defmethod apply-to-criteria ::vector
-  [[oper & cs :as criteria] f]
-  (with-meta
-    (apply vector
-           oper
-           (map #(apply-to-criteria % f)
-                cs))
-    (meta criteria)))
-
-(defmethod apply-to-criteria ::map
-  [criteria f]
-  (f criteria))
-
 (defn update-in-criteria
   "Give a criteria, which is a map, or a vector with a conjunction in the first
   position and criteria in the remaining positions, apply the update-in f

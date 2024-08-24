@@ -1,6 +1,6 @@
 (ns multi-money.db.datomic.entities
   (:require [clojure.pprint :refer [pprint]]
-            [multi-money.util :refer [apply-to-criteria]]
+            [stowaway.criteria :as crt]
             [multi-money.db.datomic :as d]))
 
 (declare ->ids)
@@ -14,4 +14,4 @@
 
 (defmethod d/prepare-criteria :entity
   [criteria]
-  (apply-to-criteria criteria ->ids))
+  (crt/apply-to criteria ->ids))

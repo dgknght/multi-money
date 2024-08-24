@@ -1,5 +1,5 @@
 (ns multi-money.db.sql.accounts
-  (:require [multi-money.util :refer [apply-to-criteria]]
+  (:require [stowaway.criteria :as crt]
             [multi-money.db :as db]
             [multi-money.db.sql :as sql]))
 
@@ -14,7 +14,7 @@
 
 (defmethod sql/prepare-criteria :account
   [criteria]
-  (apply-to-criteria criteria ->sql-refs))
+  (crt/apply-to criteria ->sql-refs))
 
 (defmethod sql/before-save :account
   [account]

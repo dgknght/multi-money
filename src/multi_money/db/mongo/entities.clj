@@ -1,6 +1,6 @@
 (ns multi-money.db.mongo.entities
   (:require [clojure.pprint :refer [pprint]]
-            [multi-money.util :refer [apply-to-criteria]]
+            [stowaway.criteria :as crt]
             [multi-money.db.mongo :as m]))
 
 (declare ->mongo-refs)
@@ -20,4 +20,4 @@
 
 (defmethod m/prepare-criteria :entity
   [criteria]
-  (apply-to-criteria criteria ->mongo-refs))
+  (crt/apply-to criteria ->mongo-refs))

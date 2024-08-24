@@ -1,5 +1,5 @@
 (ns multi-money.db.datomic.commodities
-  (:require [multi-money.util :refer [apply-to-criteria]]
+  (:require [stowaway.criteria :as crt]
             [multi-money.db.datomic :as d]))
 
 (declare ->ids)
@@ -11,4 +11,4 @@
 
 (defmethod d/prepare-criteria :commodity
   [criteria]
-  (apply-to-criteria criteria ->ids))
+  (crt/apply-to criteria ->ids))
