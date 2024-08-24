@@ -145,25 +145,18 @@
   (when-let [target (db/model-type x)]
     (keyword (name target) "id")))
 
-(defmulti ^:private massage-ids
+(defn- massage-ids
   "Coerces ids and appends the appropriate namespace
   to the :id key"
-  utl/type-dispatch)
-
-(defmethod massage-ids ::utl/map
   [m]
   (let [k (id-key m)]
     (cond-> (utl/update-in-criteria m [:id] coerce-id)
       k (rename-keys {:id k}))))
 
-(defmethod massage-ids ::utl/vector
-  [[oper & cs]]
-  (apply vector oper (map massage-ids cs)))
-
 (defn- select*
   [db criteria options]
   (let [query (-> criteria
-                  massage-ids
+                  (utl/apply-to-criteria massage-ids)
                   prepare-criteria
                   (criteria->query (assoc options
                                           :target (db/model-type criteria))))]
