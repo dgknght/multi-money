@@ -1,5 +1,5 @@
 (ns multi-money.models.accounts
-  (:refer-clojure :exclude [find count])
+  (:refer-clojure :exclude [find count resolve])
   (:require [clojure.spec.alpha :as s]
             [clojure.pprint :refer [pprint]]
             [dgknght.app-lib.validation :as v]
