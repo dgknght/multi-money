@@ -1,10 +1,20 @@
 (ns multi-money.db.sql.accounts
   (:require [stowaway.criteria :as crt]
+            [dgknght.app-lib.core :refer [update-in-if]]
+            [multi-money.dates :refer [->local-date]]
             [multi-money.db :as db]
             [multi-money.db.sql :as sql]))
 
 (defmethod sql/attributes :account [_]
-  [:id :name :entity-id :commodity-id :parent-id :type])
+  [:id
+   :name
+   :entity-id
+   :commodity-id
+   :parent-id
+   :type
+   :quantity
+   :first-transaction-date
+   :last-transaction-date])
 
 (declare ->sql-refs)
 (sql/def->sql-refs ->sql-refs
@@ -32,4 +42,6 @@
   [account]
   (-> account
       ->model-refs
-      (update-in [:account/type] keyword)))
+      (update-in [:account/type] keyword)
+      (update-in-if [:account/first-transaction-date] ->local-date)
+      (update-in-if [:account/last-transaction-date] ->local-date)))

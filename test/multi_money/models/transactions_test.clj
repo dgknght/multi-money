@@ -28,8 +28,8 @@
                  :description "Kroger"
                  :memo "notes about the purchase"
                  :entity (db/->model-ref entity)
-                 :items [#:transaction-item{:debit-account (db/->model-ref (find-account ["Credit Card" entity]))
-                                            :credit-account (db/->model-ref (find-account ["Groceries" entity]))
+                 :items [#:transaction-item{:debit-account (db/->model-ref (find-account ["Groceries" entity]))
+                                            :credit-account (db/->model-ref (find-account ["Credit Card" entity]))
                                             :quantity 100M}]}))
 
 (dbtest create-a-transaction
