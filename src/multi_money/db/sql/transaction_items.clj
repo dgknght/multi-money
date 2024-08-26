@@ -4,7 +4,16 @@
             [multi-money.db.sql :as sql]))
 
 (defmethod sql/attributes :transaction-item [_]
-  [:id :date :transaction-id :debit-account-id :credit-account-id :quantity])
+  [:id
+   :date
+   :transaction-id
+   :debit-account-id
+   :debit-index
+   :debit-balance
+   :credit-account-id
+   :credit-index
+   :credit-balance
+   :quantity])
 
 (defmethod sql/resolve-temp-ids :transaction-item
   [item id-map]

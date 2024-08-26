@@ -12,7 +12,7 @@
    :commodity-id
    :parent-id
    :type
-   :quantity
+   :balance
    :first-transaction-date
    :last-transaction-date])
 

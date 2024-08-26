@@ -24,7 +24,7 @@
 
 (defn- adj-act-balance
   [[action account quantity]]
-  (update-in account [:account/quantity] + (polarize quantity action account)))
+  (update-in account [:account/balance] + (polarize quantity action account)))
 
 (defn- update-1st-trx-date
   [model date k]
@@ -57,8 +57,16 @@
       (update-1st-trx-date date :entity/first-transaction-date)
       (update-last-trx-date date :entity/last-transaction-date)))
 
+(defn- update-items
+  [trx]
+  (update-in trx [:transaction/items 0] assoc
+             :transaction-item/debit-index 1
+             :transaction-item/debit-balance 100M
+             :transaction-item/credit-index 1
+             :transaction-item/credit-balance 100M))
+
 (defn propagate-transaction
   [{:as trx :transaction/keys [items date entity]}]
-  (cons trx
+  (cons (update-items trx)
         (cons (update-entity entity date)
               (affected-accounts date items))))
