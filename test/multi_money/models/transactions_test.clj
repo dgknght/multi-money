@@ -44,7 +44,7 @@
       (is (:id result)
           "The result contains an :id value")
       (testing "entity updates"
-        (let [{:transaction/keys [first-transaction-date
+        (let [{:entity/keys [first-transaction-date
                                   last-transaction-date]} (ents/find entity)]
           (is (= (t/local-date 2020 3 2)
                  first-transaction-date)

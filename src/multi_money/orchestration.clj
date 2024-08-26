@@ -27,18 +27,16 @@
   (update-in account [:account/quantity] + (polarize quantity action account)))
 
 (defn- update-1st-trx-date
-  [account date]
-  (update-in account
-             [:account/first-transaction-date]
-             #(->> [% date]
-                   (filter identity)
-                   (sort t/before?)
-                   first)))
+  [model date k]
+  (update-in model [k] #(->> [% date]
+                               (filter identity)
+                               (sort t/before?)
+                               first)))
 
 (defn- update-last-trx-date
-  [account date]
-  (update-in account
-             [:account/last-transaction-date]
+  [model date k]
+  (update-in model
+             [k]
              #(->> [% date]
                    (filter identity)
                    (sort t/after?)
@@ -49,10 +47,18 @@
   (->> items
        (mapcat (juxt extract-debit
                      extract-credit))
-       (map (comp #(update-1st-trx-date % date)
-                  #(update-last-trx-date % date)
+       (map (comp #(update-1st-trx-date % date :account/first-transaction-date)
+                  #(update-last-trx-date % date :account/last-transaction-date)
                   adj-act-balance))))
 
+(defn- update-entity
+  [entity date]
+  (-> entity
+      (update-1st-trx-date date :entity/first-transaction-date)
+      (update-last-trx-date date :entity/last-transaction-date)))
+
 (defn propagate-transaction
-  [{:as trx :transaction/keys [items date]}]
-  (cons trx (affected-accounts date items)))
+  [{:as trx :transaction/keys [items date entity]}]
+  (cons trx
+        (cons (update-entity entity date)
+              (affected-accounts date items))))
