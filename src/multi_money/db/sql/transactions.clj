@@ -28,10 +28,10 @@
         with-id (assoc transaction :id id)]
     (-> with-id
         (dissoc :transaction/items)
-        (cons (map #(assoc %
-                           :transaction-item/transaction with-id
-                           :transaction-item/date date)
-                   items)))))
+        (cons (mapv #(assoc %
+                            :transaction-item/transaction with-id
+                            :transaction-item/date date)
+                    items)))))
 
 (declare ->model-refs)
 (db/def->model-refs ->model-refs :transaction/entity)

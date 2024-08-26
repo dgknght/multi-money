@@ -186,9 +186,9 @@
       (assoc :transaction/entity (find-entity entity ctx))
       (update-in [:transaction/items]
                  (fn [items]
-                   (map (comp #(resolve-account % :transaction-item/debit-account ctx)
-                              #(resolve-account % :transaction-item/credit-account ctx))
-                        items)))))
+                   (mapv (comp #(resolve-account % :transaction-item/debit-account ctx)
+                               #(resolve-account % :transaction-item/credit-account ctx))
+                         items)))))
 
 (defn- realize-collection
   [ctx coll-key desc put-fn]

@@ -170,6 +170,29 @@
                                                    :credit-account ["Credit Card" "Personal"]
                                                    :quantity 100M}]}]))
 
+(dbtest create-a-transaction-after-an-existing-one
+  (with-context existing-trxs
+    (let [groceries (find-account ["Groceries" "Personal"])
+          checking (find-account ["Checking" "Personal"])
+          {:transaction/keys [items]}
+          (trxs/put
+            #:transaction{:description "Market Street"
+                          :date (t/local-date 2020 1 4)
+                          :items [#:transaction-item{:debit-account groceries
+                                                     :credit-account checking
+                                                     :quantity 25M}]})]
+      (is (seq-of-maps-like? [#:transaction-item{:debit-index 2
+                                                 :debit-balance 125M
+                                                 :credit-index 2
+                                                 :credit-balance 3075M}]
+                             items)
+          "The transaction item receives denormalization attributes")
+      (is (= 125M (:account/balance (acts/find groceries)))
+          "The credit account balance is updated")
+      (is (= 3075M (:account/balance (acts/find checking)))
+          "The debit account balance is updated")
+      ; TODO: Test the transaction items for each account)))
+
 (dbtest update-a-transaction
   (with-context existing-trxs
     (let [transaction (find-transaction [(t/local-date 2020 1 2) "Landlord"])

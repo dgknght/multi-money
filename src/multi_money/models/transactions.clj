@@ -39,7 +39,7 @@
 (s/def :transaction/description string?)
 (s/def :transaction/memo (s/nilable string?))
 (s/def :transaction/entity db/model-or-ref?)
-(s/def :transaction/items (s/coll-of ::transaction-item :min-count 1))
+(s/def :transaction/items (s/coll-of ::transaction-item :min-count 1 :kind vector?))
 (s/def ::transaction (s/and (s/keys :req [:transaction/date
                                           :transaction/description
                                           :transaction/entity
