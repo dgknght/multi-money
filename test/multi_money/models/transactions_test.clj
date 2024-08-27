@@ -190,8 +190,8 @@
       (is (= 125M (:account/balance (acts/find groceries)))
           "The credit account balance is updated")
       (is (= 3075M (:account/balance (acts/find checking)))
-          "The debit account balance is updated")
-      ; TODO: Test the transaction items for each account)))
+          "The debit account balance is updated"))))
+; TODO: Test the transaction items for each account
 
 (dbtest update-a-transaction
   (with-context existing-trxs
