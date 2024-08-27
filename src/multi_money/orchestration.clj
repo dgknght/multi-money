@@ -2,7 +2,8 @@
   (:require [clojure.pprint :refer [pprint]]
             [java-time.api :as t]
             [multi-money.accounts :refer [polarize]]
-            [multi-money.models.accounts :as acts]))
+            [multi-money.models.accounts :as acts]
+            [multi-money.models.transactions :as trxs]))
 
 (defn- resolve-account
   [account]
@@ -57,19 +58,37 @@
       (update-1st-trx-date date :entity/first-transaction-date)
       (update-last-trx-date date :entity/last-transaction-date)))
 
-(defn- update-items
-  [trx]
-  (update-in trx [:transaction/items 0] assoc
-             :transaction-item/debit-index 1
-             :transaction-item/debit-balance 100M
-             :transaction-item/credit-index 1
-             :transaction-item/credit-balance 100M))
+(defn- previous-item
+  [account date]
+  (->> (trxs/select {:transaction/account account
+                     :transaction/date [:<= date]})
+       (mapcat :transaction/items)
+       (sort-by (comp max
+                      (juxt :transaction-item/debit-index
+                            :transaction-item/credit-index)))))
+
+(defn- append-previous-items
+  [{:as m :keys [accounts transaction]}]
+  (->> accounts
+       (map previous-item)))
+
+(defn- gather-accounts
+  [{:as m :keys [transaction]}]
+  (assoc m [:accounts] (->> (:transaction/items transaction)
+                            (mapcat (juxt :transaction-item/debit-account
+                                          :transaction-item/credit-account))
+                            (reduce (fn [res {:keys [id] :as a}]
+                                      (assoc res id a))
+                                    {}))))
+
 
 (defn propagate-transaction
-  [{:as trx :transaction/keys [items date entity]}]
-  {:pre [(vector? (:transaction/items trx))
-         (t/local-date? (:transaction/date trx))]}
-
-  (cons (update-items trx)
-        (cons (update-entity entity date)
-              (affected-accounts date items))))
+  [{:as transaction :transaction/keys [items date entity]}]
+  {:pre [(vector? (:transaction/items transaction))
+         (t/local-date? (:transaction/date transaction))]}
+  (-> {:transaction transaction}
+      gather-accounts
+      append-previous-items
+      #_propagate-items
+      #_update-entity
+      #_extract-puts))

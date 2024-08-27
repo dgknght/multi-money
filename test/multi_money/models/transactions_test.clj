@@ -178,6 +178,7 @@
           (trxs/put
             #:transaction{:description "Market Street"
                           :date (t/local-date 2020 1 4)
+                          :entity (:account/entity groceries)
                           :items [#:transaction-item{:debit-account groceries
                                                      :credit-account checking
                                                      :quantity 25M}]})]
