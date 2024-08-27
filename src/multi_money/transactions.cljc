@@ -18,11 +18,13 @@
     [(merge stripped
             #:transaction-item{:account debit-account
                                :index debit-index
-                               :balance debit-balance})
+                               :balance debit-balance
+                               :action :debit})
      (merge stripped
             #:transaction-item{:account credit-account
                                :index credit-index
-                               :balance credit-balance})]))
+                               :balance credit-balance
+                               :action :credit})]))
 
 (defn ->unilateral
   [items]
