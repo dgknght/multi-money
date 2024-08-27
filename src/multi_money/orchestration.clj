@@ -67,7 +67,7 @@
 
 (defn propagate-transaction
   [{:as trx :transaction/keys [items date entity]}]
-  {:pre [(vector? {:transaction/items trx})
+  {:pre [(vector? (:transaction/items trx))
          (t/local-date? (:transaction/date trx))]}
 
   (cons (update-items trx)
