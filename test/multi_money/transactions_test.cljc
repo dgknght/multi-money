@@ -158,19 +158,73 @@
       (assert-item checking 5 -600M 150M "2020-01-31"))))
 
 (deftest set-an-item-index
-  (let [item (->> transactions
-                  (take 1)
-                  (trx/per-account {:id :checking
-                                    :account/type :asset})
-                  first)]
-    (is (= #:transaction{:date "2020-01-01"
-                         :description "Paycheck"
-                         :items [#:transaction-item{:debit-account {:id :checking}
-                                                    :debit-index 101
-                                                    :debit-balance 5000M
-                                                    :credit-account {:id :salary}
-                                                    :credit-index 0
-                                                    :credit-balance 5000M
-                                                    :quantity 5000M}]}
-           (trx/transaction
-             (trx/index item 101))))))
+  (testing "The debit account"
+    (let [item (->> transactions
+                    (take 1)
+                    (trx/per-account {:id :checking
+                                      :account/type :asset})
+                    first)]
+      (is (= #:transaction{:date "2020-01-01"
+                           :description "Paycheck"
+                           :items [#:transaction-item{:debit-account {:id :checking}
+                                                      :debit-index 101
+                                                      :debit-balance 5000M
+                                                      :credit-account {:id :salary}
+                                                      :credit-index 0
+                                                      :credit-balance 5000M
+                                                      :quantity 5000M}]}
+             (trx/transaction
+               (trx/index item 101))))))
+  (testing "The credit account"
+    (let [item (->> transactions
+                    (take 1)
+                    (trx/per-account {:id :salary
+                                      :account/type :income})
+                    first)]
+      (is (= #:transaction{:date "2020-01-01"
+                           :description "Paycheck"
+                           :items [#:transaction-item{:debit-account {:id :checking}
+                                                      :debit-index 0
+                                                      :debit-balance 5000M
+                                                      :credit-account {:id :salary}
+                                                      :credit-index 101
+                                                      :credit-balance 5000M
+                                                      :quantity 5000M}]}
+             (trx/transaction
+               (trx/index item 101)))))))
+
+(deftest set-an-item-balance
+  (testing "The debit account"
+    (let [item (->> transactions
+                    (take 1)
+                    (trx/per-account {:id :checking
+                                      :account/type :asset})
+                    first)]
+      (is (= #:transaction{:date "2020-01-01"
+                           :description "Paycheck"
+                           :items [#:transaction-item{:debit-account {:id :checking}
+                                                      :debit-index 0
+                                                      :debit-balance 1.01M
+                                                      :credit-account {:id :salary}
+                                                      :credit-index 0
+                                                      :credit-balance 5000M
+                                                      :quantity 5000M}]}
+             (trx/transaction
+               (trx/balance item 1.01M))))))
+  (testing "The credit account"
+    (let [item (->> transactions
+                    (take 1)
+                    (trx/per-account {:id :salary
+                                      :account/type :income})
+                    first)]
+      (is (= #:transaction{:date "2020-01-01"
+                           :description "Paycheck"
+                           :items [#:transaction-item{:debit-account {:id :checking}
+                                                      :debit-index 0
+                                                      :debit-balance 5000M
+                                                      :credit-account {:id :salary}
+                                                      :credit-index 0
+                                                      :credit-balance 1.01M
+                                                      :quantity 5000M}]}
+             (trx/transaction
+               (trx/balance item 1.01M)))))))
