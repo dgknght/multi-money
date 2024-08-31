@@ -1,15 +1,17 @@
 (ns multi-money.transactions-test
   (:require [clojure.test :refer [deftest testing is]]
+            #?(:clj [clojure.pprint :refer [pprint]]
+               :cljs [cljs.pprint :refer [pprint]])
             [multi-money.transactions :as trx]))
 
 (def ^:private simple-unilateral
-  #{#:transaction-item{:account :checking
+  #{#:transaction-item{:account {:id :checking}
                        :quantity 100M
                        :action :credit
                        :index 4
                        :balance 300M
                        :memo "notes about the purchase"}
-    #:transaction-item{:account :groceries
+    #:transaction-item{:account {:id :groceries}
                        :quantity 100M
                        :action :debit
                        :index 3
@@ -18,10 +20,10 @@
 
 (def ^:private simple-bilateral
   #{#:transaction-item{:quantity 100M
-                       :debit-account :groceries
+                       :debit-account {:id :groceries}
                        :debit-index 3
                        :debit-balance 200M
-                       :credit-account :checking
+                       :credit-account {:id :checking}
                        :credit-index 4
                        :credit-balance 300M
                        :memo "notes about the purchase"}})
@@ -134,8 +136,8 @@
 (deftest view-transactions-from-vis-a-vis-an-account
   (testing "The checking account"
     (let [checking (trx/per-account {:id :checking
-                                      :account/type :asset}
-                                     transactions)]
+                                     :account/type :asset}
+                                    transactions)]
       (is (= 4 (count checking))
           "The checking items are returned")
       (assert-item checking 0  5000M 5000M "2020-01-01")
@@ -144,8 +146,8 @@
       (assert-item checking 3  -600M 7400M "2020-01-31")))
   (testing "The credit card"
     (let [checking (trx/per-account {:id :credit-card
-                                      :account/type :liability}
-                                     transactions)]
+                                     :account/type :liability}
+                                    transactions)]
       (is (= 6 (count checking))
           "The credit card items are returned")
       (assert-item checking 0  150M 150M "2020-01-02")
@@ -154,3 +156,21 @@
       (assert-item checking 3  150M 600M "2020-01-23")
       (assert-item checking 4  150M 750M "2020-01-30")
       (assert-item checking 5 -600M 150M "2020-01-31"))))
+
+(deftest set-an-item-index
+  (let [item (->> transactions
+                  (take 1)
+                  (trx/per-account {:id :checking
+                                    :account/type :asset})
+                  first)]
+    (is (= #:transaction{:date "2020-01-01"
+                         :description "Paycheck"
+                         :items [#:transaction-item{:debit-account {:id :checking}
+                                                    :debit-index 101
+                                                    :debit-balance 5000M
+                                                    :credit-account {:id :salary}
+                                                    :credit-index 0
+                                                    :credit-balance 5000M
+                                                    :quantity 5000M}]}
+           (trx/transaction
+             (trx/index item 101))))))

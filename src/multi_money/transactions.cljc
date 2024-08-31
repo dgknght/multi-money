@@ -3,53 +3,80 @@
             [multi-money.accounts :refer [polarize]]))
 
 (defprotocol UnilateralItem
-  (index [this] "Returns the index of the item vis-a-vis the account")
+  (index [this] [this idx] "The 1 argument version returns the index, the 2 argument version sets the index and returns the new wrapper")
   (quantity [this] "Returns the quantity as a positive or negative number")
   (balance [this] "Returns the balance as a result of the item vis-a-vis the account")
-  (date [this] "Returns the date of the transaction"))
+  (date [this] "Returns the date of the transaction")
+  (transaction [this] "Returns the underlying transaction"))
 
-(deftype CreditItem [trx-item trx account]
-  UnilateralItem
-  (index [_] (:transaction-item/credit-index trx-item))
-  (quantity [_] (polarize (:transaction-item/quantity trx-item) :credit account))
-  (balance [_] (:transaction-item/credit-balance trx-item))
-  (date [_] (:transaction/date trx)))
+(declare ->CreditItem)
+(declare ->DebitItem)
 
-(deftype DebitItem [trx-item trx account]
+(deftype CreditItem [trx index account]
   UnilateralItem
-  (index [_] (:transaction-item/debit-index trx-item))
-  (quantity [_] (polarize (:transaction-item/quantity trx-item) :debit account))
-  (balance [_] (:transaction-item/debit-balance trx-item))
-  (date [_] (:transaction/date trx)))
+  (index [_] (:transaction-item/credit-index (nth (:transaction/items trx) index)))
+  (index [_ idx]
+    (->CreditItem (assoc-in trx
+                            [:transaction/items
+                             index
+                             :transaction-item/credit-index]
+                            idx)
+                  index
+                  account))
+  (quantity [_] (polarize (:transaction-item/quantity (nth (:transaction/items trx) index)) :credit account))
+  (balance [_] (:transaction-item/credit-balance (nth (:transaction/items trx) index)))
+  (date [_] (:transaction/date trx))
+  (transaction [_] trx))
+
+(deftype DebitItem [trx index account]
+  UnilateralItem
+  (index [_] (:transaction-item/debit-index (nth (:transaction/items trx) index)))
+  (index [_ idx]
+    (->DebitItem (assoc-in trx
+                            [:transaction/items
+                             index
+                             :transaction-item/debit-index]
+                            idx)
+                  index
+                  account))
+  (quantity [_] (polarize (:transaction-item/quantity (nth (:transaction/items trx) index)) :debit account))
+  (balance [_] (:transaction-item/debit-balance (nth (:transaction/items trx) index)))
+  (date [_] (:transaction/date trx))
+  (transaction [_] trx))
 
 (defn- =*
   [a b]
   (= (:id a) (:id b)))
 
 (defn- lateralize
-  [{:as item
-    :transaction-item/keys [debit-account
-                            credit-account]}
-   trx
+  [trx
+   index
    account]
-  (cond
-    (=* debit-account account)
-    (->DebitItem item trx account)
-    
-    (=* credit-account account)
-    (->CreditItem item trx account)
-    
-    :else
-    nil))
+  (let [{:transaction-item/keys
+         [debit-account
+          credit-account]} (nth (:transaction/items trx) index)]
+    (cond
+      (=* debit-account account)
+      (->DebitItem trx index account)
+
+      (=* credit-account account)
+      (->CreditItem trx index account)
+
+      :else
+      nil)))
 
 (defn per-account
   "Given an account and a list of transactions, returns a list of transaction
   items vis-a-vis the account."
   [account transactions]
+  {:pre [(map? account)
+         (:id account)
+         (:account/type account)]}
   (->> transactions
        (mapcat (fn [trx]
-                 (map #(lateralize % trx account)
-                      (:transaction/items trx))))
+                 (map-indexed (fn [idx _]
+                                (lateralize trx idx account))
+                              (:transaction/items trx))))
        (filter identity)))
 
 (defn- split-item
