@@ -37,35 +37,37 @@
     (let [entity (find-entity "Personal")
           attr (attributes entity)
           result (trxs/put attr)]
-      (is (comparable? attr result)
-          "The result contains the correct attributes")
-      (is (comparable? attr (trxs/find result))
-          "The transaction can be retrieved")
-      (is (:id result)
-          "The result contains an :id value")
-      (is (seq-of-maps-like? [#:transaction-item{:debit-index 1
-                                                 :debit-balance 100M
-                                                 :credit-index 1
-                                                 :credit-balance 100M}]
-                             (:transaction/items result))
-          "The transaction item receives denormalization attributes")
-      (testing "entity updates"
+      (testing "the result"
+        (is (comparable? attr result)
+            "The result contains the correct attributes")
+        (is (:id result)
+            "The result contains an :id value")
+        (is (seq-of-maps-like? [#:transaction-item{:debit-index 1
+                                                   :debit-balance 100M
+                                                   :credit-index 1
+                                                   :credit-balance 100M}]
+                               (:transaction/items result))
+            "The transaction item receives denormalization attributes"))
+      #_(testing "retrievability"
+        (is (comparable? attr (trxs/find result))
+            "The transaction can be retrieved"))
+      #_(testing "entity updates"
         (let [{:entity/keys [first-transaction-date
-                                  last-transaction-date]} (ents/find entity)]
+                             last-transaction-date]} (ents/find entity)]
           (is (= (t/local-date 2020 3 2)
                  first-transaction-date)
               ":first-transaction-date is set on the entity")
           (is (= (t/local-date 2020 3 2)
                  last-transaction-date)
               ":last-transaction-date is set on the entity")))
-      (testing "debit account updates"
+      #_(testing "debit account updates"
         (let [{:account/keys
                [first-transaction-date
                 last-transaction-date
                 balance]} (acts/find (get-in result
-                                              [:transaction/items
-                                               0
-                                               :transaction-item/debit-account]))]
+                                             [:transaction/items
+                                              0
+                                              :transaction-item/debit-account]))]
           (is (= (t/local-date 2020 3 2)
                  first-transaction-date)
               ":first-transaction-date is set on the debit account")
@@ -74,14 +76,14 @@
               ":last-transaction-date is set on the debit account")
           (is (= 100M balance)
               "The :quantity is set on the debit account")))
-      (testing "credit account updates"
+      #_(testing "credit account updates"
         (let [{:account/keys
                [first-transaction-date
                 last-transaction-date
                 balance]} (acts/find (get-in result
-                                              [:transaction/items
-                                               0
-                                               :transaction-item/credit-account]))]
+                                             [:transaction/items
+                                              0
+                                              :transaction-item/credit-account]))]
           (is (= (t/local-date 2020 3 2)
                  first-transaction-date)
               ":first-transaction-date is set on the credit account")

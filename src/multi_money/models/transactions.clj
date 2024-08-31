@@ -194,40 +194,47 @@
       (update-1st-trx-date date :entity/first-transaction-date)
       (update-last-trx-date date :entity/last-transaction-date)))
 
-(defn- previous-item
+(defn- previous-trx
   [account date]
   (->> (select {:transaction/account account
-                     :transaction/date [:<= date]})
+                :transaction/date [:<= date]}
+               {:order-by [[:transaction/date :desc]]})
        (mapcat :transaction/items)
        (sort-by (comp max
                       (juxt :transaction-item/debit-index
                             :transaction-item/credit-index)))))
 
 (defn- append-previous-items
-  [{:as m :keys [accounts transaction]}]
-  m)
+  [{:as m :keys [transaction accounts]}]
+  (assoc m
+         :previous-trxs
+         (reduce (fn [res account-id]
+                   (assoc res account-id
+                          (previous-trx account-id (:transaction/date transaction))))
+                 {}
+                 (keys accounts))))
 
 (defn- gather-accounts
   [{:as m :keys [transaction]}]
-  (assoc m [:accounts] (->> (:transaction/items transaction)
-                            (mapcat (juxt :transaction-item/debit-account
-                                          :transaction-item/credit-account))
-                            (reduce (fn [res {:keys [id] :as a}]
-                                      (assoc res id (if (:account/name a)
-                                                      a
-                                                      (acts/find a))))
-                                    {}))))
+  (assoc m :accounts (->> (:transaction/items transaction)
+                          (mapcat (juxt :transaction-item/debit-account
+                                        :transaction-item/credit-account))
+                          (reduce (fn [res {:keys [id] :as a}]
+                                    (assoc res id (if (:account/name a)
+                                                    a
+                                                    (acts/find a))))
+                                  {}))))
 
 (defn propagate-transaction
-  [{:as transaction :transaction/keys [items date entity]}]
+  [transaction]
   {:pre [(vector? (:transaction/items transaction))
          (t/local-date? (:transaction/date transaction))]}
   [(-> {:transaction transaction}
       gather-accounts
       append-previous-items
-      (utl/pp-> :with-previus-items)
+      propagate-items
+      (utl/pp-> :propagated)
       :transaction
-      #_propagate-items
       #_update-entity
       #_extract-puts)])
 
