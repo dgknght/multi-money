@@ -1,6 +1,6 @@
 (ns multi-money.transactions-test
   (:require [clojure.test :refer [deftest testing is]]
-            [multi-money.transactions :as trxs]))
+            [multi-money.transactions :as trx]))
 
 (def ^:private simple-unilateral
   #{#:transaction-item{:account :checking
@@ -28,12 +28,12 @@
 
 (deftest convert-bilateral-to-unilateral
   (is (= simple-unilateral
-         (trxs/->unilateral simple-bilateral))
+         (trx/->unilateral simple-bilateral))
       "A single bilateral item is split into two unilateral items"))
 
 (deftest convert-unilateral-to-bilateral
   (is (= simple-bilateral
-         (trxs/->bilateral simple-unilateral))
+         (trx/->bilateral simple-unilateral))
       "A single bilateral item is split into two unilateral items"))
 
 (def ^:private transactions
@@ -122,18 +122,18 @@
 (defn- assert-item
   [items index quantity balance date]
   (let [item (nth items index)]
-    (is (= index (trxs/index item))
+    (is (= index (trx/index item))
         "The index matches the item position in the list")
-    (is (= quantity (trxs/quantity item))
+    (is (= quantity (trx/quantity item))
         "The item quantity is polarized")
-    (is (= balance (trxs/balance item))
+    (is (= balance (trx/balance item))
         "The item has an appropriate balance")
-    (is (= date (trxs/date item))
+    (is (= date (trx/date item))
         "The item reflects the transaction date")))
 
 (deftest view-transactions-from-vis-a-vis-an-account
   (testing "The checking account"
-    (let [checking (trxs/per-account {:id :checking
+    (let [checking (trx/per-account {:id :checking
                                       :account/type :asset}
                                      transactions)]
       (is (= 4 (count checking))
@@ -143,7 +143,7 @@
       (assert-item checking 2  5000M 8000M "2020-01-15")
       (assert-item checking 3  -600M 7400M "2020-01-31")))
   (testing "The credit card"
-    (let [checking (trxs/per-account {:id :credit-card
+    (let [checking (trx/per-account {:id :credit-card
                                       :account/type :liability}
                                      transactions)]
       (is (= 6 (count checking))
