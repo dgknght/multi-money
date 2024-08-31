@@ -7,6 +7,7 @@
             [multi-money.db :as db]
             [multi-money.util :as utl]
             [multi-money.accounts :refer [polarize]]
+            [multi-money.transactions :as trx]
             [multi-money.models.accounts :as acts]))
 
 (derive clojure.lang.PersistentVector ::vector)
@@ -194,25 +195,14 @@
       (update-1st-trx-date date :entity/first-transaction-date)
       (update-last-trx-date date :entity/last-transaction-date)))
 
-(defn- previous-trx
+(defn- previous-item
   [account date]
   (->> (select {:transaction/account account
                 :transaction/date [:<= date]}
                {:order-by [[:transaction/date :desc]]})
-       (mapcat :transaction/items)
-       (sort-by (comp max
-                      (juxt :transaction-item/debit-index
-                            :transaction-item/credit-index)))))
-
-(defn- append-previous-items
-  [{:as m :keys [transaction accounts]}]
-  (assoc m
-         :previous-trxs
-         (reduce (fn [res account-id]
-                   (assoc res account-id
-                          (previous-trx account-id (:transaction/date transaction))))
-                 {}
-                 (keys accounts))))
+       (mapcat #(trx/per-account account %))
+       (sort-by trx/index >)
+       first))
 
 (defn- gather-accounts
   [{:as m :keys [transaction]}]
@@ -225,18 +215,38 @@
                                                     (acts/find a))))
                                   {}))))
 
+(defn- propagate-items
+  [account transaction]
+  (let [prev-item (previous-item account (:transaction/date transaction))
+        [prev-idx prev-bal] (if prev-item
+                              [(trx/index prev-item)
+                               (trx/balance prev-item)]
+                              [0 0M])]
+    (->> (trx/per-account account [transaction])
+         (map (fn [item]
+                (-> item
+                    (trx/index (inc prev-idx))
+                    (trx/balance (+ prev-bal (trx/balance item)))))))))
+
+(defn- propagate-and-append-items
+  [{:as m :keys [accounts transaction]}]
+  (reduce (fn [res account]
+            (assoc-in res
+                      [:affected-items (:id account)]
+                      (propagate-items account transaction)))
+          m
+          accounts))
+
 (defn propagate-transaction
   [transaction]
   {:pre [(vector? (:transaction/items transaction))
          (t/local-date? (:transaction/date transaction))]}
-  [(-> {:transaction transaction}
-      gather-accounts
-      append-previous-items
-      propagate-items
-      (utl/pp-> :propagated)
-      :transaction
-      #_update-entity
-      #_extract-puts)])
+  [transaction]
+  #_[(-> {:transaction transaction}
+       gather-accounts
+       propagate-and-append-items
+       update-entity
+       extract-puts)])
 
 (defn put
   [{:as transaction :transaction/keys [date]}]
